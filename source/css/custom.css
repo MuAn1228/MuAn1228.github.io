@@ -11,9 +11,17 @@
   background: #1a1a2e;
 }
 
-/* 选中文字颜色 */
+/* 选中文字颜色（紫色系，替换默认蓝） */
 ::selection {
-  background: rgba(73, 177, 245, 0.3);
+  background: rgba(161, 140, 209, 0.35);
+}
+
+/* 评论系统切换开关（多评论系统时显示）：替换默认蓝 */
+#post-comment .comment-head .comment-switch .first-comment {
+  color: #8e6bb5 !important;
+}
+#post-comment .comment-head .comment-switch #switch-btn {
+  background-color: #8e6bb5 !important;
 }
 
 /* 看板娘移到右下角，与左下角音乐播放器分开；缩小到 55% */
