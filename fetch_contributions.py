@@ -35,20 +35,17 @@ if "errors" in resp:
 
 cal = resp["data"]["user"]["contributionsCollection"]["contributionCalendar"]
 
-contributions = []
+weeks = []
 for w in cal["weeks"]:
+    days = []
     for d in w["contributionDays"]:
         c = d["contributionCount"]
         level = 0 if c == 0 else 1 if c < 10 else 2 if c < 20 else 3 if c < 30 else 4
-        contributions.append({"date": d["date"], "count": c, "level": level})
-
-total = {}
-for c in contributions:
-    y = c["date"][:4]
-    total[y] = total.get(y, 0) + c["count"]
+        days.append({"date": d["date"], "count": c, "level": level})
+    weeks.append({"days": days})
 
 os.makedirs("source/data", exist_ok=True)
 with open("source/data/contributions.json", "w", encoding="utf-8") as f:
-    json.dump({"total": total, "contributions": contributions}, f, ensure_ascii=False)
+    json.dump({"totalContributions": cal["totalContributions"], "weeks": weeks}, f, ensure_ascii=False)
 
-print("已抓取", cal["totalContributions"], "次贡献，共", len(contributions), "天")
+print("已抓取", cal["totalContributions"], "次贡献，共", sum(len(w["days"]) for w in weeks), "天")
