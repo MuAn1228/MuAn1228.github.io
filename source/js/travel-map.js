@@ -1,5 +1,6 @@
-// ===== 旅行地图（Leaflet + 卫星影像底图，中国卫星图 + 周边国家灰色，已访问省份发光动画） =====
+// ===== 旅行地图（Leaflet + 卫星底图 + 浅蓝海洋遮罩 + 周边国家灰色 + 中国卫星图） =====
 (function () {
+  var OCEAN = '/lib/ocean.json';
   var GEOJSON = '/lib/china-world.json';
   var DATA_JSON = '/data/travel.json';
   var CATEGORY = '旅行';
@@ -27,7 +28,7 @@
       worldCopyJump: true
     });
 
-    // 卫星影像底图（高德卫星）
+    // 卫星影像底图（高德卫星，中国部分透出）
     L.tileLayer('https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}', {
       subdomains: ['1', '2', '3', '4'],
       maxZoom: 10,
@@ -35,15 +36,23 @@
     }).addTo(map);
 
     Promise.all([
+      fetch(OCEAN).then(function (r) { return r.json(); }),
       fetch(GEOJSON).then(function (r) { return r.json(); }),
       fetch(DATA_JSON).then(function (r) { return r.json(); }).catch(function () { return { visited: [], counts: {} }; })
     ]).then(function (res) {
-      var geojson = res[0];
-      var data = res[1];
+      var ocean = res[0];
+      var geojson = res[1];
+      var data = res[2];
       var counts = data.counts || {};
       var visitedSet = {};
       (data.visited || []).forEach(function (n) { visitedSet[n] = true; });
 
+      // 浅蓝海洋遮罩（整个世界矩形挖掉各国，海洋涂成浅蓝）
+      L.geoJSON(ocean, {
+        style: { color: 'transparent', weight: 0, fillColor: '#A9C6E8', fillOpacity: 1 }
+      }).addTo(map);
+
+      // 国家 + 中国省份
       L.geoJSON(geojson, {
         style: function (feature) {
           var props = feature.properties || {};
@@ -52,14 +61,14 @@
           var visited = isChina && visitedSet[short];
 
           if (!isChina) {
-            // 周边国家：灰色（干净，ECharts 风格）
-            return { color: '#d5d5d5', weight: 1, fillColor: '#e9e9e9', fillOpacity: 1 };
+            // 周边国家：浅灰（ECharts 风格）
+            return { color: '#d0d0d0', weight: 1, fillColor: '#E6E6E6', fillOpacity: 1 };
           }
           if (visited) {
-            // 已访问省份：紫色（较深）+ 发光
+            // 已访问省份：紫色 + 发光
             return { color: '#b08fd9', weight: 2, fillColor: '#8e6bb5', fillOpacity: 0.55 };
           }
-          // 未访问省份：透明（卫星图透出）+ 淡白边界
+          // 未访问省份：透明（卫星图透出）
           return { color: 'rgba(255,255,255,0.5)', weight: 0.8, fillColor: 'transparent', fillOpacity: 0 };
         },
         onEachFeature: function (feature, layer) {
