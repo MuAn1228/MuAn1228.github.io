@@ -26,12 +26,12 @@
       attributionControl: false,
       scrollWheelZoom: true,
       worldCopyJump: false,
-      maxBounds: [[-85, -190], [85, 190]],
-      maxBoundsViscosity: 1.0
+      maxBounds: [[-85, -180], [85, 180]],
+      maxBoundsViscosity: 0.8
     });
 
-    // 高德标准地图（浅蓝海洋 + 行政区划，干净）
-    L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+    // 卫星影像底图（高德卫星，气象云图感）
+    L.tileLayer('https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}', {
       subdomains: ['1', '2', '3', '4'],
       maxZoom: 10,
       tileSize: 256
