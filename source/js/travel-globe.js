@@ -37,18 +37,12 @@
     renderer.setSize(W, H);
     mount.appendChild(renderer.domElement);
 
-    // 地球
+    // 地球（MeshBasicMaterial：无光照，直接显示卫星纹理，避免被灯光洗白）
     var earth = new THREE.Mesh(
       new THREE.SphereGeometry(1, 64, 64),
-      new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load('/img/earth.jpg'), shininess: 5 })
+      new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('/img/earth.jpg') })
     );
     scene.add(earth);
-
-    // 灯光
-    scene.add(new THREE.AmbientLight(0x8899bb, 1.3));
-    var dir = new THREE.DirectionalLight(0xffffff, 1.6);
-    dir.position.set(5, 3, 5);
-    scene.add(dir);
 
     // 标记组（挂在 earth 上，随地球旋转）
     var markers = new THREE.Group();
