@@ -59,9 +59,9 @@ subtitle:
     typeSpeed: 100
     backSpeed: 60
   sub:
-    - 欢迎来到我的博客
-    - 记录技术，也记录生活
-    - 一个热爱代码与二次元的角落
+    - 梦想是和喜欢的人在杭州度过余生。
+    - 山高万仞，只登一步
+    - 好，说的好，我完全同意。
 
 # ---------- 加载动画 ----------
 preloader:
@@ -121,6 +121,7 @@ inject:
     - '<script src="/js/typing.js"></script>'
     - '<script src="/js/marquee.js"></script>'
     - '<script src="/js/github-heatmap.js"></script>'
+    - '<script src="/js/github-stats.js"></script>'
     - '<script src="/js/travel-map.js"></script>'
 
 # ---------- 评论系统（Giscus） ----------

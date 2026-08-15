@@ -6,9 +6,7 @@ bottom:
     name: GitHub 统计
     icon: fab fa-github
     html: |
-      <div style="text-align:center;padding:8px;">
-        <img src="https://github-readme-stats.vercel.app/api?username=MuAn1228&show_icons=true&theme=radical&hide_title=true&hide_rank=true" style="max-width:100%;border-radius:8px;" alt="GitHub 统计" loading="lazy">
-      </div>
+      <div id="github-stats" style="padding:8px;text-align:center;color:#999;">加载中…</div>
   - class_name: hot-posts-card
     id_name: hot-posts-card
     name: 热门文章

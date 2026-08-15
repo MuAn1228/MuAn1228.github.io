@@ -398,3 +398,28 @@
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ===== GitHub 统计卡（自渲染） ===== */
+.gh-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 4px;
+}
+.gh-stat {
+  text-align: center;
+  padding: 12px 8px;
+  border-radius: 10px;
+  background: rgba(107, 91, 149, 0.08);
+}
+.gh-stat-num {
+  font-size: 22px;
+  font-weight: 700;
+  color: #6b5b95;
+  line-height: 1.2;
+}
+.gh-stat-label {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
