@@ -1,14 +1,22 @@
-// ===== GitHub 贡献热力图（直接用 GitHub 返回的精确颜色，与 profile 完全一致） =====
+// ===== GitHub 贡献热力图（紫色调，数据源 source/data/contributions.json，与 GitHub 周结构一致） =====
 (function () {
   var API = '/data/contributions.json';
-  var LEGEND = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
+  var PURPLE = ['#ebedf0', '#e0d4ef', '#b79ad6', '#8e6bb5', '#5c4a7d'];
   var CELL = 10;
   var GAP = 3;
+
+  function levelFromCount(c) {
+    if (c === 0) return 0;
+    if (c < 10) return 1;
+    if (c < 20) return 2;
+    if (c < 30) return 3;
+    return 4;
+  }
 
   function render(container, data) {
     var weeks = data.weeks || [];
 
-    // 月份标签（按每周第一天的月份）
+    // 月份标签
     var months = [];
     var lastMonth = -1;
     weeks.forEach(function (week, wi) {
@@ -35,7 +43,7 @@
       for (var wi = 0; wi < weeks.length; wi++) {
         var day = weeks[wi].days && weeks[wi].days[row];
         if (day) {
-          var color = day.color || '#ebedf0';
+          var color = PURPLE[levelFromCount(day.count)];
           var t = day.date + '：' + day.count + ' 次提交';
           html += '<span class="gh-cell" style="background:' + color + ';" title="' + t + '"></span>';
         } else {
@@ -47,7 +55,7 @@
     html += '</div>';
 
     html += '<div class="gh-legend"><span>少</span>';
-    LEGEND.forEach(function (c) {
+    PURPLE.forEach(function (c) {
       html += '<span class="gh-cell" style="background:' + c + ';"></span>';
     });
     html += '<span>多</span></div>';

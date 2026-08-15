@@ -20,7 +20,7 @@
 #waifu {
   left: auto !important;
   right: 0 !important;
-  transform: scale(0.4);
+  transform: scale(0.3);
   transform-origin: bottom right;
 }
 
