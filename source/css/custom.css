@@ -27,15 +27,67 @@
 /* 看板娘移到右下角，与左下角音乐播放器分开；缩小到 55% */
 #waifu {
   left: auto !important;
-  right: 0 !important;
-  scale: 0.3;
+  right: 60px !important;
+  bottom: 0 !important;
+  scale: 0.4;
   transform-origin: bottom right;
 }
 
-/* 音乐播放器放大 */
+/* 音乐播放器：缩小 + 毛玻璃融合 + 给折叠按钮让位 */
 .aplayer.aplayer-fixed {
-  transform: scale(1.25);
+  left: 66px !important;
+  transform: scale(1);
   transform-origin: left bottom;
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(26, 26, 46, 0.18);
+}
+
+/* 音乐折叠开关 */
+.music-toggle {
+  position: fixed;
+  left: 14px;
+  bottom: 14px;
+  z-index: 10002;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(107, 91, 149, 0.92);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(26, 26, 46, 0.3);
+  transition: transform .3s ease;
+}
+.music-toggle:hover {
+  transform: scale(1.08);
+}
+body.music-collapsed .aplayer.aplayer-fixed {
+  display: none !important;
+}
+body.music-collapsed .music-toggle {
+  animation: music-pulse 2s infinite;
+}
+@keyframes music-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+/* 移动端：播放器更小、折叠按钮更小 */
+@media (max-width: 768px) {
+  .aplayer.aplayer-fixed {
+    left: 44px !important;
+    transform: scale(0.8);
+    transform-origin: left bottom;
+  }
+  .music-toggle {
+    left: 8px;
+    bottom: 8px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
 }
 
 /* 手机端：个人介绍等模块在上，文章在下 */
@@ -422,4 +474,12 @@
   font-size: 12px;
   color: #999;
   margin-top: 4px;
+}
+
+/* ===== 文章页隐藏侧边栏（个人简介/公告/最新文章等），专注阅读 ===== */
+#body-wrap.post #aside-content {
+  display: none !important;
+}
+#body-wrap.post #content-inner > div:first-child {
+  width: 100% !important;
 }

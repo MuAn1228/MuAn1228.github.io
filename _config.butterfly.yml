@@ -123,6 +123,7 @@ inject:
     - '<script src="/js/github-heatmap.js"></script>'
     - '<script src="/js/github-stats.js"></script>'
     - '<script src="/js/travel-map.js"></script>'
+    - '<script src="/js/music-toggle.js"></script>'
 
 # ---------- 评论系统（Giscus） ----------
 comments:
