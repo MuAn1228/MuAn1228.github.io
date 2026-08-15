@@ -1,0 +1,40 @@
+# 自定义侧边栏卡片
+# 参考：https://butterfly.js.org/posts/ea33ab97/
+bottom:
+  - class_name: github-stats-card
+    id_name: github-stats-card
+    name: GitHub 统计
+    icon: fab fa-github
+    html: |
+      <div style="text-align:center;padding:8px;">
+        <img src="https://github-readme-stats.vercel.app/api?username=MuAn1228&show_icons=true&theme=radical&hide_title=true&hide_rank=true" style="max-width:100%;border-radius:8px;" alt="GitHub 统计" loading="lazy">
+      </div>
+  - class_name: hot-posts-card
+    id_name: hot-posts-card
+    name: 热门文章
+    icon: fas fa-fire
+    html: |
+      <div style="padding:4px;">
+        <a href="/2026/08/14/hello-world/" style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:10px;background:rgba(107,91,149,0.08);transition:all .3s;text-decoration:none;">
+          <span style="font-size:20px;">🔥</span>
+          <div>
+            <div style="color:#333;font-weight:500;">Hello World</div>
+            <div style="font-size:12px;color:#999;margin-top:2px;">2026-08-14</div>
+          </div>
+        </a>
+      </div>
+  - class_name: reward-card
+    id_name: reward-card
+    name: 打赏
+    icon: fas fa-yen-sign
+    html: |
+      <div style="display:flex;justify-content:center;gap:18px;padding:12px 10px;align-items:flex-start;">
+        <div style="text-align:center;">
+          <img src="/img/reward-wechat.png" alt="微信收款码" style="height:140px;width:auto;border-radius:8px;">
+          <div style="font-size:12px;color:#999;margin-top:6px;">微信</div>
+        </div>
+        <div style="text-align:center;">
+          <img src="/img/reward-alipay.jpg" alt="支付宝收款码" style="height:140px;width:auto;border-radius:8px;">
+          <div style="font-size:12px;color:#999;margin-top:6px;">支付宝</div>
+        </div>
+      </div>

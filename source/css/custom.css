@@ -1,0 +1,336 @@
+/* ===== 自定义美术效果 ===== */
+
+/* 渐变背景（柔和蓝粉，呼应粒子与樱花） */
+#web_bg {
+  background: linear-gradient(180deg, #1a1a2e 0%, #3d3561 28%, #6b5b95 55%, #a18cd1 78%, #f0c8e0 100%) !important;
+  background-attachment: fixed;
+}
+
+/* 顶部横幅：Vanta 飞鸟背景（暗色兜底，飞鸟由 vanta.js 渲染） */
+#page-header.full_page {
+  background: #1a1a2e;
+}
+
+/* 选中文字颜色 */
+::selection {
+  background: rgba(73, 177, 245, 0.3);
+}
+
+/* 看板娘移到右下角，与左下角音乐播放器分开；缩小到 55% */
+#waifu {
+  left: auto !important;
+  right: 0 !important;
+  transform: scale(0.4);
+  transform-origin: bottom right;
+}
+
+/* 音乐播放器放大 */
+.aplayer.aplayer-fixed {
+  transform: scale(1.25);
+  transform-origin: left bottom;
+}
+
+/* 手机端：个人介绍等模块在上，文章在下 */
+@media (max-width: 768px) {
+  #content-inner #aside-content {
+    order: -1;
+  }
+}
+
+/* ===== 图片滚动展示墙 ===== */
+.marquee-wrap {
+  position: relative;
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 16px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+.marquee-track {
+  display: flex;
+  gap: 16px;
+  width: max-content;
+  will-change: transform;
+}
+.marquee-track img {
+  width: 230px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  transition: transform 0.3s ease;
+  cursor: zoom-in;
+}
+.marquee-track img:hover {
+  transform: scale(1.06);
+}
+.marquee-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(26, 26, 46, 0.45);
+  color: #fff;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+.marquee-btn:hover {
+  background: rgba(107, 91, 149, 0.85);
+}
+.marquee-btn-left {
+  left: 0;
+}
+.marquee-btn-right {
+  right: 0;
+}
+
+/* ===== 图片灯箱（点击放大） ===== */
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.lightbox-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.lightbox-overlay .lightbox-img {
+  max-width: 92%;
+  max-height: 92%;
+  border-radius: 10px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+}
+.lightbox-overlay .lightbox-close {
+  position: absolute;
+  top: 18px;
+  right: 28px;
+  font-size: 44px;
+  line-height: 1;
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ===== GitHub 热力图 ===== */
+.github-heatmap-wrap {
+  max-width: 100%;
+  margin: 24px 0 0;
+  padding: 18px 16px 14px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(26, 26, 46, 0.10);
+}
+.github-heatmap-wrap .item-headline {
+  color: #6b5b95;
+  font-size: 15px;
+  margin-bottom: 10px;
+  padding-left: 8px;
+}
+.github-heatmap-wrap .item-headline i {
+  margin-right: 6px;
+}
+.gh-calendar {
+  overflow-x: auto;
+}
+.gh-graph {
+  min-width: 720px;
+}
+.gh-months {
+  position: relative;
+  height: 16px;
+  margin-left: 30px;
+  font-size: 11px;
+  color: #999;
+}
+.gh-months span {
+  position: absolute;
+}
+.gh-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 3px;
+}
+.gh-day {
+  width: 30px;
+  font-size: 10px;
+  color: #999;
+  flex-shrink: 0;
+}
+.gh-cell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 3px;
+  flex-shrink: 0;
+}
+.gh-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #999;
+}
+.gh-legend span {
+  margin: 0 3px;
+}
+
+/* 页脚背景透明（去掉主题默认的蓝色，透出渐变背景） */
+#footer {
+  background: transparent !important;
+}
+
+/* 归档/标签/分类/关于/文章等页面顶部：去掉默认蓝色，透出渐变背景 */
+#page-header.not-home-page,
+#page-header.post-bg {
+  background: transparent !important;
+}
+
+/* ===== 加载页重新设计（旋转光环 + 站点名） ===== */
+:root {
+  --preloader-bg: #1a1a2e;
+  --preloader-color: #ffffff;
+}
+#loading-box .configure-border-1,
+#loading-box .configure-border-2 {
+  display: none;
+}
+#loading-box .spinner-box::before {
+  content: "";
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: #f093fb;
+  animation: loadingSpin 0.9s linear infinite;
+}
+#loading-box .loading-word {
+  position: absolute;
+  top: calc(50% + 46px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  text-align: center;
+  font-size: 0;
+}
+#loading-box .loading-word::before {
+  content: "Mu An's Blog";
+  display: block;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: #fff;
+}
+#loading-box .loading-word::after {
+  content: "加载中 ···";
+  display: block;
+  font-size: 13px;
+  letter-spacing: 5px;
+  color: #f0c8e0;
+  margin-top: 8px;
+  animation: loadingPulse 1.4s ease-in-out infinite;
+}
+@keyframes loadingSpin {
+  to { transform: rotate(360deg); }
+}
+@keyframes loadingPulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+/* 加快背景淡入（原 4s 太慢） */
+#web_bg.bg-animation {
+  animation-duration: 0.4s !important;
+}
+
+/* ===== 侧边栏卡片个性化（毛玻璃 + 圆角 + 紫色标题） ===== */
+.card-widget {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(12px);
+  border-radius: 14px !important;
+  box-shadow: 0 4px 18px rgba(26, 26, 46, 0.10) !important;
+}
+.card-widget .item-headline {
+  color: #6b5b95 !important;
+}
+
+/* ===== 标签动态效果（悬停放大 + 高亮） ===== */
+.card-tag-cloud a {
+  display: inline-block;
+  transition: all .3s ease;
+}
+.card-tag-cloud a:hover {
+  transform: scale(1.18);
+  color: #fff !important;
+  background: #6b5b95;
+  border-radius: 4px;
+  padding: 0 5px;
+  box-shadow: 0 4px 12px rgba(107, 91, 149, 0.45);
+}
+
+/* 知乎图标（Font Awesome 无此图标，用「知」字替代） */
+.fa-zhihu::before {
+  content: "知";
+  font-weight: bold;
+}
+
+/* 滚动条颜色（紫色系，替换默认蓝色） */
+:root {
+  --scrollbar-color: #a18cd1;
+}
+*::-webkit-scrollbar-thumb {
+  background: #a18cd1 !important;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #6b5b95 !important;
+}
+
+/* 微信/抖音二维码悬停显示 */
+.social-icon {
+  position: relative;
+}
+.social-icon:has(.fa-weixin):hover::after,
+.social-icon:has(.fa-tiktok):hover::after,
+.social-icon:has(.fa-qq):hover::after {
+  content: "";
+  position: absolute;
+  bottom: 45px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 150px;
+  background: #fff center / contain no-repeat;
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  pointer-events: none;
+}
+.social-icon:has(.fa-weixin):hover::after {
+  background-image: url("/img/wechat-qr.jpg");
+}
+.social-icon:has(.fa-tiktok):hover::after {
+  background-image: url("/img/douyin-qr.jpg");
+}
+.social-icon:has(.fa-qq):hover::after {
+  background-image: url("/img/qq-qr.png");
+}

@@ -1,0 +1,142 @@
+# ============================================================
+#  Butterfly 主题美化配置
+#  此文件与主题默认配置合并、优先级更高；改动后执行 hexo clean
+# ============================================================
+
+# ---------- 导航菜单 ----------
+menu:
+  首页: / || fas fa-home
+  归档: /archives/ || fas fa-archive
+  算法题: /categories/算法题/ || fas fa-code
+  标签: /tags/ || fas fa-tags
+  分类: /categories/ || fas fa-folder-open
+  关于: /about/ || fas fa-user
+
+# ---------- 头像（旋转动画） ----------
+avatar:
+  img: /img/avatar.png
+  effect: false
+
+# ---------- 站点图标与背景 ----------
+favicon: /img/avatar.png
+background: '#eef4fb'
+
+# ---------- 社交链接 ----------
+social:
+  fab fa-github: 'https://github.com/MuAn1228 || Github || #24292e'
+  fas fa-envelope: 'mailto:libohang1228@163.com || Email || #4a7dbe'
+  fab fa-qq: 'https://wpa.qq.com/msgrd?v=3&uin=1420482988&site=qq&menu=yes || QQ || #12B7F5'
+  fab fa-weixin: 'https://weixin.qq.com/ || 微信 lbh071031 || #07C160'
+  fab fa-zhihu: 'https://www.zhihu.com/people/tian-tian-19-45-51 || 知乎 || #0084FF'
+  fab fa-bilibili: 'https://space.bilibili.com/424086446 || B站 || #FB7299'
+  fab fa-tiktok: 'https://www.douyin.com/ || 抖音 lbh071031 || #25F4EE'
+
+# ---------- 个性化设置 ----------
+aside:
+  position: left
+  card_author:
+    description: gcc blissful_life.c -o blissful_life
+    button:
+      link: https://github.com/MuAn1228
+  card_announcement:
+    content: 👋 欢迎来到我的博客！记录技术、生活与二次元的一切。
+  card_webinfo:
+    runtime_date: '2026/08/15'
+
+footer:
+  owner:
+    since: 2026
+  custom_text: 记录技术，也记录生活
+
+# ---------- 首页副标题（打字机效果） ----------
+subtitle:
+  enable: true
+  effect: true
+  source: false
+  typed_option:
+    loop: true
+    typeSpeed: 100
+    backSpeed: 60
+  sub:
+    - 欢迎来到我的博客
+    - 记录技术，也记录生活
+    - 一个热爱代码与二次元的角落
+
+# ---------- 加载动画 ----------
+preloader:
+  enable: true
+  source: 1
+
+# ---------- 打字粒子特效 ----------
+activate_power_mode:
+  enable: true
+  colorful: true
+  shake: false
+  mobile: false
+
+# ---------- 背景粒子连线 ----------
+canvas_nest:
+  enable: false
+  color: '0,150,255'
+  opacity: 0.6
+  zIndex: -1
+  count: 99
+  mobile: false
+
+# ---------- 点击特效（粉色爱心 NH₄⁺ + 核心价值观文字） ----------
+fireworks:
+  enable: false
+  zIndex: 9999
+  mobile: false
+
+clickShowText:
+  enable: false
+
+# ---------- 图片灯箱与数学公式 ----------
+lightbox: fancybox
+
+math:
+  use: katex
+  per_page: true
+
+# ---------- 注入自定义特效 ----------
+inject:
+  head:
+    - '<link rel="stylesheet" href="/css/custom.css">'
+    - '<link rel="stylesheet" href="/lib/APlayer.min.css">'
+  bottom:
+    - '<script src="/js/sakura.js"></script>'
+    - '<script src="/js/cursor.js"></script>'
+    - '<script src="/js/click-effect.js"></script>'
+    - '<script src="/js/live2d.js"></script>'
+    - '<script src="/lib/APlayer.min.js"></script>'
+    - '<script src="/lib/Meting.min.js"></script>'
+    - '<meting-js server="netease" type="song" id="2085859568" fixed="true" mini="true" autoplay="false" preload="auto" theme="#49b1f5"></meting-js>'
+    - '<script src="/lib/three.min.js"></script>'
+    - '<script src="/lib/vanta.birds.min.js"></script>'
+    - '<script src="/js/vanta.js"></script>'
+    - '<script src="/lib/tagcanvas.min.js"></script>'
+    - '<script src="/js/tagcloud.js"></script>'
+    - '<script src="/js/typing.js"></script>'
+    - '<script src="/js/marquee.js"></script>'
+    - '<script src="/js/github-heatmap.js"></script>'
+
+# ---------- 评论系统（Giscus） ----------
+comments:
+  use:
+    - Giscus
+
+giscus:
+  repo: MuAn1228/MuAn1228.github.io
+  repo_id: R_kgDORtelHg
+  category_id: DIC_kwDORtelHs4DDYVx
+
+# ---------- 打赏（赞赏）已移到首页侧边栏，文章页关闭 ----------
+reward:
+  enable: false
+  text: 打赏
+  QR_code:
+    - img: /img/reward-wechat.png
+      text: 微信
+    - img: /img/reward-alipay.jpg
+      text: 支付宝

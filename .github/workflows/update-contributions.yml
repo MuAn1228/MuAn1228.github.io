@@ -1,0 +1,39 @@
+name: Update Contributions & Deploy
+
+on:
+  schedule:
+    - cron: '17 0 * * *'  # 每天 UTC 00:17（北京时间 08:17）
+  workflow_dispatch:       # 支持手动触发
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          ref: source
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Fetch GitHub contributions
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: python fetch_contributions.py
+
+      - name: Build
+        run: npx hexo generate
+
+      - name: Deploy to Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: main
+          force_orphan: true
