@@ -411,15 +411,24 @@ body.music-collapsed .music-toggle {
   background-image: url("/img/qq-qr.png");
 }
 
-/* ===== 旅行地图（中国省份可点击） ===== */
+/* ===== 旅行地图（卫星/地形风格，参考 qzq.at Space 的 footprint 图） ===== */
+.travel-map {
+  background: linear-gradient(165deg, #94b3f3 0%, #a5c6f0 45%, #b6d4ec 100%);
+  border-radius: 16px;
+  padding: 6px;
+  box-shadow: 0 8px 28px rgba(26, 26, 46, 0.18);
+}
 .travel-map svg {
   width: 100%;
   height: auto;
   display: block;
 }
 .travel-map .cn-province,
-.travel-map .cn-province path {
-  fill: #d3d3d3 !important;
+.travel-map .cn-province path,
+.travel-map .disputed path {
+  fill: #a9cfa0 !important;
+  stroke: #ffffff !important;
+  stroke-width: 1.2 !important;
   transition: fill .25s ease;
 }
 .travel-map .cn-province.visited,
