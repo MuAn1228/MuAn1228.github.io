@@ -5,14 +5,24 @@ on:
     - cron: '17 0 * * *'  # 每天 UTC 00:17（北京时间 08:17）
   workflow_dispatch:       # 支持手动触发
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout source
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: source
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -30,10 +40,14 @@ jobs:
       - name: Build
         run: npx hexo generate
 
-      - name: Deploy to Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
-          publish_branch: main
-          force_orphan: true
+          path: ./public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
