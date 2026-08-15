@@ -62,6 +62,10 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | `source/img/` | 头像、社交二维码（微信/抖音/QQ）、打赏二维码 |
 | `source/_data/widget.yml` | 自定义侧边栏卡片（GitHub 统计、热门文章、打赏） |
 | `source/_posts/算法题/` | 18 篇力扣算法笔记 |
+| `source/travel/index.md` | 旅行页（中国地图，点击省份跳转该省文章） |
+| `source/js/travel-map.js` | 旅行地图交互（SVG 加载、省份着色、hover 提示、点击跳转） |
+| `source/lib/china.svg` | 中国省份 SVG 地图（维基公有领域，自托管） |
+| `scripts/travel-data.js` | Hexo 生成器：扫描「旅行」分类文章生成 `/data/travel.json` |
 | `source/tags/ categories/ about/` | 标签 / 分类 / 关于页面 |
 | `fetch_contributions.py` | 抓取 GitHub 贡献数据的脚本（workflow 调用） |
 | `.github/workflows/update-contributions.yml` | GitHub Actions 部署 + 贡献抓取工作流 |
@@ -89,6 +93,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 - **GitHub 统计卡**：github-readme-stats（radical 主题）
 - **GitHub 热力图**：自渲染，紫色调，精确数据，每天自动更新
 - **算法笔记**：18 篇力扣题（算法题分类 + 导航菜单入口）
+- **旅行地图**：中国省份 SVG 地图（维基公有领域），已去过的省紫色高亮、可点击跳转该省文章；写旅行文章只需 front-matter 写 `categories: [旅行, 省份名]`（如 `[旅行, 四川]`），地图自动高亮该省
 - **头像/站点图标**、**关于/标签/分类** 页面、**博客运行天数**
 
 ---
@@ -124,6 +129,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | 打赏/热门文章/统计卡 | `source/_data/widget.yml` | 对应卡片 |
 | 作者简介/公告 | `_config.butterfly.yml` | `aside.card_author`、`card_announcement` |
 | 菜单栏 | `_config.butterfly.yml` | `menu` |
+| 旅行地图省份/颜色 | `source/js/travel-map.js` + `source/css/custom.css` | `PROVINCES` 映射、`.cn-province.visited` 紫色 |
 | 特效开关 | `_config.butterfly.yml` | `canvas_nest`、`fireworks`、`subtitle`、`preloader` 等 |
 
 ---
