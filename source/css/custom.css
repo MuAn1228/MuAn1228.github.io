@@ -426,7 +426,6 @@ body.music-collapsed .music-toggle {
 .travel-map .cn-province,
 .travel-map .cn-province path,
 .travel-map .disputed path {
-  fill: #a9cfa0 !important;
   stroke: #ffffff !important;
   stroke-width: 1.2 !important;
   transition: fill .25s ease;

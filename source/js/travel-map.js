@@ -15,6 +15,30 @@
     pXJ: '新疆', pXZ: '西藏', pYN: '云南', pZJ: '浙江'
   };
 
+  // 地形配色（卫星植被指数风格：西部干旱荒漠黄 → 东部温带绿 → 南部热带深绿）
+  var TERRAIN = {
+    // 干旱荒漠（西北）
+    pXJ: '#d9c98d', pGS: '#d0c088', pNX: '#cebd8a', pNM: '#c9c288',
+    // 青藏高原（棕褐色）
+    pQH: '#c7ba86', pXZ: '#c3b184',
+    // 黄土高原
+    pSN: '#cbbe82', pSX: '#c7bd86',
+    // 东北森林
+    pHJ: '#8cb26c', pJL: '#90b46e', pLN: '#94b672',
+    // 华北平原
+    pBJ: '#abc37a', pTJ: '#abc37a', pHE: '#a7c17a', pSD: '#a3c17c',
+    // 中原
+    pHA: '#9dbb78', pAH: '#91b970', pJS: '#95bb72', pSH: '#93b972',
+    // 长江中游 / 西南
+    pHB: '#8bb36c', pHN: '#81ad66', pCQ: '#87af6a', pSC: '#89b16c', pGZ: '#85af68',
+    // 华南亚热带 / 热带
+    pZJ: '#71ab60', pJX: '#75ad62', pFJ: '#69a75c', pGD: '#5f9f56',
+    pGX: '#5b9b52', pYN: '#6da75e', pHI: '#4d8f4a', pTW: '#53914e',
+    pHK: '#4d8b4a', pMO: '#4d8b4a',
+    // 争议地区（西部高原 / 荒漠）
+    AksaiChin: '#c8bc88', Kashmir: '#c4b684', SouthTibet: '#74ac62', pXJd: '#d9c98d', pXZd: '#c4b684'
+  };
+
   function init() {
     var mount = document.getElementById('travel-map');
     if (!mount) return;
@@ -47,10 +71,18 @@
           svg.removeAttribute('height');
         }
 
-        // 给每个省份元素加 class（path 或 g 两种结构）
+        // 给每个省份元素加 class + 地形色（path 或 g 两种结构）
         Object.keys(PROVINCES).forEach(function (code) {
           var el = mount.querySelector('#' + code);
-          if (el) el.classList.add('cn-province');
+          if (el) {
+            el.classList.add('cn-province');
+            if (TERRAIN[code]) el.style.fill = TERRAIN[code];
+          }
+        });
+        // 争议地区也上地形色
+        ['AksaiChin', 'Kashmir', 'SouthTibet', 'pXJd', 'pXZd'].forEach(function (id) {
+          var el = mount.querySelector('#' + id);
+          if (el && TERRAIN[id]) el.style.fill = TERRAIN[id];
         });
 
         // 读取已访问省份
