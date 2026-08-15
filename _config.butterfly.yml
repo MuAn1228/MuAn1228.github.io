@@ -122,6 +122,7 @@ inject:
     - '<script src="/js/marquee.js"></script>'
     - '<script src="/js/github-heatmap.js"></script>'
     - '<script src="/js/github-stats.js"></script>'
+    - '<script src="/lib/echarts.min.js"></script>'
     - '<script src="/js/travel-map.js"></script>'
     - '<script src="/js/music-toggle.js"></script>'
 

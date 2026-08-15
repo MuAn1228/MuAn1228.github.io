@@ -2,13 +2,6 @@
 title: 旅行
 ---
 
-> 走过的路，看过的风景。紫色标记的是我已经去过的省份，**点击省份**即可查看我在那里的旅行记录。
+> 走过的路，看过的风景。地图按真实植被/地形着色，**紫色高亮**的是我去过的省份，点击省份即可查看旅行记录。支持滚轮缩放、拖拽平移。
 
 <div id="travel-map" class="travel-map"></div>
-
-<style>
-  .travel-map {
-    margin: 12px 0;
-    text-align: center;
-  }
-</style>

@@ -411,52 +411,18 @@ body.music-collapsed .music-toggle {
   background-image: url("/img/qq-qr.png");
 }
 
-/* ===== 旅行地图（卫星/地形风格，参考 qzq.at Space 的 footprint 图） ===== */
+/* ===== 旅行地图（ECharts + 中国 GeoJSON，卫星植被渐变） ===== */
 .travel-map {
-  background: linear-gradient(165deg, #94b3f3 0%, #a5c6f0 45%, #b6d4ec 100%);
+  width: 100%;
+  height: 620px;
   border-radius: 16px;
-  padding: 6px;
+  overflow: hidden;
   box-shadow: 0 8px 28px rgba(26, 26, 46, 0.18);
 }
-.travel-map svg {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-.travel-map .cn-province,
-.travel-map .cn-province path,
-.travel-map .disputed path {
-  stroke: #ffffff !important;
-  stroke-width: 1.2 !important;
-  transition: fill .25s ease;
-}
-.travel-map .cn-province.visited,
-.travel-map .cn-province.visited path {
-  fill: #8e6bb5 !important;
-  cursor: pointer;
-}
-.travel-map .cn-province.visited:hover,
-.travel-map .cn-province.visited:hover path {
-  fill: #6b5b95 !important;
-}
-
-/* 旅行地图悬浮提示框 */
-.travel-tooltip {
-  position: fixed;
-  z-index: 10001;
-  padding: 4px 10px;
-  background: rgba(26, 26, 46, 0.88);
-  color: #fff;
-  font-size: 13px;
-  border-radius: 6px;
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity .2s ease, transform .2s ease;
-}
-.travel-tooltip.show {
-  opacity: 1;
-  transform: translateY(0);
+@media (max-width: 768px) {
+  .travel-map {
+    height: 460px;
+  }
 }
 
 /* ===== GitHub 统计卡（自渲染） ===== */

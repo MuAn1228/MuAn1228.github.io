@@ -1,119 +1,110 @@
-// ===== 旅行地图（中国省份可点击） =====
-// 仅在存在 #travel-map 的页面运行；点击已访问省份跳转到该省分类页 /categories/旅行/<省名>/
+// ===== 旅行地图（ECharts + 中国 GeoJSON，卫星植被渐变风格） =====
+// 仅在存在 #travel-map 的页面运行；点击已访问省份跳转到 /categories/旅行/<省名>/
 (function () {
-  var MAP_SVG = '/lib/china.svg';
+  var GEOJSON = '/lib/china.json';
   var DATA_JSON = '/data/travel.json';
   var CATEGORY = '旅行';
 
-  // 省份 id（pXX）→ 中文名。注意：此 SVG 用 pHJ 表示黑龙江（非标准 ISO 的 pHL）
-  var PROVINCES = {
-    pAH: '安徽', pBJ: '北京', pCQ: '重庆', pFJ: '福建', pGD: '广东', pGS: '甘肃',
-    pGX: '广西', pGZ: '贵州', pHA: '河南', pHB: '湖北', pHE: '河北', pHI: '海南',
-    pHJ: '黑龙江', pHK: '香港', pHN: '湖南', pJL: '吉林', pJS: '江苏', pJX: '江西',
-    pLN: '辽宁', pMO: '澳门', pNM: '内蒙古', pNX: '宁夏', pQH: '青海', pSC: '四川',
-    pSD: '山东', pSH: '上海', pSN: '陕西', pSX: '山西', pTJ: '天津', pTW: '台湾',
-    pXJ: '新疆', pXZ: '西藏', pYN: '云南', pZJ: '浙江'
-  };
+  // 全名 → 简称（GeoJSON 用全名，分类用简称）
+  function shortName(full) {
+    return full
+      .replace('壮族自治区', '').replace('回族自治区', '')
+      .replace('维吾尔自治区', '').replace('特别行政区', '')
+      .replace('自治区', '').replace('省', '').replace('市', '');
+  }
 
-  // 地形配色（卫星植被指数风格：西部干旱荒漠黄 → 东部温带绿 → 南部热带深绿）
-  var TERRAIN = {
-    // 干旱荒漠（西北）
-    pXJ: '#d9c98d', pGS: '#d0c088', pNX: '#cebd8a', pNM: '#c9c288',
-    // 青藏高原（棕褐色）
-    pQH: '#c7ba86', pXZ: '#c3b184',
-    // 黄土高原
-    pSN: '#cbbe82', pSX: '#c7bd86',
-    // 东北森林
-    pHJ: '#8cb26c', pJL: '#90b46e', pLN: '#94b672',
-    // 华北平原
-    pBJ: '#abc37a', pTJ: '#abc37a', pHE: '#a7c17a', pSD: '#a3c17c',
-    // 中原
-    pHA: '#9dbb78', pAH: '#91b970', pJS: '#95bb72', pSH: '#93b972',
-    // 长江中游 / 西南
-    pHB: '#8bb36c', pHN: '#81ad66', pCQ: '#87af6a', pSC: '#89b16c', pGZ: '#85af68',
-    // 华南亚热带 / 热带
-    pZJ: '#71ab60', pJX: '#75ad62', pFJ: '#69a75c', pGD: '#5f9f56',
-    pGX: '#5b9b52', pYN: '#6da75e', pHI: '#4d8f4a', pTW: '#53914e',
-    pHK: '#4d8b4a', pMO: '#4d8b4a',
-    // 争议地区（西部高原 / 荒漠）
-    AksaiChin: '#c8bc88', Kashmir: '#c4b684', SouthTibet: '#74ac62', pXJd: '#d9c98d', pXZd: '#c4b684'
+  // 植被/地形值（0-100，西部干旱低 → 南部热带高）
+  var TERRAIN_VALUE = {
+    '新疆维吾尔自治区': 8, '甘肃省': 12, '宁夏回族自治区': 18, '内蒙古自治区': 25,
+    '青海省': 18, '西藏自治区': 15, '陕西省': 30, '山西省': 32,
+    '黑龙江省': 62, '吉林省': 64, '辽宁省': 66,
+    '北京市': 55, '天津市': 55, '河北省': 52, '山东省': 54,
+    '河南省': 50, '安徽省': 56, '江苏省': 58, '上海市': 58,
+    '湖北省': 60, '湖南省': 62, '重庆市': 60, '四川省': 58, '贵州省': 64,
+    '浙江省': 68, '江西省': 66, '福建省': 70, '广东省': 74,
+    '广西壮族自治区': 72, '云南省': 70, '海南省': 82,
+    '台湾省': 74, '香港特别行政区': 80, '澳门特别行政区': 80
   };
 
   function init() {
     var mount = document.getElementById('travel-map');
     if (!mount) return;
+    if (typeof echarts === 'undefined') return;
 
-    // 悬浮提示框
-    var tip = document.createElement('div');
-    tip.className = 'travel-tooltip';
-    document.body.appendChild(tip);
-    function showTip(text, x, y) {
-      tip.textContent = text;
-      tip.classList.add('show');
-      var tw = tip.offsetWidth;
-      var left = x + 14;
-      if (left + tw > window.innerWidth - 8) left = x - tw - 14;
-      tip.style.left = left + 'px';
-      tip.style.top = (y + 16) + 'px';
-    }
-    function hideTip() { tip.classList.remove('show'); }
+    Promise.all([
+      fetch(GEOJSON).then(function (r) { return r.json(); }),
+      fetch(DATA_JSON).then(function (r) { return r.json(); }).catch(function () { return { visited: [], counts: {} }; })
+    ]).then(function (res) {
+      var geojson = res[0];
+      var data = res[1];
+      var counts = data.counts || {};
+      var visitedSet = {};
+      (data.visited || []).forEach(function (n) { visitedSet[n] = true; });
 
-    fetch(MAP_SVG)
-      .then(function (r) { return r.text(); })
-      .then(function (svgText) {
-        mount.innerHTML = svgText;
-        var svg = mount.querySelector('svg');
-        if (svg) {
-          var vw = svg.getAttribute('width') || '1000';
-          var vh = svg.getAttribute('height') || '850';
-          svg.setAttribute('viewBox', '0 0 ' + vw + ' ' + vh);
-          svg.removeAttribute('width');
-          svg.removeAttribute('height');
+      echarts.registerMap('china', geojson);
+
+      var mapData = geojson.features.map(function (f) {
+        var full = f.properties.name;
+        var short = shortName(full);
+        var v = TERRAIN_VALUE[full] != null ? TERRAIN_VALUE[full] : 50;
+        if (visitedSet[short]) {
+          return {
+            name: full, value: v, short: short,
+            itemStyle: { areaColor: '#a97fd4', shadowColor: 'rgba(169,127,212,0.85)', shadowBlur: 18 }
+          };
         }
-
-        // 给每个省份元素加 class + 地形色（path 或 g 两种结构）
-        Object.keys(PROVINCES).forEach(function (code) {
-          var el = mount.querySelector('#' + code);
-          if (el) {
-            el.classList.add('cn-province');
-            if (TERRAIN[code]) el.style.fill = TERRAIN[code];
-          }
-        });
-        // 争议地区也上地形色
-        ['AksaiChin', 'Kashmir', 'SouthTibet', 'pXJd', 'pXZd'].forEach(function (id) {
-          var el = mount.querySelector('#' + id);
-          if (el && TERRAIN[id]) el.style.fill = TERRAIN[id];
-        });
-
-        // 读取已访问省份
-        fetch(DATA_JSON)
-          .then(function (r) { return r.json(); })
-          .catch(function () { return { visited: [], counts: {} }; })
-          .then(function (data) {
-            var counts = data.counts || {};
-            Object.keys(PROVINCES).forEach(function (code) {
-              var name = PROVINCES[code];
-              var el = mount.querySelector('#' + code);
-              if (!el) return;
-              var count = counts[name] || 0;
-
-              if (count > 0) {
-                el.classList.add('visited');
-                el.addEventListener('click', function () {
-                  location.href = '/categories/' + encodeURIComponent(CATEGORY) + '/' + encodeURIComponent(name) + '/';
-                });
-              }
-
-              el.addEventListener('mousemove', function (e) {
-                showTip(count > 0 ? (name + ' · ' + count + ' 篇') : name, e.clientX, e.clientY);
-              });
-              el.addEventListener('mouseleave', hideTip);
-            });
-          });
-      })
-      .catch(function () {
-        mount.innerHTML = '<p style="text-align:center;color:#999;">地图加载失败，请刷新重试</p>';
+        return { name: full, value: v, short: short };
       });
+
+      var chart = echarts.init(mount);
+      chart.setOption({
+        backgroundColor: '#14242e',
+        tooltip: {
+          trigger: 'item',
+          backgroundColor: 'rgba(26, 26, 46, 0.92)',
+          borderColor: 'transparent',
+          textStyle: { color: '#fff', fontSize: 13 },
+          formatter: function (p) {
+            var short = p.data.short;
+            var c = counts[short] || 0;
+            return short + (c > 0 ? ' · ' + c + ' 篇' : ' · 未去过');
+          }
+        },
+        visualMap: {
+          show: false,
+          min: 0,
+          max: 100,
+          inRange: { color: ['#d4c08a', '#c0c47a', '#94b870', '#6aa45c', '#468a48'] }
+        },
+        series: [{
+          type: 'map',
+          map: 'china',
+          roam: true,
+          scaleLimit: { min: 0.8, max: 5 },
+          label: { show: false },
+          itemStyle: {
+            borderColor: '#3a4a56',
+            borderWidth: 1,
+            areaColor: '#94b870'
+          },
+          emphasis: {
+            itemStyle: { areaColor: '#c9a8e8', shadowColor: 'rgba(169,127,212,0.9)', shadowBlur: 24 },
+            label: { show: true, color: '#fff', fontSize: 12, fontWeight: 'bold' }
+          },
+          data: mapData
+        }]
+      });
+
+      chart.on('click', function (p) {
+        if (p.data && p.data.short && visitedSet[p.data.short]) {
+          location.href = '/categories/' + encodeURIComponent(CATEGORY) + '/' + encodeURIComponent(p.data.short) + '/';
+        }
+      });
+
+      window.addEventListener('resize', function () { chart.resize(); });
+    }).catch(function () {
+      mount.innerHTML = '<p style="text-align:center;color:#999;">地图加载失败，请刷新重试</p>';
+    });
   }
 
   if (document.readyState === 'loading') {
