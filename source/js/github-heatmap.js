@@ -1,7 +1,7 @@
 // ===== GitHub 贡献热力图（紫色调，数据源 source/data/contributions.json，与 GitHub 周结构一致） =====
 (function () {
   var API = '/data/contributions.json';
-  var PURPLE = ['#ebedf0', '#e0d4ef', '#b79ad6', '#8e6bb5', '#5c4a7d'];
+  var PURPLE = ['#ebedf0', '#c9b3e6', '#9d7cc2', '#6b5b95', '#3d3561'];
   var CELL = 10;
   var GAP = 3;
 

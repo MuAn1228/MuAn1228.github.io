@@ -80,7 +80,11 @@
 
     wrap.appendChild(btnLeft);
     wrap.appendChild(btnRight);
-    wrap.appendChild(track);
+
+    var viewport = document.createElement('div');
+    viewport.className = 'marquee-viewport';
+    viewport.appendChild(track);
+    wrap.appendChild(viewport);
     header.after(wrap);
 
     loop();

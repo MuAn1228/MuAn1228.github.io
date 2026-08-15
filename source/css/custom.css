@@ -28,7 +28,7 @@
 #waifu {
   left: auto !important;
   right: 0 !important;
-  transform: scale(0.3);
+  scale: 0.3;
   transform-origin: bottom right;
 }
 
@@ -48,9 +48,12 @@
 /* ===== 图片滚动展示墙 ===== */
 .marquee-wrap {
   position: relative;
+  width: 100%;
   max-width: 1200px;
   margin: 24px auto;
-  padding: 0 16px;
+  padding: 0 48px;
+}
+.marquee-viewport {
   overflow: hidden;
   -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
   mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
@@ -97,6 +100,17 @@
 }
 .marquee-btn-right {
   right: 0;
+}
+
+/* 移动端：缩小图片、适当收窄两侧按钮区 */
+@media (max-width: 768px) {
+  .marquee-wrap {
+    padding: 0 44px;
+  }
+  .marquee-track img {
+    width: 150px;
+    height: 98px;
+  }
 }
 
 /* ===== 图片灯箱（点击放大） ===== */
