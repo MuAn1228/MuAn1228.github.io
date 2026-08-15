@@ -124,6 +124,7 @@ inject:
     - '<script src="/js/github-stats.js"></script>'
     - '<script src="/lib/echarts.min.js"></script>'
     - '<script src="/js/travel-map.js"></script>'
+    - '<script src="/js/travel-globe.js"></script>'
     - '<script src="/js/music-toggle.js"></script>'
 
 # ---------- 评论系统（Giscus） ----------
