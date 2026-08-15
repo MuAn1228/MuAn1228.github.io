@@ -9,7 +9,7 @@
   var STEP = 260;           // 按钮点击滚动距离
   var RESUME_DELAY = 4000;  // 无操作 4 秒后恢复自动滚动
 
-  var track, offset = 0, playing = true, timer = null;
+  var track, offset = 0, playing = true, timer = null, transitionTimer = null, halfW = 0;
 
   // 灯箱（点击放大）
   var overlay = document.createElement('div');
@@ -21,13 +21,11 @@
   overlay.addEventListener('click', closeLightbox);
   overlay.querySelector('.lightbox-close').addEventListener('click', function (e) { e.stopPropagation(); closeLightbox(); });
 
-  function halfWidth() { return track.scrollWidth / 2; }
-
   function loop() {
     if (playing) {
       offset -= SPEED;
-      if (-offset >= halfWidth()) offset += halfWidth();
-      track.style.transform = 'translateX(' + offset + 'px)';
+      if (-offset >= halfW) offset += halfW;
+      track.style.transform = 'translate3d(' + offset + 'px, 0, 0)';
     }
     requestAnimationFrame(loop);
   }
@@ -35,11 +33,12 @@
   function manual(dir) {
     playing = false;
     offset += dir * STEP;
-    if (offset > 0) offset -= halfWidth();
-    if (-offset >= halfWidth()) offset += halfWidth();
-    track.style.transition = 'transform 0.4s ease';
-    track.style.transform = 'translateX(' + offset + 'px)';
-    setTimeout(function () { track.style.transition = 'none'; }, 400);
+    if (offset > 0) offset -= halfW;
+    if (-offset >= halfW) offset += halfW;
+    track.style.transition = 'transform 0.4s cubic-bezier(.25, .1, .25, 1)';
+    track.style.transform = 'translate3d(' + offset + 'px, 0, 0)';
+    clearTimeout(transitionTimer);
+    transitionTimer = setTimeout(function () { track.style.transition = 'none'; }, 420);
     clearTimeout(timer);
     timer = setTimeout(function () { playing = true; }, RESUME_DELAY);
   }
@@ -86,6 +85,7 @@
     viewport.appendChild(track);
     wrap.appendChild(viewport);
     header.after(wrap);
+    halfW = track.scrollWidth / 2; // 缓存半宽，避免每帧读取 scrollWidth 触发 reflow（需在 DOM 插入后读取）
 
     loop();
   }
