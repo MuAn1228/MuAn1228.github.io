@@ -17,7 +17,7 @@
 | 仓库 | `MuAn1228.github.io`（已公开，SSH 已配好） |
 | 线上地址 | https://MuAn1228.github.io/ |
 | 邮箱 | libohang1228@163.com |
-| 分支 | `main` = 博客源码（默认分支）；`source` = 备份分支 |
+| 分支 | **部署分支 = `main`**（GitHub 默认分支，workflow 从 main 构建部署）；`source` = 备份；⚠️ 本地 checkout 在 `source`，提交后 `git push origin source:main` |
 
 > ⚠️ **部署架构已从 `hexo d` 改成 GitHub Actions**（Pages artifact 部署）。`main` 分支现在是**源码**（不是部署产物），网站由 workflow 构建部署。
 
@@ -31,7 +31,7 @@ hexo new "文章标题"               # 新建文章 → source/_posts/xxx.md
 hexo s                           # 本地预览 → http://localhost:4000
 
 # 部署（改内容后）：
-git add -A && git commit -m "改动说明" && git push origin main
+git add -A && git commit -m "改动说明" && git push origin source:main
 # 然后去 GitHub Actions 手动触发「Update Contributions & Deploy」，或等每天 08:17 自动跑
 ```
 
@@ -130,7 +130,7 @@ git add -A && git commit -m "改动说明" && git push origin main
 
 ## 七、坑与注意事项（重要！）
 
-1. **部署架构改了**：现在用 GitHub Actions（Pages artifact），**不要再用 `hexo d`**（会把 main 分支覆盖成 public/，破坏源码）。改内容后 `git push origin main` + 触发 workflow。
+1. **部署架构改了**：现在用 GitHub Actions（Pages artifact），**不要再用 `hexo d`**（会把 main 分支覆盖成 public/，破坏源码）。改内容后 `git push origin source:main` + 触发 workflow。
 
 2. **GitHub Actions workflow 必须在默认分支（main）**：放别的分支不会出现在 Actions UI，schedule 也不会跑（曾踩坑）。
 
