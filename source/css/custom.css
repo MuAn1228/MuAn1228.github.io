@@ -411,13 +411,22 @@ body.music-collapsed .music-toggle {
   background-image: url("/img/qq-qr.png");
 }
 
-/* ===== 旅行地图（ECharts + 世界 GeoJSON，气象图风格） ===== */
+/* ===== 旅行地图（Leaflet 卫星影像 + 周边国家灰色） ===== */
 .travel-map {
   width: 100%;
   height: 620px;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 8px 28px rgba(26, 26, 46, 0.18);
+}
+
+/* 已访问省份：发光 + 呼吸动画 */
+.travel-map .province-visited {
+  animation: province-glow 2.4s ease-in-out infinite;
+}
+@keyframes province-glow {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(142, 107, 181, 0.55)); }
+  50% { filter: drop-shadow(0 0 14px rgba(142, 107, 181, 1)); }
 }
 @media (max-width: 768px) {
   .travel-map {

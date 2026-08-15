@@ -1,7 +1,6 @@
-// ===== 旅行地图（Leaflet + 卫星影像底图 + 中国省份半透明叠加） =====
-// 真实卫星云图感：底图是卫星影像，省份边界半透明叠加，已访问省份紫色高亮
+// ===== 旅行地图（Leaflet + 卫星影像底图，中国卫星图 + 周边国家灰色，已访问省份发光动画） =====
 (function () {
-  var GEOJSON = '/lib/china.json';
+  var GEOJSON = '/lib/china-world.json';
   var DATA_JSON = '/data/travel.json';
   var CATEGORY = '旅行';
 
@@ -20,11 +19,12 @@
     var map = L.map(mount, {
       center: [35, 105],
       zoom: 4,
-      minZoom: 3,
+      minZoom: 1,
       maxZoom: 10,
       zoomControl: true,
       attributionControl: false,
-      scrollWheelZoom: true
+      scrollWheelZoom: true,
+      worldCopyJump: true
     });
 
     // 卫星影像底图（高德卫星）
@@ -46,25 +46,34 @@
 
       L.geoJSON(geojson, {
         style: function (feature) {
-          var short = shortName((feature.properties && feature.properties.name) || '');
-          var visited = visitedSet[short];
-          return {
-            color: visited ? '#b08fd9' : 'rgba(255,255,255,0.55)',
-            weight: visited ? 2 : 1,
-            fillColor: visited ? '#8e6bb5' : 'transparent',
-            fillOpacity: visited ? 0.4 : 0,
-            opacity: visited ? 0.95 : 0.5
-          };
+          var props = feature.properties || {};
+          var isChina = props.isChina;
+          var short = shortName(props.name || '');
+          var visited = isChina && visitedSet[short];
+
+          if (!isChina) {
+            // 周边国家：灰色（干净，ECharts 风格）
+            return { color: '#d5d5d5', weight: 1, fillColor: '#e9e9e9', fillOpacity: 1 };
+          }
+          if (visited) {
+            // 已访问省份：紫色（较深）+ 发光
+            return { color: '#b08fd9', weight: 2, fillColor: '#8e6bb5', fillOpacity: 0.55 };
+          }
+          // 未访问省份：透明（卫星图透出）+ 淡白边界
+          return { color: 'rgba(255,255,255,0.5)', weight: 0.8, fillColor: 'transparent', fillOpacity: 0 };
         },
         onEachFeature: function (feature, layer) {
-          var short = shortName((feature.properties && feature.properties.name) || '');
-          if (visitedSet[short]) {
+          var props = feature.properties || {};
+          var short = shortName(props.name || '');
+          var visited = props.isChina && visitedSet[short];
+          if (visited) {
             layer.bindTooltip(short + (counts[short] > 1 ? ' · ' + counts[short] + ' 篇' : ''), { sticky: true });
             layer.on('click', function () {
               location.href = '/categories/' + encodeURIComponent(CATEGORY) + '/' + encodeURIComponent(short) + '/';
             });
-            layer.on('mouseover', function () { layer.setStyle({ fillOpacity: 0.55 }); });
-            layer.on('mouseout', function () { layer.setStyle({ fillOpacity: 0.4 }); });
+            layer.on('add', function () {
+              if (layer._path) layer._path.classList.add('province-visited');
+            });
           }
         }
       }).addTo(map);
