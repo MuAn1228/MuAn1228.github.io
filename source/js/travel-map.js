@@ -1,11 +1,9 @@
-// ===== 旅行地图（ECharts + 中国 GeoJSON，卫星植被渐变风格） =====
-// 仅在存在 #travel-map 的页面运行；点击已访问省份跳转到 /categories/旅行/<省名>/
+// ===== 旅行地图（ECharts + 世界 GeoJSON，中国省份可点击 + 周边国家，气象图风格） =====
 (function () {
-  var GEOJSON = '/lib/china.json';
+  var GEOJSON = '/lib/china-world.json';
   var DATA_JSON = '/data/travel.json';
   var CATEGORY = '旅行';
 
-  // 全名 → 简称（GeoJSON 用全名，分类用简称）
   function shortName(full) {
     return full
       .replace('壮族自治区', '').replace('回族自治区', '')
@@ -13,7 +11,7 @@
       .replace('自治区', '').replace('省', '').replace('市', '');
   }
 
-  // 植被/地形值（0-100，西部干旱低 → 南部热带高）
+  // 植被/地形值（0-100）
   var TERRAIN_VALUE = {
     '新疆维吾尔自治区': 8, '甘肃省': 12, '宁夏回族自治区': 18, '内蒙古自治区': 25,
     '青海省': 18, '西藏自治区': 15, '陕西省': 30, '山西省': 32,
@@ -41,57 +39,79 @@
       var visitedSet = {};
       (data.visited || []).forEach(function (n) { visitedSet[n] = true; });
 
-      echarts.registerMap('china', geojson);
+      echarts.registerMap('china-world', geojson);
 
-      var mapData = geojson.features.map(function (f) {
-        var full = f.properties.name;
+      // 中国省份数据（带 value 走渐变；已访问紫色）
+      var chinaData = [];
+      geojson.features.forEach(function (f) {
+        var props = f.properties || {};
+        if (!props.isChina) return;
+        var full = props.name || '';
         var short = shortName(full);
+        if (!short) return; // 跳过十段线（无名字）
         var v = TERRAIN_VALUE[full] != null ? TERRAIN_VALUE[full] : 50;
         if (visitedSet[short]) {
-          return {
+          chinaData.push({
             name: full, value: v, short: short,
-            itemStyle: { areaColor: '#a97fd4', shadowColor: 'rgba(169,127,212,0.85)', shadowBlur: 18 }
-          };
+            itemStyle: { areaColor: '#a97fd4', shadowColor: 'rgba(169,127,212,0.85)', shadowBlur: 16 }
+          });
+        } else {
+          chinaData.push({ name: full, value: v, short: short });
         }
-        return { name: full, value: v, short: short };
       });
 
       var chart = echarts.init(mount);
       chart.setOption({
-        backgroundColor: '#14242e',
+        backgroundColor: '#a9c6e8',
         tooltip: {
           trigger: 'item',
-          backgroundColor: 'rgba(26, 26, 46, 0.92)',
+          backgroundColor: 'rgba(26,26,46,0.92)',
           borderColor: 'transparent',
           textStyle: { color: '#fff', fontSize: 13 },
           formatter: function (p) {
-            var short = p.data.short;
-            var c = counts[short] || 0;
-            return short + (c > 0 ? ' · ' + c + ' 篇' : ' · 未去过');
+            if (p.data && p.data.short) {
+              var c = counts[p.data.short] || 0;
+              return p.data.short + (c > 0 ? ' · ' + c + ' 篇' : ' · 未去过');
+            }
+            return p.name || '';
           }
         },
         visualMap: {
           show: false,
           min: 0,
           max: 100,
-          inRange: { color: ['#d4c08a', '#c0c47a', '#94b870', '#6aa45c', '#468a48'] }
+          seriesIndex: 0,
+          inRange: { color: ['#d9c98d', '#c9c288', '#b0c486', '#86b06a', '#5c9c50', '#3d7a40'] }
+        },
+        geo: {
+          map: 'china-world',
+          center: [105, 35],
+          zoom: 1.8,
+          roam: true,
+          scaleLimit: { min: 1, max: 8 },
+          label: { show: false },
+          itemStyle: {
+            areaColor: '#e6e6e6',
+            borderColor: '#ffffff',
+            borderWidth: 1
+          },
+          emphasis: {
+            label: { show: true, color: '#555', fontSize: 11 },
+            itemStyle: { areaColor: '#d8d8d8' }
+          }
         },
         series: [{
           type: 'map',
-          map: 'china',
-          roam: true,
-          scaleLimit: { min: 0.8, max: 5 },
-          label: { show: false },
+          geoIndex: 0,
+          data: chinaData,
           itemStyle: {
-            borderColor: '#3a4a56',
-            borderWidth: 1,
-            areaColor: '#94b870'
+            borderColor: '#ffffff',
+            borderWidth: 1
           },
           emphasis: {
-            itemStyle: { areaColor: '#c9a8e8', shadowColor: 'rgba(169,127,212,0.9)', shadowBlur: 24 },
-            label: { show: true, color: '#fff', fontSize: 12, fontWeight: 'bold' }
-          },
-          data: mapData
+            label: { show: true, color: '#333', fontSize: 11, fontWeight: 'bold' },
+            itemStyle: { areaColor: '#c9a8e8', shadowColor: 'rgba(169,127,212,0.9)', shadowBlur: 20 }
+          }
         }]
       });
 
