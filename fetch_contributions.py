@@ -12,7 +12,7 @@ query {
     contributionsCollection {
       contributionCalendar {
         totalContributions
-        weeks { contributionDays { date contributionCount } }
+        weeks { contributionDays { date contributionCount color } }
       }
     }
   }
@@ -39,9 +39,7 @@ weeks = []
 for w in cal["weeks"]:
     days = []
     for d in w["contributionDays"]:
-        c = d["contributionCount"]
-        level = 0 if c == 0 else 1 if c < 10 else 2 if c < 20 else 3 if c < 30 else 4
-        days.append({"date": d["date"], "count": c, "level": level})
+        days.append({"date": d["date"], "count": d["contributionCount"], "color": d["color"]})
     weeks.append({"days": days})
 
 os.makedirs("source/data", exist_ok=True)

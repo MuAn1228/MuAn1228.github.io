@@ -1,7 +1,7 @@
-// ===== GitHub 贡献热力图（自渲染，数据源 source/data/contributions.json，与 GitHub 周结构一致） =====
+// ===== GitHub 贡献热力图（直接用 GitHub 返回的精确颜色，与 profile 完全一致） =====
 (function () {
   var API = '/data/contributions.json';
-  var COLORS = ['#ebedf0', '#d9c6ec', '#b79ad6', '#8e6bb5', '#5c4a7d'];
+  var LEGEND = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
   var CELL = 10;
   var GAP = 3;
 
@@ -35,7 +35,7 @@
       for (var wi = 0; wi < weeks.length; wi++) {
         var day = weeks[wi].days && weeks[wi].days[row];
         if (day) {
-          var color = COLORS[day.level] || COLORS[0];
+          var color = day.color || '#ebedf0';
           var t = day.date + '：' + day.count + ' 次提交';
           html += '<span class="gh-cell" style="background:' + color + ';" title="' + t + '"></span>';
         } else {
@@ -47,7 +47,7 @@
     html += '</div>';
 
     html += '<div class="gh-legend"><span>少</span>';
-    COLORS.forEach(function (c) {
+    LEGEND.forEach(function (c) {
       html += '<span class="gh-cell" style="background:' + c + ';"></span>';
     });
     html += '<span>多</span></div>';
