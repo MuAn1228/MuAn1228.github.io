@@ -105,6 +105,7 @@ inject:
   head:
     - '<link rel="stylesheet" href="/css/custom.css">'
     - '<link rel="stylesheet" href="/lib/APlayer.min.css">'
+    - '<link rel="stylesheet" href="/lib/leaflet/leaflet.css">'
   bottom:
     - '<script src="/js/sakura.js"></script>'
     - '<script src="/js/cursor.js"></script>'
@@ -122,7 +123,7 @@ inject:
     - '<script src="/js/marquee.js"></script>'
     - '<script src="/js/github-heatmap.js"></script>'
     - '<script src="/js/github-stats.js"></script>'
-    - '<script src="/lib/echarts.min.js"></script>'
+    - '<script src="/lib/leaflet/leaflet.js"></script>'
     - '<script src="/js/travel-map.js"></script>'
     - '<script src="/js/music-toggle.js"></script>'
 
