@@ -420,13 +420,17 @@ body.music-collapsed .music-toggle {
   box-shadow: 0 8px 28px rgba(26, 26, 46, 0.18);
 }
 
-/* 已访问省份：发光 + 呼吸动画 */
+/* 已访问省份：发光描边 + 强光晕呼吸动画 */
 .travel-map .province-visited {
-  animation: province-glow 2.4s ease-in-out infinite;
+  animation: province-glow 2s ease-in-out infinite;
 }
 @keyframes province-glow {
-  0%, 100% { filter: drop-shadow(0 0 3px rgba(142, 107, 181, 0.55)); }
-  50% { filter: drop-shadow(0 0 14px rgba(142, 107, 181, 1)); }
+  0%, 100% {
+    filter: drop-shadow(0 0 5px rgba(155, 107, 208, 0.75)) drop-shadow(0 0 2px rgba(224, 196, 255, 0.9));
+  }
+  50% {
+    filter: drop-shadow(0 0 22px rgba(155, 107, 208, 1)) drop-shadow(0 0 6px rgba(224, 196, 255, 1));
+  }
 }
 @media (max-width: 768px) {
   .travel-map {

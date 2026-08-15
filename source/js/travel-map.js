@@ -1,8 +1,9 @@
-// ===== 旅行地图（高德标准地图底图 + 已访问省份紫色高亮） =====
+// ===== 旅行地图（高德卫星影像底图 + 已访问省份发光高亮） =====
 (function () {
   var GEOJSON = '/lib/china.json';
   var DATA_JSON = '/data/travel.json';
   var CATEGORY = '旅行';
+  var SAT_URL = 'https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}';
 
   function shortName(full) {
     return full
@@ -16,7 +17,6 @@
     if (!mount) return;
     if (typeof L === 'undefined') return;
 
-    // 单张世界地图，禁止跨日期线重复，禁止无限横向滑动
     var map = L.map(mount, {
       center: [34, 104],
       zoom: 4,
@@ -30,8 +30,8 @@
       maxBoundsViscosity: 0.8
     });
 
-    // 卫星影像底图（高德卫星，气象云图感）
-    L.tileLayer('https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}', {
+    // 卫星影像底图（高德卫星）
+    L.tileLayer(SAT_URL, {
       subdomains: ['1', '2', '3', '4'],
       maxZoom: 10,
       tileSize: 256
@@ -50,10 +50,10 @@
       L.geoJSON(geojson, {
         filter: function (feature) {
           var short = shortName((feature.properties && feature.properties.name) || '');
-          return visitedSet[short]; // 只渲染已访问省份
+          return visitedSet[short];
         },
         style: function () {
-          return { color: '#b08fd9', weight: 1.5, fillColor: '#8e6bb5', fillOpacity: 0.5 };
+          return { color: '#e0c4ff', weight: 2.5, fillColor: '#9b6bd0', fillOpacity: 0.55 };
         },
         onEachFeature: function (feature, layer) {
           var short = shortName((feature.properties && feature.properties.name) || '');
