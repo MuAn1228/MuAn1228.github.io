@@ -297,6 +297,8 @@
 /* 滚动条颜色（紫色系，替换默认蓝色） */
 :root {
   --scrollbar-color: #a18cd1;
+  --btn-bg: #8e6bb5;
+  --btn-hover-color: #5c4a7d;
 }
 *::-webkit-scrollbar-thumb {
   background: #a18cd1 !important;
