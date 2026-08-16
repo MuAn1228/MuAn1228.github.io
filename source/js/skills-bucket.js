@@ -77,13 +77,13 @@
       var rightWall = Bodies.rectangle(W + WALL / 2, H / 2, WALL, H * 2, { isStatic: true });
       Composite.add(engine.world, [ground, leftWall, rightWall]);
 
-      // 高尔顿板钉子：中间的小圆圈，图标下落时碰撞弹跳
-      var PEG_R = 8;
+      // 高尔顿板钉子（标准布局：间距足够让图标通过，不会卡住）
+      var PEG_R = 7;
       pegs = [];
       for (var row = 0; row < 4; row++) {
-        var py = 85 + row * 75;
-        var startX = (row % 2 === 0) ? 40 : 85;
-        for (var px = startX; px < W - 20; px += 90) {
+        var py = 80 + row * 80;
+        var startX = (row % 2 === 0) ? 55 : 105;
+        for (var px = startX; px < W - 40; px += 100) {
           pegs.push(Bodies.circle(px, py, PEG_R, { isStatic: true }));
         }
       }
@@ -98,13 +98,15 @@
         // 钉子（高尔顿板圆圈）
         pegs.forEach(function (peg) {
           ctx.beginPath();
-          ctx.arc(peg.position.x, peg.position.y, 8, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(0,0,0,0.15)';
+          ctx.arc(peg.position.x, peg.position.y, 7, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0,0,0,0.18)';
           ctx.fill();
         });
-        // 桶底
-        ctx.fillStyle = 'rgba(0,0,0,0.08)';
-        ctx.fillRect(0, H - 10, W, 10);
+        // 桶（可见容器：左壁 + 右壁 + 底部）
+        ctx.fillStyle = 'rgba(0,0,0,0.14)';
+        ctx.fillRect(0, 0, 10, H);
+        ctx.fillRect(W - 10, 0, 10, H);
+        ctx.fillRect(0, H - 16, W, 16);
         bodies.forEach(function (b) {
           var x = b.position.x, y = b.position.y, r = b.circleRadius;
           var img = images[b.tech.slug];
