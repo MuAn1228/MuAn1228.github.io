@@ -137,7 +137,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | 社交图标 | `_config.butterfly.yml` | `social` |
 | 打赏/热门文章/统计卡 | `source/_data/widget.yml` | 对应卡片 |
 | 作者简介/公告 | `_config.butterfly.yml` | `aside.card_author`、`card_announcement` |
-| 菜单栏 | `_config.butterfly.yml` | `menu`（当前：首页/算法题/旅行/展示/娱乐▾/分类/关于；已去掉「归档」「标签」入口——标签靠首页 3D 标签云展示，分类是唯一浏览入口） |
+| 菜单栏 | `_config.butterfly.yml` | `menu`（当前：首页/旅行/展示/娱乐▾/分类/关于；已去掉「归档」「标签」「算法题」顶级入口——「分类」是唯一浏览入口，算法题/旅行等都在其下作子集） |
 | 旅行地图省份/颜色 | `source/js/travel-map.js` + `source/css/custom.css` | `PROVINCES` 映射、`.cn-province.visited` 紫色 |
 | 特效开关 | `_config.butterfly.yml` | `canvas_nest`、`fireworks`、`subtitle`、`preloader` 等 |
 
