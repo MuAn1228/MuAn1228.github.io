@@ -50,6 +50,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | `source/js/cursor.js` | 光标跟随光晕（渐变圆点 + 光环） |
 | `source/js/click-effect.js` | 点击特效（爱心爆炸 + NH₄⁺ + 核心价值观光影文字） |
 | `source/js/vanta.js` | Vanta 飞鸟背景（首页横幅） |
+| `source/js/hero-3d.js` | 首页变形环面结（3D 拓扑结构，紫色发光 + 顶点波浪形变 + 鼠标视差） |
 | `source/js/live2d.js` | 看板娘（自托管模型，只保留 Pio/Tia） |
 | `source/js/tagcloud.js` | 3D 标签云（TagCanvas） |
 | `source/js/marquee.js` | 图片滚动墙（左右按钮 + 点击放大） |
@@ -191,3 +192,5 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 - **国内可用的无防盗链图源**：萌娘共享 `storage.moegirl.org.cn`、17173 `i.17173cdn.com`、苹果 App Store 图标（iTunes API `itunes.apple.com/search?term=…&country=us` → `artworkUrl512`，CDN `is1-ssl.mzstatic.com`）、网易云封面 `p*.music.126.net`。维基百科 `upload.wikimedia.org` 被墙（DNS 污染）、4399/百度百科有防盗链。
 - **网易云 API**（拿歌 ID/歌单）：搜索 `music.163.com/api/cloudsearch/pc?s=歌名&type=1&limit=1`；用户歌单列表 `music.163.com/api/user/playlist?uid=xxx`；单曲外链 `music.163.com/song/media/outer/url?id=X.mp3`（VIP 歌会返回 HTML，见「坑」第 6 条）。
 - **看板娘模型自托管**：从 fghrsh/live2d_api 只下载了 Pio/Tia 的核心文件（index.json、model.moc、默认贴图、motions），model_list.json 精简为两个模型。
+- **⚠️ three.js 是旧版**（`REVISION="121"`，自托管 `source/lib/three.min.js`）：`TorusKnotGeometry` 等返回的是**旧 Geometry**（顶点在 `vertices` 数组，不是新版的 `attributes.position`）。做顶点变形要用 `geometry.vertices`（Vector3 数组）+ `geometry.verticesNeedUpdate = true`，别用 `geometry.attributes`（会报 `Cannot read properties of undefined`）。
+- **移动端布局**：首页（`#body-wrap:has(#recent-posts)`）简介在上；内页正文在上、侧边栏沉底（`custom.css` 里 `order: -1` 只作用于首页）。移动端提速：Vanta 飞鸟 `window.innerWidth <= 768` 跳过渲染，three/vanta 脚本加 `defer` 异步加载。
