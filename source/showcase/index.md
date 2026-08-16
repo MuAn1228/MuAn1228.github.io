@@ -4,7 +4,8 @@ title: 展示
 
 <div class="showcase">
 
-<h1 class="showcase-name">李博航</h1>
+<img class="showcase-avatar" src="/img/avatar.png" alt="Li Bohang">
+<h1 class="showcase-name">Li Bohang</h1>
 <p class="showcase-sub">浙江理工大学 · 智能科学与技术 · 本科学生</p>
 
 <section class="showcase-sec">
@@ -17,6 +18,21 @@ title: 展示
 <p>我喜欢游戏，玩过的不下 200 款；会滑轮滑，做简单的健身；试过口琴，学过蛙泳；如今正迷上摄影，只是还没拥有第一台正式相机。</p>
 
 <p>现在我在杭州就读计算机专业。虽没做出什么实质成果，但仅仅是生活在杭州这一点，已经让我很幸福。我的理想，是和爱的人在杭州度过余生，创作出更有价值的作品；我的梦想，是去中国科学院大学计算所攻读人工智能——虽然难，但仅仅是梦想。</p>
+</section>
+
+<section class="showcase-sec">
+<h2>摄影</h2>
+
+<p class="showcase-muted">正在入门，还没拥有第一台正式相机。下面是一些我喜欢的照片。</p>
+
+<div class="showcase-photos">
+<img src="/img/blog/img01.jpg" alt="照片">
+<img src="/img/blog/img06.jpg" alt="照片">
+<img src="/img/blog/img11.jpg" alt="照片">
+<img src="/img/blog/img16.jpg" alt="照片">
+<img src="/img/blog/img21.jpg" alt="照片">
+<img src="/img/blog/img26.jpg" alt="照片">
+</div>
 </section>
 
 <section class="showcase-sec">
