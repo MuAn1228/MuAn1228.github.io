@@ -53,7 +53,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | `source/js/live2d.js` | 看板娘（自托管模型，只保留 Pio/Tia） |
 | `source/js/tagcloud.js` | 3D 标签云（TagCanvas） |
 | `source/js/marquee.js` | 图片滚动墙（左右按钮 + 点击放大） |
-| `source/js/music-playlist.js` | 音乐播放列表（52 首网易云静态歌单） |
+| `source/js/music-playlist.js` | 音乐播放列表（49 首网易云静态歌单） |
 | `source/js/github-heatmap.js` | GitHub 热力图（自渲染，紫色调） |
 | `source/js/typing.js` | 简介打字机效果 |
 | `source/lib/` | 本地自托管库：APlayer、Meting、three.js、vanta、tagcanvas |
@@ -67,9 +67,9 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | `source/data/games.json` `movies.json` | 游戏/电影列表数据（name/sub/img） |
 | `source/img/games/` | 游戏海报（20 款，game01-20.jpg，600×900 竖版） |
 | `source/js/media-grid.js` | 电影/游戏网格渲染（读取 `/data/*.json`） |
-| `source/data/music.json` | 音乐页歌单（title/author/cover，52 首） |
+| `source/data/music.json` | 音乐页歌单（title/author/cover，49 首） |
 | `source/js/music-grid.js` | 音乐网格渲染（音乐页） |
-| `source/js/music-playlist.js` | 音乐播放器歌单（52 首，运行时 Meting API 解析 URL） |
+| `source/js/music-playlist.js` | 音乐播放器歌单（49 首，运行时 Meting API 解析 URL） |
 | `source/travel/index.md` | 旅行页（中国地图，点击省份跳转该省文章） |
 | `source/js/travel-map.js` | 旅行地图交互（SVG 加载、省份着色、hover 提示、点击跳转） |
 | `source/lib/china.svg` | 中国省份 SVG 地图（维基公有领域，自托管） |
@@ -111,7 +111,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 
 | 项 | 值 |
 |----|----|
-| 音乐播放器 | 52 首歌单（`source/js/music-playlist.js`，运行时 Meting API 解析 URL，VIP 歌给 30s 试听）；改歌单改这里 |
+| 音乐播放器 | 49 首歌单（`source/js/music-playlist.js`，运行时 Meting API 解析 URL，VIP 歌给 30s 试听）；改歌单改这里 |
 | Giscus repo | `MuAn1228/MuAn1228.github.io` |
 | Giscus repo_id | `R_kgDORtelHg` |
 | Giscus category_id | `DIC_kwDORtelHs4DDYVx` |
