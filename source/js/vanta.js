@@ -1,6 +1,7 @@
 // ===== Vanta.js 飞鸟动态背景（仅首页横幅） =====
 (function () {
   if (!window.VANTA || !window.THREE) return;
+  if (window.innerWidth <= 768) return; // 移动端跳过 3D 渲染，省性能
   var el = document.querySelector('#page-header.full_page');
   if (!el) return;
   VANTA.BIRDS({

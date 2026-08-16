@@ -53,6 +53,12 @@
   overflow-y: auto !important;
 }
 
+/* 首页 hero：标题和下滑按钮在粒子星云之上 */
+#page-header.full_page #site-info,
+#page-header.full_page #scroll-down {
+  z-index: 2;
+}
+
 /* 音乐折叠开关 */
 .music-toggle {
   position: fixed;
@@ -100,9 +106,9 @@ body.music-collapsed .music-toggle {
   }
 }
 
-/* 手机端：个人介绍等模块在上，文章在下 */
+/* 手机端：首页（有文章列表）个人简介等模块在上；内页（旅行/展示/娱乐/分类/关于等）正文在上、侧边栏在下 */
 @media (max-width: 768px) {
-  #content-inner #aside-content {
+  #body-wrap:has(#recent-posts) #content-inner #aside-content {
     order: -1;
   }
 }
