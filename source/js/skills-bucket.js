@@ -49,7 +49,7 @@
       images[t.slug] = img;
     });
 
-    var engine, bodies, started = false;
+    var engine, bodies, pegs = [], started = false;
 
     function ready() {
       if ('IntersectionObserver' in window) {
@@ -76,12 +76,33 @@
       var leftWall = Bodies.rectangle(-WALL / 2, H / 2, WALL, H * 2, { isStatic: true });
       var rightWall = Bodies.rectangle(W + WALL / 2, H / 2, WALL, H * 2, { isStatic: true });
       Composite.add(engine.world, [ground, leftWall, rightWall]);
+
+      // 高尔顿板钉子：中间的小圆圈，图标下落时碰撞弹跳
+      var PEG_R = 8;
+      pegs = [];
+      for (var row = 0; row < 4; row++) {
+        var py = 85 + row * 75;
+        var startX = (row % 2 === 0) ? 40 : 85;
+        for (var px = startX; px < W - 20; px += 90) {
+          pegs.push(Bodies.circle(px, py, PEG_R, { isStatic: true }));
+        }
+      }
+      Composite.add(engine.world, pegs);
+
       started = true;
       drop();
 
       (function render() {
         Engine.update(engine, 1000 / 60);
         ctx.clearRect(0, 0, W, H);
+        // 钉子（高尔顿板圆圈）
+        pegs.forEach(function (peg) {
+          ctx.beginPath();
+          ctx.arc(peg.position.x, peg.position.y, 8, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0,0,0,0.15)';
+          ctx.fill();
+        });
+        // 桶底
         ctx.fillStyle = 'rgba(0,0,0,0.08)';
         ctx.fillRect(0, H - 10, W, 10);
         bodies.forEach(function (b) {
