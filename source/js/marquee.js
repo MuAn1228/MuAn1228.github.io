@@ -33,24 +33,34 @@
 
   function manual(dir) {
     playing = false;
-    var stepTarget = offset + dir * STEP;
-    // 计算回绕后的等价位置
-    var wrapped = stepTarget;
-    if (wrapped > 0) wrapped -= halfW;
-    if (-wrapped >= halfW) wrapped += halfW;
+    var target = offset + dir * STEP;
 
-    // 阶段1：平滑过渡 STEP 距离
-    track.style.transition = 'transform 0.4s cubic-bezier(.25, .1, .25, 1)';
-    track.style.transform = 'translate3d(' + stepTarget + 'px, 0, 0)';
-    offset = wrapped;
-
-    // 阶段2：过渡结束后瞬间回绕（内容重复，视觉无缝，不再跳回初始）
-    clearTimeout(transitionTimer);
-    transitionTimer = setTimeout(function () {
+    // 向左浏览回到开头时，目标会变成正数（露出左侧空白）。
+    // 先瞬间预定位到等价的负位置（内容重复，视觉无缝），再平滑过渡。
+    if (target > 0) {
       track.style.transition = 'none';
-      track.style.transform = 'translate3d(' + wrapped + 'px, 0, 0)';
-      void track.offsetWidth; // 强制 reflow，确保下次过渡正常
-    }, 420);
+      offset -= halfW;
+      target -= halfW;
+      track.style.transform = 'translate3d(' + offset + 'px, 0, 0)';
+      void track.offsetWidth; // 强制 reflow
+    }
+
+    // 平滑过渡
+    track.style.transition = 'transform 0.4s cubic-bezier(.25, .1, .25, 1)';
+    track.style.transform = 'translate3d(' + target + 'px, 0, 0)';
+    offset = target;
+
+    // 向右浏览到末尾时，目标越过左边界，过渡结束后瞬间无缝回绕
+    if (offset < -halfW) {
+      var wrapped = offset + halfW;
+      clearTimeout(transitionTimer);
+      transitionTimer = setTimeout(function () {
+        track.style.transition = 'none';
+        track.style.transform = 'translate3d(' + wrapped + 'px, 0, 0)';
+        void track.offsetWidth;
+        offset = wrapped;
+      }, 420);
+    }
 
     clearTimeout(timer);
     timer = setTimeout(function () { playing = true; }, RESUME_DELAY);
@@ -128,7 +138,11 @@
     wrap.appendChild(viewport);
     bindTouch(viewport);
     header.after(wrap);
-    halfW = track.scrollWidth / 2; // 缓存半宽，避免每帧读取 scrollWidth 触发 reflow（需在 DOM 插入后读取）
+    // 正确循环周期 = 第 1 张到第 48 张（第二份首张）的距离，避免 gap 导致的半像素误差
+    var imgs = track.querySelectorAll('img');
+    halfW = imgs.length >= 48
+      ? (imgs[47].getBoundingClientRect().left - imgs[0].getBoundingClientRect().left)
+      : (track.scrollWidth / 2);
 
     loop();
   }
