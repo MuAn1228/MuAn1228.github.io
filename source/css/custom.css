@@ -584,6 +584,8 @@ canvas.particle-text-canvas {
   aspect-ratio: 3 / 4;
   object-fit: cover;
   display: block;
+  margin: 0 !important;
+  border-radius: 0 !important;
   opacity: 0;
   transform: translateY(24px);
   transition: opacity .7s ease, transform .7s ease;
