@@ -71,3 +71,29 @@ title: 展示
 </section>
 
 </div>
+
+<script>
+(function () {
+  function reveal() {
+    var imgs = document.querySelectorAll('.showcase-photos img');
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15 });
+      imgs.forEach(function (img) { io.observe(img); });
+    } else {
+      imgs.forEach(function (img) { img.classList.add('revealed'); });
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', reveal);
+  } else {
+    reveal();
+  }
+})();
+</script>
