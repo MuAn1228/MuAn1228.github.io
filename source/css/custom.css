@@ -677,33 +677,53 @@ canvas.particle-text-canvas {
 }
 .media-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 16px;
   margin-top: 1.5em;
 }
 .media-card {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-  padding: 24px 16px;
   border-radius: 12px;
+  overflow: hidden;
   background: rgba(255, 255, 255, 0.6);
   box-shadow: 0 3px 12px rgba(26, 26, 46, 0.08);
-  text-align: center;
   transition: transform .3s ease;
 }
 .media-card:hover {
   transform: translateY(-4px);
 }
+.media-card img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  display: block;
+}
+.media-placeholder {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #6b5b95, #a18cd1);
+  color: #fff;
+  font-size: 2.2em;
+}
 .media-name {
-  font-size: 1.05em;
-  color: #4c4948;
+  padding: 10px 10px 2px;
+  font-size: 0.92em;
+  color: #333;
   font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .media-sub {
-  font-size: 0.8em;
+  padding: 0 10px 12px;
+  font-size: 0.78em;
   color: #a99fc0;
+  text-align: center;
 }
 @media (max-width: 768px) {
   .showcase-name { font-size: 1.9em; }

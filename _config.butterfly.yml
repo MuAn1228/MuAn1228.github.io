@@ -10,7 +10,10 @@ menu:
   算法题: /categories/算法题/ || fas fa-code
   旅行: /travel/ || fas fa-map-marked-alt
   展示: /showcase/ || fas fa-id-card
-  娱乐: /fun/ || fas fa-gamepad
+  娱乐||fas fa-gamepad:
+    音乐: /fun/music/ || fas fa-music
+    电影: /fun/movies/ || fas fa-film
+    游戏: /fun/games/ || fas fa-gamepad
   标签: /tags/ || fas fa-tags
   分类: /categories/ || fas fa-folder-open
   关于: /about/ || fas fa-user
@@ -132,6 +135,7 @@ inject:
     - '<script src="/lib/matter.min.js"></script>'
     - '<script src="/js/skills-bucket.js"></script>'
     - '<script src="/js/music-grid.js"></script>'
+    - '<script src="/js/media-grid.js"></script>'
 
 # ---------- 评论系统（Giscus） ----------
 comments:

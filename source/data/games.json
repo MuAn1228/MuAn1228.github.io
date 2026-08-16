@@ -1,0 +1,47 @@
+[
+  {
+    "name": "赛博朋克 2077",
+    "sub": "RPG",
+    "img": "/img/games/game01.jpg"
+  },
+  {
+    "name": "侠盗猎车手 V",
+    "sub": "开放世界",
+    "img": "/img/games/game02.jpg"
+  },
+  {
+    "name": "侠盗猎车手：圣安地列斯",
+    "sub": "开放世界",
+    "img": "/img/games/game03.jpg"
+  },
+  {
+    "name": "黑暗之魂",
+    "sub": "魂游",
+    "img": "/img/games/game04.jpg"
+  },
+  {
+    "name": "艾尔登法环",
+    "sub": "魂游",
+    "img": "/img/games/game05.jpg"
+  },
+  {
+    "name": "只狼：影逝二度",
+    "sub": "魂游",
+    "img": "/img/games/game06.jpg"
+  },
+  {
+    "name": "生死狙击",
+    "sub": "FPS",
+    "img": ""
+  },
+  {
+    "name": "王者荣耀",
+    "sub": "MOBA",
+    "img": ""
+  },
+  {
+    "name": "血源诅咒",
+    "sub": "魂游",
+    "img": ""
+  }
+]
