@@ -54,6 +54,9 @@ function loadExternalResource(url, type) {
   ]);
   // For detailed usage of configuration options, see README.en.md
   // 配置选项的具体用法见 README.md
+  // 清除缓存的模型选择，强制默认显示 Tia（黄头发）
+  localStorage.removeItem('modelId');
+  localStorage.removeItem('modelTexturesId');
   initWidget({
     waifuPath: live2d_path + 'waifu-tips.json',
     cdnPath: '/live2d_api/',
