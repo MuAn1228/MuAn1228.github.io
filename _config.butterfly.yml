@@ -119,6 +119,8 @@ inject:
     - '<script src="/lib/vanta.birds.min.js" defer></script>'
     - '<script src="/js/vanta.js" defer></script>'
     - '<script src="/js/hero-3d.js" defer></script>'
+    - '<script src="/js/rubik.js" defer></script>'
+    - '<script src="/js/visitor-count.js"></script>'
     - '<script src="/lib/tagcanvas.min.js"></script>'
     - '<script src="/js/tagcloud.js"></script>'
     - '<script src="/js/typing.js"></script>'
