@@ -6,7 +6,6 @@
 # ---------- 导航菜单 ----------
 menu:
   首页: / || fas fa-home
-  算法题: /categories/算法题/ || fas fa-code
   旅行: /travel/ || fas fa-map-marked-alt
   展示: /showcase/ || fas fa-id-card
   娱乐||fas fa-gamepad:
