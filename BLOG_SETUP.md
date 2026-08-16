@@ -67,6 +67,9 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | `source/data/games.json` `movies.json` | 游戏/电影列表数据（name/sub/img） |
 | `source/img/games/` | 游戏海报（20 款，game01-20.jpg，600×900 竖版） |
 | `source/js/media-grid.js` | 电影/游戏网格渲染（读取 `/data/*.json`） |
+| `source/data/music.json` | 音乐页歌单（title/author/cover，52 首） |
+| `source/js/music-grid.js` | 音乐网格渲染（音乐页） |
+| `source/js/music-playlist.js` | 音乐播放器歌单（52 首，运行时 Meting API 解析 URL） |
 | `source/travel/index.md` | 旅行页（中国地图，点击省份跳转该省文章） |
 | `source/js/travel-map.js` | 旅行地图交互（SVG 加载、省份着色、hover 提示、点击跳转） |
 | `source/lib/china.svg` | 中国省份 SVG 地图（维基公有领域，自托管） |
@@ -108,7 +111,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 
 | 项 | 值 |
 |----|----|
-| 音乐播放器 | 52 首静态歌单（`source/js/music-playlist.js`，网易云外链 `music.163.com/song/media/outer/url?id=…`）；⚠️ VIP 歌只有 30 秒试听 |
+| 音乐播放器 | 52 首歌单（`source/js/music-playlist.js`，运行时 Meting API 解析 URL，VIP 歌给 30s 试听）；改歌单改这里 |
 | Giscus repo | `MuAn1228/MuAn1228.github.io` |
 | Giscus repo_id | `R_kgDORtelHg` |
 | Giscus category_id | `DIC_kwDORtelHs4DDYVx` |
@@ -129,7 +132,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | 点击爱心/文字 | `source/js/click-effect.js` | `count`、`CORE` 数组、颜色 |
 | 热力图颜色 | `source/js/github-heatmap.js` | `PURPLE` 数组 |
 | 图片滚动墙 | `source/js/marquee.js` + `source/img/blog/` | 图片列表、滚动速度 |
-| 音乐歌曲 | `source/js/music-playlist.js` | `songs` 数组（name/artist/url/cover）；改歌单改这里 |
+| 音乐歌曲 | `source/js/music-playlist.js` | `songs` 数组（id/name/artist/cover）；歌曲 ID 用网易云搜索 API 拿 |
 | 评论配置 | `_config.butterfly.yml` | `comments` + `giscus` |
 | 社交图标 | `_config.butterfly.yml` | `social` |
 | 打赏/热门文章/统计卡 | `source/_data/widget.yml` | 对应卡片 |
@@ -152,7 +155,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 
 5. **token 权限**：抓 GitHub 贡献数据，细粒度 token 要「All repositories」；经典 token 要 `repo` + `read:user`。只有 `read:user` 看不到**私有仓库**贡献（曾踩坑，导致热力图缺格子）。
 
-6. **网易云 VIP 歌曲只有 30 秒试听**（Meting 免费接口的版权限制，无法绕过）；Meting API（api.i-meto.com）可能 403/限流。
+6. **网易云音乐播放坑**：VIP 歌只有 30 秒试听（免费接口版权限制）。⚠️ 播放器**别用** `music.163.com/song/media/outer/url?id=X.mp3` 外链——它对 VIP/版权歌返回 HTML 错误页（不是音频），要用 Meting API `api.i-meto.com/meting/api?server=netease&type=song&id=X` 解析 URL（VIP 也给 30s 试听）。另外 APlayer 的 `listMaxHeight` 选项生成的 `max-height:320` 没单位（无效 CSS），歌单会撑满全屏滚不动——已在 `custom.css` 用 `.aplayer-list ol { max-height:320px; overflow-y:auto }` 强制限高滚动。
 
 7. **本地预览端口占用**：旧 `hexo s` 进程杀不干净，用：
    ```bash
@@ -184,4 +187,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 - **GitHub 热力图数据流**：`fetch_contributions.py`（用 GH_TOKEN 抓 GraphQL）→ `source/data/contributions.json`（保留 weeks 结构）→ `github-heatmap.js` 渲染。
 - **GitHub Actions 部署**：`.github/workflows/update-contributions.yml`，每天 08:17（UTC 00:17）抓贡献 + `hexo g` + `actions/deploy-pages` 部署；Pages source 设为「GitHub Actions」。
 - **图片导入**：`D:\blog\原始图片` 的 47 张图，用 Python PIL 压缩（`ImageOps.exif_transpose` 修方向 + 缩放到 500px）到 `source/img/blog/`。
+- **图片处理**：本机无 PIL/ImageMagick/ffmpeg，用 PowerShell `System.Drawing` 缩放/裁剪（`Image` 加载 → `Bitmap` 目标尺寸 → `DrawImage` → 存 JPEG，透明 PNG 先铺白底）；`file` 命令能读 JPEG 尺寸，PNG 要看完整输出（`1024 x 1024` 带空格）。
+- **国内可用的无防盗链图源**：萌娘共享 `storage.moegirl.org.cn`、17173 `i.17173cdn.com`、苹果 App Store 图标（iTunes API `itunes.apple.com/search?term=…&country=us` → `artworkUrl512`，CDN `is1-ssl.mzstatic.com`）、网易云封面 `p*.music.126.net`。维基百科 `upload.wikimedia.org` 被墙（DNS 污染）、4399/百度百科有防盗链。
+- **网易云 API**（拿歌 ID/歌单）：搜索 `music.163.com/api/cloudsearch/pc?s=歌名&type=1&limit=1`；用户歌单列表 `music.163.com/api/user/playlist?uid=xxx`；单曲外链 `music.163.com/song/media/outer/url?id=X.mp3`（VIP 歌会返回 HTML，见「坑」第 6 条）。
 - **看板娘模型自托管**：从 fghrsh/live2d_api 只下载了 Pio/Tia 的核心文件（index.json、model.moc、默认贴图、motions），model_list.json 精简为两个模型。
