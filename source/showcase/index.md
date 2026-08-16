@@ -50,6 +50,11 @@ title: 展示
 </section>
 
 <section class="showcase-sec">
+<h2>Skills</h2>
+<div id="skills-bucket" class="skills-bucket"></div>
+</section>
+
+<section class="showcase-sec">
 <h2>作品</h2>
 
 <p>我目前的产出主要在 <a href="https://github.com/MuAn1228">GitHub</a> 仓库和 Obsidian 笔记里。</p>

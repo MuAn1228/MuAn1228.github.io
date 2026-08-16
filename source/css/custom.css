@@ -594,6 +594,10 @@ canvas.particle-text-canvas {
   opacity: 1;
   transform: none;
 }
+.skills-bucket {
+  max-width: 600px;
+  margin: 0 auto;
+}
 @media (max-width: 768px) {
   .showcase-name { font-size: 1.9em; }
   .showcase-sec p { font-size: 0.98em; }

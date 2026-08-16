@@ -128,6 +128,8 @@ inject:
     - '<script src="/js/travel-map.js"></script>'
     - '<script src="/js/music-toggle.js"></script>'
     - '<script src="/js/name-particles.js"></script>'
+    - '<script src="/lib/matter.min.js"></script>'
+    - '<script src="/js/skills-bucket.js"></script>'
 
 # ---------- 评论系统（Giscus） ----------
 comments:
