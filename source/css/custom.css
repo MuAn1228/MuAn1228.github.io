@@ -599,6 +599,112 @@ canvas.particle-text-canvas {
   margin: 0 auto;
   cursor: pointer;
 }
+
+/* ===== 娱乐板块 ===== */
+.fun-hub {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 2em 0;
+}
+.fun-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 140px;
+  height: 140px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 16px rgba(26, 26, 46, 0.08);
+  color: #6b5b95;
+  font-size: 1.1em;
+  transition: transform .3s ease, box-shadow .3s ease;
+  text-decoration: none;
+}
+.fun-card i {
+  font-size: 2.4em;
+}
+.fun-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 24px rgba(107, 91, 149, 0.2);
+}
+.music-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  margin-top: 1.5em;
+}
+.music-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-decoration: none;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 3px 12px rgba(26, 26, 46, 0.08);
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+.music-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(26, 26, 46, 0.16);
+}
+.music-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+.music-title {
+  padding: 0 10px;
+  font-size: 0.95em;
+  color: #333;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.music-author {
+  padding: 0 10px 12px;
+  font-size: 0.8em;
+  color: #999;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 1.5em;
+}
+.media-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 3px 12px rgba(26, 26, 46, 0.08);
+  text-align: center;
+  transition: transform .3s ease;
+}
+.media-card:hover {
+  transform: translateY(-4px);
+}
+.media-name {
+  font-size: 1.05em;
+  color: #4c4948;
+  font-weight: 600;
+}
+.media-sub {
+  font-size: 0.8em;
+  color: #a99fc0;
+}
 @media (max-width: 768px) {
   .showcase-name { font-size: 1.9em; }
   .showcase-sec p { font-size: 0.98em; }
