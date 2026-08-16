@@ -43,6 +43,16 @@
   box-shadow: 0 8px 24px rgba(26, 26, 46, 0.18);
 }
 
+/* 音乐歌单列表限高 + 可滚动（否则 52 首撑满全屏且滚不动） */
+.aplayer.aplayer-fixed .aplayer-list {
+  max-height: 320px !important;
+  overflow: hidden;
+}
+.aplayer.aplayer-fixed .aplayer-list ol {
+  max-height: 320px !important;
+  overflow-y: auto !important;
+}
+
 /* 音乐折叠开关 */
 .music-toggle {
   position: fixed;
