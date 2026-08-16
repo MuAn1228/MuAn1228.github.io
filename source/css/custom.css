@@ -486,6 +486,13 @@ body.music-collapsed .music-toggle {
   margin: 0 0 0.25em;
   color: #4c4948;
 }
+#showcase-name {
+  display: block;
+  margin: 0 auto 0.3em;
+  max-width: 100%;
+  height: auto;
+  cursor: pointer;
+}
 .showcase-sub {
   font-size: 1.08em;
   color: #999;

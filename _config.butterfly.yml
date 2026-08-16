@@ -127,6 +127,7 @@ inject:
     - '<script src="/lib/leaflet/leaflet.js"></script>'
     - '<script src="/js/travel-map.js"></script>'
     - '<script src="/js/music-toggle.js"></script>'
+    - '<script src="/js/name-particles.js"></script>'
 
 # ---------- 评论系统（Giscus） ----------
 comments:
