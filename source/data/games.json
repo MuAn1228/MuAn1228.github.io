@@ -32,16 +32,16 @@
   {
     "name": "生死狙击",
     "sub": "FPS",
-    "img": ""
+    "img": "/img/games/game07.jpg"
   },
   {
     "name": "王者荣耀",
     "sub": "MOBA",
-    "img": ""
+    "img": "/img/games/game08.jpg"
   },
   {
     "name": "血源诅咒",
     "sub": "魂游",
-    "img": ""
+    "img": "/img/games/game09.jpg"
   }
 ]
