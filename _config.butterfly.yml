@@ -6,7 +6,6 @@
 # ---------- 导航菜单 ----------
 menu:
   首页: / || fas fa-home
-  归档: /archives/ || fas fa-archive
   算法题: /categories/算法题/ || fas fa-code
   旅行: /travel/ || fas fa-map-marked-alt
   展示: /showcase/ || fas fa-id-card
@@ -14,7 +13,6 @@ menu:
     音乐: /fun/music/ || fas fa-music
     电影: /fun/movies/ || fas fa-film
     游戏: /fun/games/ || fas fa-gamepad
-  标签: /tags/ || fas fa-tags
   分类: /categories/ || fas fa-folder-open
   关于: /about/ || fas fa-user
 
