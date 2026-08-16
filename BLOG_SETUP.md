@@ -61,7 +61,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | `source/img/blog/` | 图片滚动墙的 47 张图片 |
 | `source/img/` | 头像、社交二维码（微信/抖音/QQ）、打赏二维码 |
 | `source/_data/widget.yml` | 自定义侧边栏卡片（GitHub 统计、热门文章、打赏） |
-| `source/_posts/算法题/` | 18 篇力扣算法笔记 |
+| `source/_posts/算法题/` | 18 篇力扣算法笔记（tags 统一「力扣」，难度/比赛类型放 categories 子分类） |
 | `source/travel/index.md` | 旅行页（中国地图，点击省份跳转该省文章） |
 | `source/js/travel-map.js` | 旅行地图交互（SVG 加载、省份着色、hover 提示、点击跳转） |
 | `source/lib/china.svg` | 中国省份 SVG 地图（维基公有领域，自托管） |
@@ -92,7 +92,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 - **打赏功能**：首页侧边栏微信/支付宝收款码
 - **GitHub 统计卡**：github-readme-stats（radical 主题）
 - **GitHub 热力图**：自渲染，紫色调，精确数据，每天自动更新
-- **算法笔记**：18 篇力扣题（算法题分类 + 导航菜单入口）
+- **算法笔记**：18 篇力扣题（算法题分类 + 导航菜单入口）；**标签/分类规范**：`tags` 只写 `力扣`，难度或比赛类型写入 `categories` 子分类（`算法题 → 简单/中等/困难/周赛/双周赛`），避免标签页堆满 leetcode/难度/周赛等零散标签
 - **旅行地图**：中国省份 SVG 地图（维基公有领域），已去过的省紫色高亮、可点击跳转该省文章；写旅行文章只需 front-matter 写 `categories: [旅行, 省份名]`（如 `[旅行, 四川]`），地图自动高亮该省
 - **头像/站点图标**、**关于/标签/分类** 页面、**博客运行天数**
 
