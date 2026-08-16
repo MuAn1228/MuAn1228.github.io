@@ -21,7 +21,7 @@
   el.appendChild(canvas);
 
   // 环面结（旧版 three.js 返回 Geometry，顶点在 vertices 数组）
-  var geometry = new THREE.TorusKnotGeometry(0.82, 0.25, 160, 28);
+  var geometry = new THREE.TorusKnotGeometry(0.68, 0.2, 160, 28);
   var baseVerts = geometry.vertices.map(function (v) { return v.clone(); });
 
   var material = new THREE.MeshStandardMaterial({
@@ -32,12 +32,12 @@
     roughness: 0.22,
   });
   var knot = new THREE.Mesh(geometry, material);
-  knot.position.set(2.3, 0.1, 0);
+  knot.position.set(2.55, 0.1, 0);
   knot.rotation.x = 0.3;
   scene.add(knot);
 
   // 外圈光环
-  var ringGeo = new THREE.TorusGeometry(1.35, 0.02, 8, 120);
+  var ringGeo = new THREE.TorusGeometry(1.1, 0.02, 8, 120);
   var ringMat = new THREE.MeshBasicMaterial({ color: 0xf093fb, transparent: true, opacity: 0.5 });
   var ring = new THREE.Mesh(ringGeo, ringMat);
   ring.position.copy(knot.position);
@@ -81,7 +81,7 @@
     // 鼠标跟随
     tx += (mx - tx) * 0.05;
     ty += (my - ty) * 0.05;
-    knot.position.x = 2.3 + tx * 0.3;
+    knot.position.x = 2.55 + tx * 0.3;
     knot.position.y = 0.1 - ty * 0.3;
     ring.position.copy(knot.position);
 
