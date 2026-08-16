@@ -5,7 +5,7 @@ title: 展示
 <div class="showcase">
 
 <img class="showcase-avatar" src="/img/avatar.png" alt="Li Bohang">
-<canvas id="showcase-name" aria-label="Li Bohang"></canvas>
+<canvas id="showcase-name" class="particle-text" data-text="Li Bohang" data-color="#8e6bb5" aria-label="Li Bohang"></canvas>
 <p class="showcase-sub">浙江理工大学 · 智能科学与技术 · 本科学生</p>
 
 <section class="showcase-sec">

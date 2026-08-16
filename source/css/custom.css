@@ -493,6 +493,13 @@ body.music-collapsed .music-toggle {
   height: auto;
   cursor: pointer;
 }
+canvas.particle-text-canvas {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+  cursor: pointer;
+}
 .showcase-sub {
   font-size: 1.08em;
   color: #999;
