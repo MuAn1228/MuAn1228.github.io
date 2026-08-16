@@ -1,7 +1,7 @@
 # 博客搭建记录（Hexo + Butterfly + GitHub Pages）
 
 > 本文件记录整个博客的搭建过程、所有配置与自定义内容，方便继续维护或新对话快速接手。
-> 最后更新：2026-08-15
+> 最后更新：2026-08-16
 
 ---
 
@@ -62,6 +62,10 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | `source/img/` | 头像、社交二维码（微信/抖音/QQ）、打赏二维码 |
 | `source/_data/widget.yml` | 自定义侧边栏卡片（GitHub 统计、热门文章、打赏） |
 | `source/_posts/算法题/` | 18 篇力扣算法笔记（tags 统一「力扣」，难度/比赛类型放 categories 子分类） |
+| `source/fun/` | 娱乐页（音乐/电影/游戏，导航「娱乐」下拉） |
+| `source/data/games.json` `movies.json` | 游戏/电影列表数据（name/sub/img） |
+| `source/img/games/` | 游戏海报（20 款，game01-20.jpg，600×900 竖版） |
+| `source/js/media-grid.js` | 电影/游戏网格渲染（读取 `/data/*.json`） |
 | `source/travel/index.md` | 旅行页（中国地图，点击省份跳转该省文章） |
 | `source/js/travel-map.js` | 旅行地图交互（SVG 加载、省份着色、hover 提示、点击跳转） |
 | `source/lib/china.svg` | 中国省份 SVG 地图（维基公有领域，自托管） |
@@ -93,6 +97,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 - **GitHub 统计卡**：github-readme-stats（radical 主题）
 - **GitHub 热力图**：自渲染，紫色调，精确数据，每天自动更新
 - **算法笔记**：18 篇力扣题（算法题分类 + 导航菜单入口）；**标签/分类规范**：`tags` 只写 `力扣`，难度或比赛类型写入 `categories` 子分类（`算法题 → 简单/中等/困难/周赛/双周赛`），避免标签页堆满 leetcode/难度/周赛等零散标签
+- **娱乐模块**：音乐 / 电影 / 游戏 三个子页（导航「娱乐」下拉），游戏 20 款带竖版海报（`games.json` + `game01-20.jpg`）
 - **旅行地图**：中国省份 SVG 地图（维基公有领域），已去过的省紫色高亮、可点击跳转该省文章；写旅行文章只需 front-matter 写 `categories: [旅行, 省份名]`（如 `[旅行, 四川]`），地图自动高亮该省
 - **头像/站点图标**、**关于/标签/分类** 页面、**博客运行天数**
 
@@ -128,7 +133,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | 社交图标 | `_config.butterfly.yml` | `social` |
 | 打赏/热门文章/统计卡 | `source/_data/widget.yml` | 对应卡片 |
 | 作者简介/公告 | `_config.butterfly.yml` | `aside.card_author`、`card_announcement` |
-| 菜单栏 | `_config.butterfly.yml` | `menu` |
+| 菜单栏 | `_config.butterfly.yml` | `menu`（当前：首页/算法题/旅行/展示/娱乐▾/分类/关于；已去掉「归档」「标签」入口——标签靠首页 3D 标签云展示，分类是唯一浏览入口） |
 | 旅行地图省份/颜色 | `source/js/travel-map.js` + `source/css/custom.css` | `PROVINCES` 映射、`.cn-province.visited` 紫色 |
 | 特效开关 | `_config.butterfly.yml` | `canvas_nest`、`fireworks`、`subtitle`、`preloader` 等 |
 
@@ -162,7 +167,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 ## 八、可继续的方向（未做）
 
 - [ ] 音乐：换成免费歌曲（完整播放），或本地 MP3 自托管
-- [ ] 换掉 `hello-world` 示例文章
+- [ ] 换掉 `hello-world` 示例文章（已清掉其 12 个散标签，正文仍是 Hexo 示例内容）
 - [ ] 加友链页、相册页
 - [ ] 自定义域名
 - [ ] 调整各种颜色/参数到满意
