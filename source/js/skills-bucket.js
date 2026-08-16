@@ -1,5 +1,5 @@
 // ===== Skills 桶：官方技术 Logo 下落 + 碰撞（Matter.js 物理引擎）=====
-// 在展示页的 #skills-bucket 容器里渲染：官方 SVG logo 从上往下掉，落到桶里碰撞堆叠
+// 滚动到区块时才触发下落动画，点击可重放
 (function () {
   var TECHS = [
     { slug: 'python', name: 'Python' },
@@ -41,60 +41,52 @@
     var loaded = 0;
     TECHS.forEach(function (t) {
       var img = new Image();
-      img.onload = function () {
+      img.onload = img.onerror = function () {
         loaded++;
-        if (loaded === TECHS.length) start();
-      };
-      img.onerror = function () {
-        loaded++;
-        if (loaded === TECHS.length) start();
+        if (loaded === TECHS.length) ready();
       };
       img.src = '/lib/logos/' + t.slug + '.svg';
       images[t.slug] = img;
     });
 
+    var engine, bodies, started = false;
+
+    function ready() {
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting && !started) {
+              start();
+              io.disconnect();
+            }
+          });
+        }, { threshold: 0.25 });
+        io.observe(mount);
+      } else {
+        start();
+      }
+    }
+
     function start() {
       var Engine = Matter.Engine, Bodies = Matter.Bodies, Composite = Matter.Composite;
-      var engine = Engine.create();
-      engine.gravity.y = 1;
-
-      // 桶：底部 + 左右壁（静态）
+      engine = Engine.create();
+      engine.gravity.y = 0.9;
       var WALL = 50;
       var ground = Bodies.rectangle(W / 2, H + WALL / 2 - 8, W + WALL * 2, WALL, { isStatic: true });
       var leftWall = Bodies.rectangle(-WALL / 2, H / 2, WALL, H * 2, { isStatic: true });
       var rightWall = Bodies.rectangle(W + WALL / 2, H / 2, WALL, H * 2, { isStatic: true });
       Composite.add(engine.world, [ground, leftWall, rightWall]);
-
-      // 图标：随机 x 落点 + 轻微错开高度，让它们掉落时互相碰撞
-      var bodies = TECHS.map(function (t, i) {
-        var x = 30 + Math.random() * (W - 60);
-        var y = -RADIUS - (i % 4) * 35;
-        var b = Bodies.circle(x, y, RADIUS, {
-          restitution: 0.6,
-          friction: 0.1,
-          density: 0.001,
-          label: t.name
-        });
-        b.tech = t;
-        return b;
-      });
-      Composite.add(engine.world, bodies);
+      started = true;
+      drop();
 
       (function render() {
         Engine.update(engine, 1000 / 60);
         ctx.clearRect(0, 0, W, H);
-
-        // 桶底
         ctx.fillStyle = 'rgba(0,0,0,0.08)';
         ctx.fillRect(0, H - 10, W, 10);
-
         bodies.forEach(function (b) {
-          var x = b.position.x;
-          var y = b.position.y;
-          var r = b.circleRadius;
+          var x = b.position.x, y = b.position.y, r = b.circleRadius;
           var img = images[b.tech.slug];
-
-          // 白底圆（logo 衬底）
           ctx.beginPath();
           ctx.arc(x, y, r, 0, Math.PI * 2);
           ctx.fillStyle = '#ffffff';
@@ -102,8 +94,6 @@
           ctx.lineWidth = 1.5;
           ctx.strokeStyle = 'rgba(0,0,0,0.1)';
           ctx.stroke();
-
-          // 官方 logo（随物理体旋转）
           if (img && img.complete && img.naturalWidth > 0) {
             ctx.save();
             ctx.translate(x, y);
@@ -116,6 +106,30 @@
         requestAnimationFrame(render);
       })();
     }
+
+    // 重新掉落（点击重放）
+    function drop() {
+      if (!engine) return;
+      var Bodies = Matter.Bodies, Composite = Matter.Composite;
+      if (bodies) Composite.remove(engine.world, bodies);
+      bodies = TECHS.map(function (t, i) {
+        var x = 30 + Math.random() * (W - 60);
+        var y = -RADIUS - 60 - (i % 5) * 45;
+        var b = Bodies.circle(x, y, RADIUS, {
+          restitution: 0.6,
+          friction: 0.1,
+          density: 0.001,
+          label: t.name
+        });
+        b.tech = t;
+        return b;
+      });
+      Composite.add(engine.world, bodies);
+    }
+
+    mount.addEventListener('click', function () {
+      if (started) drop();
+    });
   }
 
   if (document.readyState === 'loading') {
