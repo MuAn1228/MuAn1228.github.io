@@ -53,6 +53,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | `source/js/live2d.js` | 看板娘（自托管模型，只保留 Pio/Tia） |
 | `source/js/tagcloud.js` | 3D 标签云（TagCanvas） |
 | `source/js/marquee.js` | 图片滚动墙（左右按钮 + 点击放大） |
+| `source/js/music-playlist.js` | 音乐播放列表（52 首网易云静态歌单） |
 | `source/js/github-heatmap.js` | GitHub 热力图（自渲染，紫色调） |
 | `source/js/typing.js` | 简介打字机效果 |
 | `source/lib/` | 本地自托管库：APlayer、Meting、three.js、vanta、tagcanvas |
@@ -107,7 +108,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 
 | 项 | 值 |
 |----|----|
-| 网易云歌曲 | LET ME LUV U（mac ova seas / 付思遥），ID `2085859568`（⚠️ VIP 歌，只有 30 秒试听） |
+| 音乐播放器 | 52 首静态歌单（`source/js/music-playlist.js`，网易云外链 `music.163.com/song/media/outer/url?id=…`）；⚠️ VIP 歌只有 30 秒试听 |
 | Giscus repo | `MuAn1228/MuAn1228.github.io` |
 | Giscus repo_id | `R_kgDORtelHg` |
 | Giscus category_id | `DIC_kwDORtelHs4DDYVx` |
@@ -128,7 +129,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | 点击爱心/文字 | `source/js/click-effect.js` | `count`、`CORE` 数组、颜色 |
 | 热力图颜色 | `source/js/github-heatmap.js` | `PURPLE` 数组 |
 | 图片滚动墙 | `source/js/marquee.js` + `source/img/blog/` | 图片列表、滚动速度 |
-| 音乐歌曲 | `_config.butterfly.yml` | `inject` 里 `<meting-js ... id=...>` |
+| 音乐歌曲 | `source/js/music-playlist.js` | `songs` 数组（name/artist/url/cover）；改歌单改这里 |
 | 评论配置 | `_config.butterfly.yml` | `comments` + `giscus` |
 | 社交图标 | `_config.butterfly.yml` | `social` |
 | 打赏/热门文章/统计卡 | `source/_data/widget.yml` | 对应卡片 |
