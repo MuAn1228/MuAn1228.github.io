@@ -43,5 +43,60 @@
     "name": "血源诅咒",
     "sub": "魂游",
     "img": "/img/games/game09.jpg"
+  },
+  {
+    "name": "愤怒的小鸟",
+    "sub": "休闲",
+    "img": "/img/games/game10.jpg"
+  },
+  {
+    "name": "水果忍者",
+    "sub": "休闲",
+    "img": "/img/games/game11.jpg"
+  },
+  {
+    "name": "神庙逃亡",
+    "sub": "跑酷",
+    "img": "/img/games/game12.jpg"
+  },
+  {
+    "name": "地铁跑酷",
+    "sub": "跑酷",
+    "img": "/img/games/game13.jpg"
+  },
+  {
+    "name": "植物大战僵尸",
+    "sub": "塔防",
+    "img": "/img/games/game14.jpg"
+  },
+  {
+    "name": "纪念碑谷",
+    "sub": "解谜",
+    "img": "/img/games/game15.jpg"
+  },
+  {
+    "name": "天天酷跑",
+    "sub": "跑酷",
+    "img": "/img/games/game16.jpg"
+  },
+  {
+    "name": "贪吃蛇大作战",
+    "sub": "休闲",
+    "img": "/img/games/game17.jpg"
+  },
+  {
+    "name": "和平精英",
+    "sub": "射击",
+    "img": "/img/games/game18.jpg"
+  },
+  {
+    "name": "原神",
+    "sub": "开放世界",
+    "img": "/img/games/game19.jpg"
+  },
+  {
+    "name": "我的世界",
+    "sub": "沙盒",
+    "img": "/img/games/game20.jpg"
   }
 ]
