@@ -1,4 +1,4 @@
-// ===== 静态音乐播放列表（网易云，52 首）=====
+// ===== 静态音乐播放列表（网易云，49 首）=====
 // 运行时通过 Meting API 解析可播放 URL（VIP 歌给 30s 试听），失败兜底网易云外链
 (function () {
   if (!window.APlayer) return;
@@ -14,24 +14,6 @@
     "name": "I Really Want to Stay at Your House",
     "artist": "Rosa Walton",
     "cover": "https://p2.music.126.net/ETNtwbJ4s1oCNXAyr_YEYQ==/109951170504647739.jpg"
-  },
-  {
-    "id": 25657526,
-    "name": "Catch My Breath",
-    "artist": "Kelly Clarkson",
-    "cover": "https://p2.music.126.net/oioz4AI79t_8hd6njGrWqA==/109951167302849274.jpg"
-  },
-  {
-    "id": 1300265618,
-    "name": "Levitate",
-    "artist": "twenty one pilots",
-    "cover": "https://p2.music.126.net/HDpf7sFyuBrQNBGFTPDscw==/109951169620299418.jpg"
-  },
-  {
-    "id": 442605343,
-    "name": "Home (Radio Edit)",
-    "artist": "ThimLife",
-    "cover": "https://p2.music.126.net/oY9rJwIU6HbZaOASalz4Dg==/109951163691318963.jpg"
   },
   {
     "id": 534540498,
@@ -304,16 +286,16 @@
     "cover": "https://p1.music.126.net/6-1VshVZQ3m8N4NWZbmWbw==/1405175875965107.jpg"
   },
   {
-    "id": 1297986663,
-    "name": "FRIENDS",
-    "artist": "Marshmello",
-    "cover": "https://p2.music.126.net/mwR5zbb3mE4xN0u0lDD0Cg==/109951170495003003.jpg"
+    "id": 499274178,
+    "name": "Friends",
+    "artist": "Justin Bieber / BloodPop",
+    "cover": "https://p1.music.126.net/eWHzfn-JXqi9orQybN1EUw==/109951168770712532.jpg"
   },
   {
-    "id": 465973474,
-    "name": "No Matter",
-    "artist": "Frances",
-    "cover": "https://p2.music.126.net/_nQ27FELH-EcRl2uh-3vzw==/19207368625649550.jpg"
+    "id": 464721029,
+    "name": "No Matter (Basic Tape vs. Frances)",
+    "artist": "Basic Tape",
+    "cover": "https://p1.music.126.net/VqDGz0bgQkQgSsFYG35row==/17798894230849117.jpg"
   }
 ];
 
