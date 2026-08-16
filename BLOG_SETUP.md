@@ -51,6 +51,8 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | `source/js/click-effect.js` | 点击特效（爱心爆炸 + NH₄⁺ + 核心价值观光影文字） |
 | `source/js/vanta.js` | Vanta 飞鸟背景（首页横幅） |
 | `source/js/hero-3d.js` | 首页变形环面结（3D 拓扑结构，紫色发光 + 顶点波浪形变 + 鼠标视差） |
+| `source/js/rubik.js` | 首页 3D 魔方（拖拽表面转层 + 右键转视角 + 打乱） |
+| `source/js/visitor-count.js` | 访客统计（Vercount）+ 排除站长自己 |
 | `source/js/live2d.js` | 看板娘（自托管模型，只保留 Pio/Tia） |
 | `source/js/tagcloud.js` | 3D 标签云（TagCanvas） |
 | `source/js/marquee.js` | 图片滚动墙（左右按钮 + 点击放大） |
@@ -195,3 +197,5 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 - **⚠️ three.js 是旧版**（`REVISION="121"`，自托管 `source/lib/three.min.js`）：`TorusKnotGeometry` 等返回的是**旧 Geometry**（顶点在 `vertices` 数组，不是新版的 `attributes.position`）。做顶点变形要用 `geometry.vertices`（Vector3 数组）+ `geometry.verticesNeedUpdate = true`，别用 `geometry.attributes`（会报 `Cannot read properties of undefined`）。
 - **移动端布局**：首页（`#body-wrap:has(#recent-posts)`）简介在上；内页正文在上、侧边栏沉底（`custom.css` 里 `order: -1` 只作用于首页）。移动端提速：Vanta 飞鸟 `window.innerWidth <= 768` 跳过渲染，three/vanta 脚本加 `defer` 异步加载。
 - **图片滚动墙无缝循环**（`source/js/marquee.js`）：track 用「两份图片」实现无限循环。⚠️ 坑：循环周期必须量 `imgs[47].getBoundingClientRect().left - imgs[0].getBoundingClientRect().left`（真实周期），不能用 `scrollWidth/2`（会差半个 gap 导致 8px 跳变）；向左回到开头要「先瞬间预定位到等价负位置再平滑过渡」，否则会露出左侧空白。
+- **首页 3D 魔方**（`source/js/rubik.js`）：Raycaster 射线选中 cubie，拖拽表面转对应层、右键/双指拖拽转视角、「打乱」按钮。⚠️ 坑：旧版 three.js 的 `getWorldQuaternion(...).invert` 不是函数，要把拖拽方向转到局部空间得用 `new THREE.Matrix4().getInverse(cubeGroup.matrixWorld)` + `transformDirection`；转层方向可用 `FLIP` 变量整体反向（`FLIP=1` 改 `-1`）。⏳ 待改进：转视角用的欧拉角有万向锁，对角线拖拽略拧，待换四元数。
+- **访客统计 + 排除自己**（`source/js/visitor-count.js`）：页脚用 Vercount（`events.vercount.one/js`）显示 PV/UV。Vercount 计数是「写入即读取」，无法只读不计数；排除站长自己的做法是——访问 `?owner=1` 一次给本机打 localStorage 标记 `blog_owner`，之后本机不再加载 Vercount 脚本（不计数），页脚显示「站长模式」，想看真实数据用手机/无痕。
