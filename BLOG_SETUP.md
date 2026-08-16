@@ -12,7 +12,7 @@
 | 框架 | Hexo 8.x |
 | 主题 | Butterfly 5.7.0（npm 安装，位于 `node_modules/hexo-theme-butterfly`） |
 | 托管 | GitHub Pages（用户站点，**GitHub Actions 部署**） |
-| 项目目录 | `C:\Users\liboh\blog` |
+| 项目目录 | `D:\blog` |
 | GitHub 用户名 | MuAn1228 |
 | 仓库 | `MuAn1228.github.io`（已公开，SSH 已配好） |
 | 线上地址 | https://MuAn1228.github.io/ |
@@ -26,7 +26,7 @@
 ## 二、常用命令
 
 ```bash
-cd ~/blog                        # 重要！cwd 经常被重置，务必先 cd 再操作
+cd /d/blog                        # 重要！cwd 经常被重置，务必先 cd 再操作
 hexo new "文章标题"               # 新建文章 → source/_posts/xxx.md
 hexo s                           # 本地预览 → http://localhost:4000
 
@@ -140,7 +140,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 
 2. **GitHub Actions workflow 必须在默认分支（main）**：放别的分支不会出现在 Actions UI，schedule 也不会跑（曾踩坑）。
 
-3. **Bash 的 cwd 会重置**：执行 hexo/git 命令前务必 `cd ~/blog`。
+3. **Bash 的 cwd 会重置**：执行 hexo/git 命令前务必 `cd /d/blog`。
 
 4. **GitHub 直连不稳**（国内）：`git clone` 常 `Connection was reset`，改用 npm 安装；CDN 用 `fastly.jsdelivr.net` 或本地自托管。
 
@@ -177,5 +177,5 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 - **Vanta 飞鸟**：依赖 three.js + vanta.birds（本地），初始化在 `source/js/vanta.js`，只作用于 `#page-header.full_page`（首页）。
 - **GitHub 热力图数据流**：`fetch_contributions.py`（用 GH_TOKEN 抓 GraphQL）→ `source/data/contributions.json`（保留 weeks 结构）→ `github-heatmap.js` 渲染。
 - **GitHub Actions 部署**：`.github/workflows/update-contributions.yml`，每天 08:17（UTC 00:17）抓贡献 + `hexo g` + `actions/deploy-pages` 部署；Pages source 设为「GitHub Actions」。
-- **图片导入**：`D:\photo\blog` 的 47 张图，用 Python PIL 压缩（`ImageOps.exif_transpose` 修方向 + 缩放到 500px）到 `source/img/blog/`。
+- **图片导入**：`D:\blog\原始图片` 的 47 张图，用 Python PIL 压缩（`ImageOps.exif_transpose` 修方向 + 缩放到 500px）到 `source/img/blog/`。
 - **看板娘模型自托管**：从 fghrsh/live2d_api 只下载了 Pio/Tia 的核心文件（index.json、model.moc、默认贴图、motions），model_list.json 精简为两个模型。

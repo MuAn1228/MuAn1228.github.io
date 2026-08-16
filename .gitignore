@@ -6,3 +6,6 @@ node_modules/
 public/
 .deploy*/
 _multiconfig.yml
+# 本地资源（不提交到仓库）
+原始图片/
+备份/
