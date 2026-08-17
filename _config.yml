@@ -104,3 +104,10 @@ deploy:
   type: git
   repo: git@github.com:MuAn1228/MuAn1228.github.io.git
   branch: main
+
+# Search
+search:
+  path: search.json
+  field: post
+  format: json
+  limit: 10000

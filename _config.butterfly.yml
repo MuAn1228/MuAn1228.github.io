@@ -34,6 +34,11 @@ social:
   fab fa-bilibili: 'https://space.bilibili.com/424086446 || B站 || #FB7299'
   fab fa-tiktok: 'https://www.douyin.com/ || 抖音 lbh071031 || #25F4EE'
 
+# ---------- 搜索 ----------
+search:
+  use: local_search
+  placeholder: 搜索文章...
+
 # ---------- 个性化设置 ----------
 aside:
   position: left
