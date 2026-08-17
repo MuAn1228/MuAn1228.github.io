@@ -43,8 +43,8 @@ git add -A && git commit -m "..." && git push origin source:main
 | `source/css/custom.css` | 所有自定义样式 |
 | `source/js/*.js` | 自定义交互/特效脚本 |
 | `source/_posts/算法题/` | 算法题文章 |
-| `source/fun/` | 娱乐页（音乐/电影/游戏） |
-| `source/data/` | 游戏/电影/音乐 JSON 数据、GitHub 贡献数据 |
+| `source/fun/` | 娱乐页（音乐/电影/游戏/书籍） |
+| `source/data/` | 游戏/电影/音乐/书籍 JSON 数据、GitHub 贡献数据 |
 | `source/_data/widget.yml` | 侧边栏自定义卡片 |
 | `source/lib/` | 本地自托管库（three.js r121、APlayer、Meting 等） |
 | `fetch_contributions.py` | GitHub Actions 抓取贡献数据 |

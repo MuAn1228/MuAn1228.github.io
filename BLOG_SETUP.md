@@ -66,10 +66,11 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 | `source/img/` | 头像、社交二维码（微信/抖音/QQ）、打赏二维码 |
 | `source/_data/widget.yml` | 自定义侧边栏卡片（GitHub 统计、热门文章、打赏） |
 | `source/_posts/算法题/` | 18 篇力扣算法笔记（tags 统一「力扣」，难度/比赛类型放 categories 子分类） |
-| `source/fun/` | 娱乐页（音乐/电影/游戏，导航「娱乐」下拉） |
-| `source/data/games.json` `movies.json` | 游戏/电影列表数据（name/sub/img） |
+| `source/fun/` | 娱乐页（音乐/电影/游戏/书籍，导航「娱乐」下拉） |
+| `source/data/games.json` `movies.json` `books.json` | 游戏/电影/书籍列表数据（name/sub/img） |
 | `source/img/games/` | 游戏海报（20 款，game01-20.jpg，600×900 竖版） |
-| `source/js/media-grid.js` | 电影/游戏网格渲染（读取 `/data/*.json`） |
+| `source/img/books/` | 书籍封面（13 本，中文文件名.jpg） |
+| `source/js/media-grid.js` | 电影/游戏/书籍网格渲染（读取 `/data/*.json`，三合一） |
 | `source/data/music.json` | 音乐页歌单（title/author/cover，49 首） |
 | `source/js/music-grid.js` | 音乐网格渲染（音乐页） |
 | `source/js/music-playlist.js` | 音乐播放器歌单（49 首，运行时 Meting API 解析 URL） |
@@ -104,7 +105,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 - **GitHub 统计卡**：github-readme-stats（radical 主题）
 - **GitHub 热力图**：自渲染，紫色调，精确数据，每天自动更新
 - **算法笔记**：18 篇力扣题（算法题分类 + 导航菜单入口）；**标签/分类规范**：`tags` 只写 `力扣`，难度或比赛类型写入 `categories` 子分类（`算法题 → 简单/中等/困难/周赛/双周赛`），避免标签页堆满 leetcode/难度/周赛等零散标签
-- **娱乐模块**：音乐 / 电影 / 游戏 三个子页（导航「娱乐」下拉），游戏 20 款带竖版海报（`games.json` + `game01-20.jpg`）
+- **娱乐模块**：音乐 / 电影 / 游戏 / 书籍 四个子页（导航「娱乐」下拉），游戏 20 款带竖版海报（`games.json` + `game01-20.jpg`）；书籍 13 本带封面（`books.json` + `source/img/books/*.jpg`）
 - **旅行地图**：中国省份 SVG 地图（维基公有领域），已去过的省紫色高亮、可点击跳转该省文章；写旅行文章只需 front-matter 写 `categories: [旅行, 省份名]`（如 `[旅行, 四川]`），地图自动高亮该省
 - **头像/站点图标**、**关于/标签/分类** 页面、**博客运行天数**
 
@@ -192,6 +193,7 @@ git add -A && git commit -m "改动说明" && git push origin source:main
 - **图片导入**：`D:\blog\原始图片` 的 47 张图，用 Python PIL 压缩（`ImageOps.exif_transpose` 修方向 + 缩放到 500px）到 `source/img/blog/`。
 - **图片处理**：本机无 PIL/ImageMagick/ffmpeg，用 PowerShell `System.Drawing` 缩放/裁剪（`Image` 加载 → `Bitmap` 目标尺寸 → `DrawImage` → 存 JPEG，透明 PNG 先铺白底）；`file` 命令能读 JPEG 尺寸，PNG 要看完整输出（`1024 x 1024` 带空格）。
 - **国内可用的无防盗链图源**：萌娘共享 `storage.moegirl.org.cn`、17173 `i.17173cdn.com`、苹果 App Store 图标（iTunes API `itunes.apple.com/search?term=…&country=us` → `artworkUrl512`，CDN `is1-ssl.mzstatic.com`）、网易云封面 `p*.music.126.net`。维基百科 `upload.wikimedia.org` 被墙（DNS 污染）、4399/百度百科有防盗链。
+- **豆瓣图片 CDN 状态**：豆瓣书籍页面和搜索 API 已全面封锁（需要登录，返回 error code 004），但图片 CDN `img*.doubanio.com` 仍可直接下载（有 referer 校验）。获取封面失败时，改用百度搜索图片 API：`curl "https://image.baidu.com/search/flip?tn=baiduimage&word={书名}+封面" | grep -oP 'https://[^"]+\.jpg' | grep -v "baidu\|bdstatic\|bdimg"`。
 - **网易云 API**（拿歌 ID/歌单）：搜索 `music.163.com/api/cloudsearch/pc?s=歌名&type=1&limit=1`；用户歌单列表 `music.163.com/api/user/playlist?uid=xxx`；单曲外链 `music.163.com/song/media/outer/url?id=X.mp3`（VIP 歌会返回 HTML，见「坑」第 6 条）。
 - **看板娘模型自托管**：从 fghrsh/live2d_api 只下载了 Pio/Tia 的核心文件（index.json、model.moc、默认贴图、motions），model_list.json 精简为两个模型。**默认模型 = `model_list.json` 的 `models` 数组第一项**（当前 Tia 黄头发在前、Pio 女巫在后）。⚠️ 坑：live2d-widget 把选中模型索引存在 localStorage 的 `modelId`/`modelTexturesId`，改 `model_list.json` 顺序后旧缓存会错位；已在 `live2d.js` 里 `localStorage.removeItem` 强制走默认。「textures.cache」404 是正常现象（缺可选的纹理缓存文件，不影响显示）。
 - **⚠️ three.js 是旧版**（`REVISION="121"`，自托管 `source/lib/three.min.js`）：`TorusKnotGeometry` 等返回的是**旧 Geometry**（顶点在 `vertices` 数组，不是新版的 `attributes.position`）。做顶点变形要用 `geometry.vertices`（Vector3 数组）+ `geometry.verticesNeedUpdate = true`，别用 `geometry.attributes`（会报 `Cannot read properties of undefined`）。
