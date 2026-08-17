@@ -5,7 +5,7 @@
   if (!el) return;
 
   var wrap = document.createElement('div');
-  wrap.style.cssText = 'position:absolute;left:24px;top:130px;width:220px;height:220px;z-index:2;cursor:grab;';
+  wrap.style.cssText = 'position:absolute;left:80px;top:80px;width:264px;height:264px;z-index:2;cursor:grab;';
   el.appendChild(wrap);
 
   var scene = new THREE.Scene();
@@ -14,7 +14,7 @@
   camera.lookAt(0, 0, 0);
 
   var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-  renderer.setSize(220, 220);
+  renderer.setSize(264, 264);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.domElement.style.display = 'block';
   wrap.appendChild(renderer.domElement);
@@ -27,6 +27,7 @@
   var INNER = 0x1a1a2e;
 
   var cubeGroup = new THREE.Group();
+  cubeGroup.scale.set(1.2, 1.2, 1.2);
   scene.add(cubeGroup);
 
   var cubies = [];
@@ -40,6 +41,7 @@
         ].map(function (c) { return new THREE.MeshLambertMaterial({ color: c }); });
         var cubie = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.95, 0.95), mats);
         cubie.position.set(x, y, z);
+        cubie.userData = { originPos: new THREE.Vector3(x, y, z), originQuat: cubie.quaternion.clone() };
         cubeGroup.add(cubie);
         cubies.push(cubie);
       }
@@ -101,6 +103,15 @@
     })();
   }
 
+  function resetCube() {
+    if (rotating) return;
+    cubeGroup.quaternion.set(0, 0, 0, 1);
+    cubies.forEach(function (c) {
+      c.position.copy(c.userData.originPos);
+      c.quaternion.copy(c.userData.originQuat);
+    });
+  }
+
   // ===== 鼠标交互：射线检测选层 =====
   var raycaster = new THREE.Raycaster();
   var interaction = null;
@@ -137,8 +148,16 @@
     if (interaction.mode === 'orbit') {
       var dx = clientX - interaction.lx, dy = clientY - interaction.ly;
       interaction.lx = clientX; interaction.ly = clientY;
-      cubeGroup.rotation.y -= dx * 0.008; // 拖右 → 前面转右
-      cubeGroup.rotation.x += dy * 0.008; // 拖下 → 前面转下
+
+      var m = camera.matrixWorld.elements;
+      var right = new THREE.Vector3(m[0], m[1], m[2]);
+      var up = new THREE.Vector3(m[4], m[5], m[6]);
+
+      var qy = new THREE.Quaternion().setFromAxisAngle(up, dx * 0.008);
+      var qx = new THREE.Quaternion().setFromAxisAngle(right, dy * 0.008);
+
+      cubeGroup.quaternion.premultiply(qy);
+      cubeGroup.quaternion.premultiply(qx);
     } else if (interaction.mode === 'layer' && !interaction.done) {
       var dx2 = clientX - interaction.sx, dy2 = clientY - interaction.sy;
       if (Math.abs(dx2) < 15 && Math.abs(dy2) < 15) return;
@@ -177,12 +196,23 @@
   wrap.addEventListener('touchmove', function (e) { if (e.touches.length === 1) { onMove(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); } }, { passive: false });
   wrap.addEventListener('touchend', onUp);
 
-  // 打乱按钮 + 提示
-  var btn = document.createElement('button');
-  btn.textContent = '打乱';
-  btn.style.cssText = 'display:block;margin:8px auto 0;padding:4px 16px;border:none;border-radius:12px;background:rgba(107,91,149,0.85);color:#fff;font-size:13px;cursor:pointer;';
-  btn.addEventListener('click', scramble);
-  wrap.appendChild(btn);
+  // 打乱 + 还原按钮 + 提示
+  var btnWrap = document.createElement('div');
+  btnWrap.style.cssText = 'display:flex;gap:8px;justify-content:center;margin-top:8px;';
+
+  var scrambleBtn = document.createElement('button');
+  scrambleBtn.textContent = '打乱';
+  scrambleBtn.style.cssText = 'padding:4px 16px;border:none;border-radius:12px;background:rgba(107,91,149,0.85);color:#fff;font-size:13px;cursor:pointer;';
+  scrambleBtn.addEventListener('click', scramble);
+  btnWrap.appendChild(scrambleBtn);
+
+  var resetBtn = document.createElement('button');
+  resetBtn.textContent = '还原';
+  resetBtn.style.cssText = 'padding:4px 16px;border:none;border-radius:12px;background:rgba(142,107,181,0.85);color:#fff;font-size:13px;cursor:pointer;';
+  resetBtn.addEventListener('click', resetCube);
+  btnWrap.appendChild(resetBtn);
+
+  wrap.appendChild(btnWrap);
 
   var hint = document.createElement('div');
   hint.textContent = '拖拽表面转层 · 右键/双指拖拽旋转视角';
@@ -192,7 +222,10 @@
   // 初始慢速自转展示
   var spinUntil = performance.now() + 3000;
   function render(now) {
-    if (now < spinUntil && !interaction) cubeGroup.rotation.y += 0.006;
+    if (now < spinUntil && !interaction) {
+      var q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0.006);
+      cubeGroup.quaternion.premultiply(q);
+    }
     renderer.render(scene, camera);
     requestAnimationFrame(render);
   }
