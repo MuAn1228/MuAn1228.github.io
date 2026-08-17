@@ -12,6 +12,7 @@ menu:
     音乐: /fun/music/ || fas fa-music
     电影: /fun/movies/ || fas fa-film
     游戏: /fun/games/ || fas fa-gamepad
+    书籍: /fun/books/ || fas fa-book
   分类: /categories/ || fas fa-folder-open
   关于: /about/ || fas fa-user
 
