@@ -29,6 +29,7 @@
 
   function init() {
     render('movie-grid', '/data/movies.json');
+    render('book-grid', '/data/books.json');
     render('game-grid', '/data/games.json');
   }
 
