@@ -14,6 +14,7 @@ completed
 - C 语言入门分类：学习笔记 / C语言，标签：C语言
 - 本地 `hexo clean && hexo s` 预览通过，无报错
 - 删除临时导入脚本（避免 Hexo 自动执行）
+- 已提交并推送到 `origin source:main`，提交哈希 `502efda`
 
 ## In Progress
 无
