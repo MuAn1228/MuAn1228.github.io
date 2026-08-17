@@ -1,44 +1,33 @@
 # Current Task
 
 ## Goal
-等待下一个具体任务。
+新增书籍阅读记录模块（fun/books），参照音乐/电影/游戏结构。
 
 ## Status
-idle
+done
 
 ## Completed
-- 上一个任务「导入 Obsidian Go 后端与面试150题笔记」已完成并部署（提交 `502efda` / `e8fbe66`）
-- 已将博客中的《我的恋爱史与爱情观》复制到 Obsidian：`D:\obsidian\Obsidian Vault\博客文章\我的恋爱史与爱情观.md`
-- 回答了用户关于 Obsidian→博客工作流、网页端模型沟通、Agent 交接、找工作评估、可新增功能的 6 个问题
+- 新增 source/fun/books/index.md 页面
+- 新增 source/data/books.json（13本书）
+- 更新 source/js/media-grid.js 支持书籍网格渲染
+- 更新 _config.butterfly.yml 菜单，娱乐下新增「书籍」
+- 已推送至 source -> main，commit 9916e1
+- 待 GitHub Actions 部署
 
 ## In Progress
 无
 
 ## Modified Files
-无（博客仓库当前干净）
+- source/fun/books/index.md (新建)
+- source/data/books.json (新建)
+- source/js/media-grid.js (修改，新增 render book-grid)
+- _config.butterfly.yml (修改，菜单加书籍)
 
 ## Current Problems
-无
+- 豆瓣图片被反爬封禁，书籍封面暂无图片。需手动下载放到 source/img/books/ 并更新 books.json
 
 ## Current Errors
 无
 
-## Attempts
-无
-
-## Failed Attempts
-无
-
-## Decisions
-- Obsidian 博客文章统一放在 `D:\obsidian\Obsidian Vault\博客文章/`
-- 写完后复制到 `D:\blog\source\_posts/对应分类/`，保持 front-matter
-
 ## Next Step
-由用户或下一个 Agent 接手，按 `CLAUDE.md` 和本文件恢复上下文。
-
-## Do Not Repeat
-无
-
-## Verification
-- `git status` 干净
-- 线上博客已通过 GitHub Actions 部署
+待部署完成后确认页面正常；之后可手动补充书籍封面图片。
