@@ -15,9 +15,9 @@
     "img": "/img/books/诗云.jpg"
   },
   {
-    "name": "瞻仰人类",
+    "name": "赡养人类",
     "sub": "刘慈欣",
-    "img": "/img/books/瞻仰人类.jpg"
+    "img": "/img/books/赡养人类.jpg"
   },
   {
     "name": "这世界既残酷也温柔",
@@ -47,7 +47,7 @@
   {
     "name": "程序员健康指南",
     "sub": "[美] 布莱恩·琼斯",
-    "img": "/img/books/程序员健康指南.jpg"
+    "img": "/img/books/程序员健康指南.png"
   },
   {
     "name": "阿衰",
@@ -57,11 +57,26 @@
   {
     "name": "漫画Party",
     "sub": "漫友文化",
-    "img": "/img/books/漫画Party.jpg"
+    "img": "/img/books/漫画Party.png"
   },
   {
     "name": "我们爱科学",
     "sub": "杂志",
     "img": "/img/books/我们爱科学.jpg"
+  },
+  {
+    "name": "机器学习",
+    "sub": "周志华",
+    "img": "/img/books/机器学习.png"
+  },
+  {
+    "name": "漫步华尔街",
+    "sub": "伯顿·马尔基尔",
+    "img": "/img/books/漫步华尔街.jpg"
+  },
+  {
+    "name": "C程序设计语言",
+    "sub": "Brian W. Kernighan",
+    "img": "/img/books/C程序设计语言.jpg"
   }
 ]

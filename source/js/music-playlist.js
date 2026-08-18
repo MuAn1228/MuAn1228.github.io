@@ -13,7 +13,7 @@
     "id": 1496089152,
     "name": "I Really Want to Stay at Your House",
     "artist": "Rosa Walton",
-    "cover": "https://p2.music.126.net/ETNtwbJ4s1oCNXAyr_YEYQ==/109951170504647739.jpg"
+    "cover": "/img/music/IReallyWantToStayAtYourHouse.jpg"
   },
   {
     "id": 534540498,
@@ -115,13 +115,13 @@
     "id": 65592,
     "name": "单车",
     "artist": "陈奕迅",
-    "cover": "https://p2.music.126.net/bRLW5RFIO9_lCsVJT4-L9A==/109951163067349766.jpg"
+    "cover": "/img/music/danche.jpg"
   },
   {
     "id": 432821964,
     "name": "恋",
     "artist": "星野源",
-    "cover": "https://p1.music.126.net/ElaxIg9-mHVoNWrvfZ_G4g==/109951164332825582.jpg"
+    "cover": "/img/music/lian.jpg"
   },
   {
     "id": 1835009703,
