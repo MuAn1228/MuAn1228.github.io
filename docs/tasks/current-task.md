@@ -4,26 +4,30 @@
 等待下一个任务。
 
 ## Status
-idle — 所有已知问题已修复
+idle — 小游戏模块已完成并推送（3ff70e9），**等待用户手动触发 GitHub Actions 部署**
 
 ## 本次会话完成
 
-### 书籍模块修复
-- 修正 4 本书封面路径与文件名不匹配：`dahua_data_structure.jpg` → `dahua datastructure.jpg`、`shijieji.canduoyiwei.jpg` → `shijiejioku candouyiwei.jpg`、`maoxuandexuanji.jpg` → `maozexuandexuanji.jpg`、`womenai_kexue.jpg` → `womenai kexue.jpg`
-- 修正《这世界既残酷也温柔》作者：余华 → 孙宇晨
+### 小游戏模块（/fun/arcade/）— 已推送，待部署
+- 新建页面 `source/fun/arcade/index.md`，三个标签页：Flappy Bird / FPS 射击 / 魔方
+- `source/js/flappy-bird.js`：canvas 自包含，固定 60Hz 时间步长（高刷屏不加速），GRAVITY=0.38 / FLAP=-6.8，localStorage 最高分
+- `source/js/fps-game.js`：基于本地 three.min.js（r121）重写（原 Kimi 版依赖外部 CDN 已废弃删除），Pointer Lock 瞄准 + 按住拖拽降级 + 触屏拖拽，WASD 移动，敌人追踪/攻击，计分+最高分
+- `source/js/rubik.js`：挂载点从主页 `#page-header.full_page` 改为 `#arcade-rubik`（**主页左上角魔方已移除**），面板隐藏时暂停渲染
+- `source/js/arcade.js`：标签切换，派发 `arcade:switch` 事件（FPS 监听它退出 pointer lock）
+- 导航菜单「娱乐」下拉新增「小游戏」入口
+- 样式集中在 `source/css/custom.css`（.arcade-* / .fps-* 段）
+- 提交记录：1dc2d95 → 6665c87 → 4762f4d → 3ff70e9
 
-### 导航栏中文渲染修复
-- 修复 Windows Chrome 桌面端导航栏中文字笔画缺失问题（`backdrop-filter: blur()` + `will-change: transform` 触发亚像素错位）
-- 在 `source/css/custom.css` 追加 font-smoothing + text-rendering 修复规则
-
-## 上会话已完成（已推送）
-- 音乐模块修正：De Yang Gatal→布灵布灵Duang、溯→三叶、新增《形容》（沈以诚）、恋→饼饼/慵狐/倚云听风雨、单车→卿卿酱、I Really Want to Stay at Your House→Samuel Kim/Lorien
-- 电影模块更新：移除诺兰4部，新增8部
-- 书籍封面全部替换为 D:/photo/book/ 原图，PNG转JPEG，文件名ASCII化
+## 待处理问题
+- **用户必须手动触发「Update Contributions & Deploy」工作流**，否则线上仍是旧代码（已确认线上 flappy-bird.js 还是 GRAVITY=0.45 的原始版本）
+- 未跟踪文件 `AGENTS.md` 未提交（非本项目产物，保持不动）
 
 ## Modified Files
-- source/data/books.json
-- source/css/custom.css
+- source/fun/arcade/index.md（新增）
+- source/js/flappy-bird.js、fps-game.js、arcade.js（新增）
+- source/js/rubik.js（挂载点迁移）
+- source/css/custom.css（追加样式）
+- _config.butterfly.yml（菜单 + inject.bottom）
 
 ## Next Step
-等待下一个任务。
+等待用户触发部署后验证线上效果；若 Flappy 手感仍需微调，改 flappy-bird.js 第 7 行 GRAVITY/FLAP。

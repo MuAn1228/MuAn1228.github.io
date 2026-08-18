@@ -42,14 +42,21 @@ cd /d/blog && git pull
 
 ## 本次会话完成的工作（供参考）
 
-1. **书籍模块修复**：4本书封面路径与文件名不匹配修正（`dahua datastructure.jpg`、`shijiejioku candouyiwei.jpg`、`maozexuandexuanji.jpg`、`womenai kexue.jpg`）；《这世界既残酷也温柔》作者修正为孙宇晨
-2. **导航栏中文渲染修复**：Windows Chrome 桌面端导航栏中文字笔画缺失问题修复（`backdrop-filter` + `will-change` 组合导致亚像素错位），在 `source/css/custom.css` 追加 font-smoothing + text-rendering 规则
+1. **小游戏模块（/fun/arcade/）**：新建标签页式小游戏页面，含三个游戏：
+   - Flappy Bird（`source/js/flappy-bird.js`，canvas 自包含，固定 60Hz 时间步长防高刷屏加速，GRAVITY=0.38/FLAP=-6.8）
+   - FPS 射击（`source/js/fps-game.js`，基于本地 three.min.js r121 重写；Pointer Lock 瞄准 + 按住拖拽降级 + 触屏拖拽）
+   - 魔方（`source/js/rubik.js` 从主页迁入，**主页左上角魔方已移除**）
+   - 标签切换逻辑在 `source/js/arcade.js`，样式在 custom.css 的 .arcade-* / .fps-* 段
+   - 导航「娱乐」下拉新增「小游戏」入口
+2. **重要：以上已推送（3ff70e9）但线上尚未部署**，需手动触发「Update Contributions & Deploy」工作流
 
 ## 上会话已完成（已推送）
 
-1. **音乐模块修正**：6首歌作者/音源修正（单车→卿卿酱、恋→饼饼/慵狐/倚云听风雨、I Really Want to Stay at Your House→Samuel Kim/Lorien、De Yang Gatal→布灵布灵Duang、溯→三叶、新增形容→沈以诚）
-2. **电影模块更新**：移除诺兰4部（盗梦空间、敦刻尔克、信条、奥本海默），新增8部（阿甘正传、我不是药神、功夫、重庆森林、流浪地球、流浪地球2、小丑、九品芝麻官）
-3. **书籍封面全部更新**：16本书封面替换为 D:/photo/book/ 原图，PNG转JPEG压缩，所有文件名为 ASCII
+1. **书籍模块修复**：4本书封面路径与文件名不匹配修正；《这世界既残酷也温柔》作者修正为孙宇晨
+2. **导航栏中文渲染修复**：Windows Chrome 桌面端导航栏中文字笔画缺失（`backdrop-filter` + `will-change` 亚像素错位），custom.css 追加 font-smoothing + text-rendering 规则
+3. **音乐模块修正**：6首歌作者/音源修正
+4. **电影模块更新**：移除诺兰4部，新增8部
+5. **书籍封面全部更新**：16本书封面替换，PNG转JPEG压缩，文件名 ASCII
 
 ## 重要坑（务必记住）
 
