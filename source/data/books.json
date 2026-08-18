@@ -22,7 +22,7 @@
   {
     "name": "这世界既残酷也温柔",
     "sub": "余华",
-    "img": "/img/books/shijieji.canduoyiwei.jpg"
+    "img": "/img/books/shijiejioku candouyiwei.jpg"
   },
   {
     "name": "钢铁是怎样炼成的",
@@ -32,7 +32,7 @@
   {
     "name": "毛泽东选集",
     "sub": "毛泽东",
-    "img": "/img/books/maoxuandexuanji.jpg"
+    "img": "/img/books/maozexuandexuanji.jpg"
   },
   {
     "name": "乡土中国",
@@ -42,7 +42,7 @@
   {
     "name": "大话数据结构",
     "sub": "程杰",
-    "img": "/img/books/dahua_data_structure.jpg"
+    "img": "/img/books/dahua datastructure.jpg"
   },
   {
     "name": "程序员健康指南",
@@ -62,7 +62,7 @@
   {
     "name": "我们爱科学",
     "sub": "杂志",
-    "img": "/img/books/womenai_kexue.jpg"
+    "img": "/img/books/womenai kexue.jpg"
   },
   {
     "name": "机器学习",
