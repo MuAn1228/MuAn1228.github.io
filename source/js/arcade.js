@@ -4,6 +4,7 @@
   if (!tabs.length) return;
   var panels = {
     flappy: document.getElementById('arcade-panel-flappy'),
+    fps: document.getElementById('arcade-panel-fps'),
     rubik: document.getElementById('arcade-panel-rubik')
   };
 
