@@ -1,20 +1,21 @@
 # Current Task
 
 ## Goal
-书籍封面图片已添加完成。
+更新电影模块：移除 4 部诺兰电影，新增 8 部电影。
 
 ## Status
 idle - 等待下一个任务
 
 ## Completed
-- 搜索功能（local search）已启用并部署
-- 书籍模块（fun/books）已创建，13 本书，菜单已更新
-- 书籍封面图片已从百度搜索获取并下载到 source/img/books/
-- 更新了 source/data/books.json 中的 img 字段
+- movies.json 已更新（12 部 → 16 部）
+- 移除：盗梦空间、敦刻尔克、信条、奥本海默
+- 新增：阿甘正传、我不是药神、功夫、重庆森林、流浪地球、流浪地球2、小丑、九品芝麻官
+- 15 张海报文件已就位（movie01-16，跳过已删除的 movie08/movie10/movie11/movie12）
+- 海报来源：百度搜索图片 API（成功率约 80%，个别用备用 URL）
 
 ## Modified Files
-- source/data/books.json (修改 - 添加了所有书籍的封面路径)
-- source/img/books/*.jpg (新建 - 13 本书籍封面图片)
+- source/data/movies.json (更新内容)
+- source/img/movies/*.jpg (删除 4 张旧海报，新增 8 张新海报，共 15 张)
 
 ## Next Step
 等待下一个任务。

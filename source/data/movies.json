@@ -35,28 +35,48 @@
     "img": "/img/movies/movie07.jpg"
   },
   {
-    "name": "盗梦空间",
-    "sub": "2010 · 诺兰",
+    "name": "星际穿越",
+    "sub": "2014 · 诺兰",
     "img": "/img/movies/movie08.jpg"
   },
   {
-    "name": "星际穿越",
-    "sub": "2014 · 诺兰",
+    "name": "阿甘正传",
+    "sub": "1994",
     "img": "/img/movies/movie09.jpg"
   },
   {
-    "name": "敦刻尔克",
-    "sub": "2017 · 诺兰",
+    "name": "我不是药神",
+    "sub": "2018",
     "img": "/img/movies/movie10.jpg"
   },
   {
-    "name": "信条",
-    "sub": "2020 · 诺兰",
+    "name": "功夫",
+    "sub": "2004",
     "img": "/img/movies/movie11.jpg"
   },
   {
-    "name": "奥本海默",
-    "sub": "2023 · 诺兰",
+    "name": "重庆森林",
+    "sub": "1994",
     "img": "/img/movies/movie12.jpg"
+  },
+  {
+    "name": "流浪地球",
+    "sub": "2019",
+    "img": "/img/movies/movie13.jpg"
+  },
+  {
+    "name": "流浪地球2",
+    "sub": "2023",
+    "img": "/img/movies/movie14.jpg"
+  },
+  {
+    "name": "小丑",
+    "sub": "2019",
+    "img": "/img/movies/movie15.jpg"
+  },
+  {
+    "name": "九品芝麻官",
+    "sub": "1994",
+    "img": "/img/movies/movie16.jpg"
   }
 ]
