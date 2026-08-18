@@ -2,81 +2,81 @@
   {
     "name": "三体",
     "sub": "刘慈欣",
-    "img": "/img/books/三体.jpg"
+    "img": "/img/books/santi.jpg"
   },
   {
     "name": "追风筝的人",
     "sub": "卡勒德·胡赛尼",
-    "img": "/img/books/追风筝的人.jpg"
+    "img": "/img/books/zhifengzhengderen.jpg"
   },
   {
     "name": "诗云",
     "sub": "刘慈欣",
-    "img": "/img/books/诗云.jpg"
+    "img": "/img/books/shiyun.jpg"
   },
   {
     "name": "赡养人类",
     "sub": "刘慈欣",
-    "img": "/img/books/赡养人类.jpg"
+    "img": "/img/books/shanyangrenlei.jpg"
   },
   {
     "name": "这世界既残酷也温柔",
     "sub": "余华",
-    "img": "/img/books/这世界既残酷也温柔.jpg"
+    "img": "/img/books/shijieji.canduoyiwei.jpg"
   },
   {
     "name": "钢铁是怎样炼成的",
     "sub": "奥斯特洛夫斯基",
-    "img": "/img/books/钢铁是怎样炼成的.jpg"
+    "img": "/img/books/gangtie.jpg"
   },
   {
     "name": "毛泽东选集",
     "sub": "毛泽东",
-    "img": "/img/books/毛泽东选集.jpg"
+    "img": "/img/books/maoxuandexuanji.jpg"
   },
   {
     "name": "乡土中国",
     "sub": "费孝通",
-    "img": "/img/books/乡土中国.jpg"
+    "img": "/img/books/xiangtuzhongguo.jpg"
   },
   {
     "name": "大话数据结构",
     "sub": "程杰",
-    "img": "/img/books/大话数据结构.jpg"
+    "img": "/img/books/dahua_data_structure.jpg"
   },
   {
     "name": "程序员健康指南",
     "sub": "[美] 布莱恩·琼斯",
-    "img": "/img/books/程序员健康指南.jpg"
+    "img": "/img/books/health.jpg"
   },
   {
     "name": "阿衰",
     "sub": "猫小乐",
-    "img": "/img/books/阿衰.jpg"
+    "img": "/img/books/ashuai.jpg"
   },
   {
     "name": "漫画Party",
     "sub": "漫友文化",
-    "img": "/img/books/漫画Party.jpg"
+    "img": "/img/books/manhuaparty.jpg"
   },
   {
     "name": "我们爱科学",
     "sub": "杂志",
-    "img": "/img/books/我们爱科学.jpg"
+    "img": "/img/books/womenai_kexue.jpg"
   },
   {
     "name": "机器学习",
     "sub": "周志华",
-    "img": "/img/books/机器学习.jpg"
+    "img": "/img/books/machinelearning.jpg"
   },
   {
     "name": "漫步华尔街",
     "sub": "伯顿·马尔基尔",
-    "img": "/img/books/漫步华尔街.jpg"
+    "img": "/img/books/wallstreet.jpg"
   },
   {
     "name": "C程序设计语言",
     "sub": "Brian W. Kernighan",
-    "img": "/img/books/C程序设计语言.jpg"
+    "img": "/img/books/c_programming_language.jpg"
   }
 ]
