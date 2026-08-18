@@ -13,6 +13,7 @@ menu:
     电影: /fun/movies/ || fas fa-film
     游戏: /fun/games/ || fas fa-gamepad
     书籍: /fun/books/ || fas fa-book
+    小游戏: /fun/arcade/ || fas fa-puzzle-piece
   分类: /categories/ || fas fa-folder-open
   关于: /about/ || fas fa-user
 
@@ -145,6 +146,8 @@ inject:
     - '<script src="/js/letterglitch.js"></script>'
     - '<script src="/js/game-ballpit.js"></script>'
     - '<script src="/js/reward-lightbox.js"></script>'
+    - '<script src="/js/arcade.js"></script>'
+    - '<script src="/js/flappy-bird.js"></script>'
 
 # ---------- 评论系统（Giscus） ----------
 comments:

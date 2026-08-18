@@ -1069,3 +1069,43 @@ canvas.particle-text-canvas {
     min-height: 300px;
   }
 }
+
+/* ===== 小游戏模块（/fun/arcade/） ===== */
+.arcade-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.arcade-tab {
+  padding: 8px 26px;
+  font-size: 0.95em;
+  color: #8e6bb5;
+  background: rgba(142, 107, 181, 0.1);
+  border: 1px solid rgba(142, 107, 181, 0.35);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.arcade-tab:hover {
+  background: rgba(142, 107, 181, 0.2);
+  color: #6f4d94;
+}
+.arcade-tab.is-active {
+  background: #8e6bb5;
+  border-color: #8e6bb5;
+  color: #fff;
+}
+.arcade-panel {
+  display: flex;
+  justify-content: center;
+}
+#arcade-flappy .arcade-flappy-canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  touch-action: none;
+}

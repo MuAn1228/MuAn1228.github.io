@@ -1,11 +1,12 @@
 // ===== 3D 魔方（three.js，鼠标拖拽转层、拖空白转视角、可打乱） =====
+// 挂载于 /fun/arcade/ 小游戏模块的 #arcade-rubik 容器
 (function () {
   if (!window.THREE) return;
-  var el = document.querySelector('#page-header.full_page');
+  var el = document.getElementById('arcade-rubik');
   if (!el) return;
 
   var wrap = document.createElement('div');
-  wrap.style.cssText = 'position:absolute;left:80px;top:80px;width:264px;height:264px;z-index:2;cursor:grab;';
+  wrap.style.cssText = 'position:relative;width:264px;margin:0 auto;cursor:grab;';
   el.appendChild(wrap);
 
   var scene = new THREE.Scene();
@@ -216,17 +217,20 @@
 
   var hint = document.createElement('div');
   hint.textContent = '拖拽表面转层 · 右键/双指拖拽旋转视角';
-  hint.style.cssText = 'margin-top:6px;font-size:11px;color:rgba(255,255,255,0.55);text-align:center;pointer-events:none;';
+  hint.style.cssText = 'margin-top:6px;font-size:11px;color:rgba(80,80,100,0.75);text-align:center;pointer-events:none;';
   wrap.appendChild(hint);
 
-  // 初始慢速自转展示
-  var spinUntil = performance.now() + 3000;
-  function render(now) {
-    if (now < spinUntil && !interaction) {
-      var q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0.006);
-      cubeGroup.quaternion.premultiply(q);
+  // 初始慢速自转展示（按可见帧计时，面板隐藏时暂停）
+  var spinFrames = 180;
+  function render() {
+    if (wrap.offsetParent !== null) {
+      if (spinFrames > 0 && !interaction) {
+        spinFrames--;
+        var q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0.006);
+        cubeGroup.quaternion.premultiply(q);
+      }
+      renderer.render(scene, camera);
     }
-    renderer.render(scene, camera);
     requestAnimationFrame(render);
   }
   requestAnimationFrame(render);
