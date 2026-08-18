@@ -2,81 +2,97 @@
   {
     "name": "三体",
     "sub": "刘慈欣",
-    "img": "/img/books/santi.jpg"
+    "img": "/img/books/santi.jpg",
+    "note": ""
   },
   {
     "name": "追风筝的人",
     "sub": "卡勒德·胡赛尼",
-    "img": "/img/books/zhifengzhengderen.jpg"
+    "img": "/img/books/zhifengzhengderen.jpg",
+    "note": ""
   },
   {
     "name": "诗云",
     "sub": "刘慈欣",
-    "img": "/img/books/shiyun.jpg"
+    "img": "/img/books/shiyun.jpg",
+    "note": ""
   },
   {
     "name": "赡养人类",
     "sub": "刘慈欣",
-    "img": "/img/books/shanyangrenlei.jpg"
+    "img": "/img/books/shanyangrenlei.jpg",
+    "note": ""
   },
   {
     "name": "这世界既残酷也温柔",
     "sub": "孙宇晨",
-    "img": "/img/books/shijiejioku candouyiwei.jpg"
+    "img": "/img/books/shijiejioku candouyiwei.jpg",
+    "note": ""
   },
   {
     "name": "钢铁是怎样炼成的",
     "sub": "奥斯特洛夫斯基",
-    "img": "/img/books/gangtie.jpg"
+    "img": "/img/books/gangtie.jpg",
+    "note": ""
   },
   {
     "name": "毛泽东选集",
     "sub": "毛泽东",
-    "img": "/img/books/maozexuandexuanji.jpg"
+    "img": "/img/books/maozexuandexuanji.jpg",
+    "note": ""
   },
   {
     "name": "乡土中国",
     "sub": "费孝通",
-    "img": "/img/books/xiangtuzhongguo.jpg"
+    "img": "/img/books/xiangtuzhongguo.jpg",
+    "note": ""
   },
   {
     "name": "大话数据结构",
     "sub": "程杰",
-    "img": "/img/books/dahua datastructure.jpg"
+    "img": "/img/books/dahua datastructure.jpg",
+    "note": ""
   },
   {
     "name": "程序员健康指南",
     "sub": "[美] 布莱恩·琼斯",
-    "img": "/img/books/health.jpg"
+    "img": "/img/books/health.jpg",
+    "note": ""
   },
   {
     "name": "阿衰",
     "sub": "猫小乐",
-    "img": "/img/books/ashuai.jpg"
+    "img": "/img/books/ashuai.jpg",
+    "note": ""
   },
   {
     "name": "漫画Party",
     "sub": "漫友文化",
-    "img": "/img/books/manhuaparty.jpg"
+    "img": "/img/books/manhuaparty.jpg",
+    "note": ""
   },
   {
     "name": "我们爱科学",
     "sub": "杂志",
-    "img": "/img/books/womenai kexue.jpg"
+    "img": "/img/books/womenai kexue.jpg",
+    "note": ""
   },
   {
     "name": "机器学习",
     "sub": "周志华",
-    "img": "/img/books/machinelearning.jpg"
+    "img": "/img/books/machinelearning.jpg",
+    "note": ""
   },
   {
     "name": "漫步华尔街",
     "sub": "伯顿·马尔基尔",
-    "img": "/img/books/wallstreet.jpg"
+    "img": "/img/books/wallstreet.jpg",
+    "note": ""
   },
   {
     "name": "C程序设计语言",
     "sub": "Brian W. Kernighan",
-    "img": "/img/books/c_programming_language.jpg"
+    "img": "/img/books/c_programming_language.jpg",
+    "note": ""
   }
 ]
