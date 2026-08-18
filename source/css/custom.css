@@ -745,3 +745,23 @@ canvas.particle-text-canvas {
   .showcase-name { font-size: 1.9em; }
   .showcase-sec p { font-size: 0.98em; }
 }
+
+/* ===== 桌面端导航栏中文渲染修复 =====
+   Windows Chrome 上 backdrop-filter blur + will-change: transform
+   会导致 nav 内中文字笔画亚像素错位（笔画缺失）。
+   移动端不触发 nav-fixed，故无此问题。
+   修复：强制 GPU 合成层 + 字体平滑 + 禁用主题 will-change。
+*/
+#page-header.nav-fixed #nav,
+#page-header.fixed #nav {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: optimizeLegibility !important;
+  will-change: auto !important;
+  transform: translate3d(0, 0, 0) !important;
+}
+#page-header:not(.nav-fixed):not(.fixed) #nav {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: optimizeLegibility !important;
+}
