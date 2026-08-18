@@ -53,6 +53,7 @@
 
   function DriftWall(container, items, conf) {
     this.items = items;
+    this.container = container;
     this.conf = Object.assign({}, DEFAULTS, conf || {});
 
     // 桌面端固定四列（能看到全部书），移动端两列
@@ -326,6 +327,10 @@
 
   DriftWall.prototype.tick = function (ts) {
     var self = this;
+    if (this.container.style.display === 'none') {
+      this.raf = requestAnimationFrame(function (t2) { self.tick(t2); });
+      return;
+    }
     if (this.lastTs === null) this.lastTs = ts;
     var dt = Math.min(0.05, Math.max(0, ts - this.lastTs) / 1000);
     this.lastTs = ts;
