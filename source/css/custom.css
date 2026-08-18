@@ -1109,3 +1109,121 @@ canvas.particle-text-canvas {
   cursor: pointer;
   touch-action: none;
 }
+
+/* ===== FPS 射击小游戏 ===== */
+.fps-wrap {
+  position: relative;
+  width: 800px;
+  max-width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  user-select: none;
+}
+.fps-wrap .fps-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: crosshair;
+}
+.fps-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  color: #fff;
+  font-size: 14px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+.fps-hud-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fps-hp-bar {
+  width: 120px;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.fps-hp-fill {
+  width: 100%;
+  height: 100%;
+  background: #4caf50;
+  transition: width 0.2s ease, background 0.2s ease;
+}
+.fps-crosshair {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.fps-crosshair::before,
+.fps-crosshair::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+}
+.fps-crosshair::before {
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  transform: translateX(-50%);
+}
+.fps-crosshair::after {
+  top: 50%;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  transform: translateY(-50%);
+}
+.fps-crosshair-flash {
+  transform: translate(-50%, -50%) scale(1.5);
+}
+.fps-crosshair-flash::before,
+.fps-crosshair-flash::after {
+  background: #ffd54f;
+}
+.fps-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(10, 10, 20, 0.72);
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+}
+.fps-ov-title {
+  font-size: 30px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+.fps-ov-sub {
+  font-size: 17px;
+  color: #ffd54f;
+}
+.fps-ov-tip {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+}
+@media (max-width: 768px) {
+  .fps-hp-bar {
+    width: 80px;
+  }
+}
