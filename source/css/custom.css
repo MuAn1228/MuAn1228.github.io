@@ -765,3 +765,17 @@ canvas.particle-text-canvas {
   -moz-osx-font-smoothing: grayscale !important;
   text-rendering: optimizeLegibility !important;
 }
+
+/* ===== 桌面端页面顶部标题中文渲染修复 =====
+   与导航栏同类问题：backdrop-filter blur + 合成层导致
+   页面顶部标题（首页/旅行/展示/娱乐/分类/关于及各子页面）
+   中文字笔画亚像素错位、笔画缺失；移动端不触发。
+   修复：字体平滑 + 文本渲染优化。
+*/
+#page-header #site-title,
+#page-header #site-subtitle,
+#page-header #post-info .post-title {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: optimizeLegibility !important;
+}
