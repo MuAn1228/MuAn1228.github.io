@@ -3,15 +3,15 @@
 // 也可对普通元素（如 h1）加 class，脚本会自动把它替换成 canvas
 // 站点标题 #site-title 自动应用（白色，适配深色头部）
 (function () {
-  var STEP = 2, DOT = 2, RADIUS = 70, FORCE = 55;
-  var SERIF = 'Georgia, "Times New Roman", "Songti SC", "Noto Serif SC", "SimSun", serif';
+  var STEP = 3, DOT = 2, RADIUS = 70, FORCE = 55;
+  var FONT = 'Georgia, "Times New Roman", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", "Hiragino Sans GB", "SimHei", sans-serif';
 
   function makeParticleText(el, opts) {
     opts = opts || {};
     var text = opts.text || el.getAttribute('data-text') || el.textContent.trim();
     var color = opts.color || el.getAttribute('data-color') || '#8e6bb5';
     var fontSize = opts.font || parseInt(el.getAttribute('data-font')) || 48;
-    var font = '600 ' + fontSize + 'px ' + SERIF;
+    var font = '700 ' + fontSize + 'px ' + FONT;
 
     // 离屏采样文字像素
     var off = document.createElement('canvas');
@@ -30,7 +30,7 @@
     var particles = [];
     for (var y = 0; y < th; y += STEP) {
       for (var x = 0; x < tw; x += STEP) {
-        if (data[(y * tw + x) * 4 + 3] > 100) {
+        if (data[(y * tw + x) * 4 + 3] > 128) {
           particles.push({ hx: x, hy: y, x: x, y: y, vx: 0, vy: 0 });
         }
       }
