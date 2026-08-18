@@ -12,7 +12,7 @@
 
     var img = document.createElement('img');
     img.style.cssText =
-      'max-width:92vw;max-height:92vh;border-radius:10px;background:#fff;padding:6px;';
+      'max-width:60vw;max-height:60vh;border-radius:10px;background:#fff;padding:6px;';
 
     lb.appendChild(img);
     lb.addEventListener('click', function () { lb.style.display = 'none'; });
