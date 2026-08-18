@@ -4,7 +4,7 @@
   if (!host) return;
 
   var W = 420, H = 560, GROUND = 80;
-  var GRAVITY = 0.22, FLAP = -6.5;
+  var GRAVITY = 0.38, FLAP = -6.8;
   var PIPE_W = 64, PIPE_GAP = 150, PIPE_SPACING = 220, SPEED = 2.6;
 
   var canvas = document.createElement('canvas');
@@ -218,12 +218,22 @@
     drawUI();
   }
 
-  // ===== 主循环（面板隐藏时暂停） =====
-  function loop() {
+  // ===== 主循环（固定时间步长 60Hz，任何刷新率下手感一致；面板隐藏时暂停） =====
+  var lastTime = performance.now();
+  var accumulator = 0;
+  var STEP = 1 / 60;
+  function loop(now) {
     if (host.offsetParent !== null) {
-      update();
+      var delta = (now - lastTime) / 1000;
+      if (delta > 0.25) delta = 0.25; // 切后台回来防止追帧螺旋
+      accumulator += delta;
+      while (accumulator >= STEP) {
+        update();
+        accumulator -= STEP;
+      }
       render();
     }
+    lastTime = now;
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
