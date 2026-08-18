@@ -1,21 +1,24 @@
 # Current Task
 
 ## Goal
-更新电影模块：移除 4 部诺兰电影，新增 8 部电影。
+修正音乐模块：作者名 + 专辑封面
 
 ## Status
 idle - 等待下一个任务
 
 ## Completed
-- movies.json 已更新（12 部 → 16 部）
-- 移除：盗梦空间、敦刻尔克、信条、奥本海默
-- 新增：阿甘正传、我不是药神、功夫、重庆森林、流浪地球、流浪地球2、小丑、九品芝麻官
-- 15 张海报文件已就位（movie01-16，跳过已删除的 movie08/movie10/movie11/movie12）
-- 海报来源：百度搜索图片 API（成功率约 80%，个别用备用 URL）
+- ✅ music.json：单车→卿卿酱，恋→饼饼/慵狐/倚云听风雨，I Really Want to Stay at Your House→Samuel Kim/Lorien
+- ✅ 新封面下载到 source/img/music/danche.jpg、lian.jpg、IReallyWantToStayAtYourHouse.jpg（300×300）
+- ✅ music.json 三首歌 cover 字段改为本地路径
+- ✅ music-playlist.js 三首歌 cover 字段同步修改
+- ✅ music-grid.js 自动读取 music.json，无需修改
 
 ## Modified Files
-- source/data/movies.json (更新内容)
-- source/img/movies/*.jpg (删除 4 张旧海报，新增 8 张新海报，共 15 张)
+- source/data/music.json (3首作者+封面)
+- source/js/music-playlist.js (3首封面)
+- source/img/music/danche.jpg (新增)
+- source/img/music/lian.jpg (新增)
+- source/img/music/IReallyWantToStayAtYourHouse.jpg (新增)
 
 ## Next Step
 等待下一个任务。
