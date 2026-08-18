@@ -266,7 +266,8 @@
     }
   }
 
-  renderer.domElement.addEventListener('click', function () {
+  // 点击监听绑在 wrap 上：遮罩层（overlay）盖住画布时，点击也能冒泡到这里
+  wrap.addEventListener('click', function () {
     if (state === 'play') {
       shoot();
     } else {

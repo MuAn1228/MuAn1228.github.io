@@ -4,7 +4,7 @@
   if (!host) return;
 
   var W = 420, H = 560, GROUND = 80;
-  var GRAVITY = 0.45, FLAP = -7.6;
+  var GRAVITY = 0.22, FLAP = -6.5;
   var PIPE_W = 64, PIPE_GAP = 150, PIPE_SPACING = 220, SPEED = 2.6;
 
   var canvas = document.createElement('canvas');
