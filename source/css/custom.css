@@ -782,7 +782,7 @@ canvas.particle-text-canvas {
 
 /* ===== 书籍「漂移墙」DriftWall（reactbits.dev 移植） ===== */
 #book-driftwall {
-  height: 560px;
+  height: 850px;
   margin: 1.5em 0;
 }
 
@@ -992,4 +992,25 @@ canvas.particle-text-canvas {
 .driftwall-tip .dt-note.is-empty {
   color: rgba(255, 255, 255, 0.42);
   font-style: italic;
+}
+
+/* 书籍页 - 漂移墙/规整视图切换按钮 */
+.book-view-toolbar {
+  text-align: right;
+  margin-bottom: 4px;
+}
+.book-toggle-btn {
+  display: inline-block;
+  padding: 6px 14px;
+  font-size: 0.85em;
+  color: #8e6bb5;
+  background: rgba(142, 107, 181, 0.1);
+  border: 1px solid rgba(142, 107, 181, 0.35);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.book-toggle-btn:hover {
+  background: rgba(142, 107, 181, 0.2);
+  color: #6f4d94;
 }

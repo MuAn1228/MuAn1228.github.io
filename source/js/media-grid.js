@@ -27,9 +27,28 @@
       });
   }
 
+  function initBookToggle() {
+    var btn = document.getElementById('book-toggle');
+    var wall = document.getElementById('book-driftwall');
+    var grid = document.getElementById('book-grid');
+    if (!btn || !wall || !grid) return;
+    function show(mode) {
+      var isGrid = mode === 'grid';
+      wall.style.display = isGrid ? 'none' : '';
+      grid.style.display = isGrid ? '' : 'none';
+      btn.textContent = isGrid ? '切换到漂移墙' : '切换到规整视图';
+    }
+    btn.addEventListener('click', function () {
+      var isGridNow = grid.style.display !== 'none';
+      show(isGridNow ? 'wall' : 'grid');
+    });
+  }
+
   function init() {
     render('movie-grid', '/data/movies.json');
     render('game-grid', '/data/games.json');
+    render('book-grid', '/data/books.json');
+    initBookToggle();
   }
 
   if (document.readyState === 'loading') {
