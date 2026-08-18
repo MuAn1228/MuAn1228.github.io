@@ -4,34 +4,39 @@
 // 站点标题 #site-title 自动应用（白色，适配深色头部）
 (function () {
   var STEP = 3, DOT = 2, RADIUS = 70, FORCE = 55;
-  var FONT = 'Georgia, "Times New Roman", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", "Hiragino Sans GB", "SimHei", sans-serif';
+  var SAMPLE_SCALE = 3;
+  var FONT = 'Georgia, "Times New Roman", "Songti SC", "Noto Serif SC", "SimSun", serif';
 
   function makeParticleText(el, opts) {
     opts = opts || {};
     var text = opts.text || el.getAttribute('data-text') || el.textContent.trim();
     var color = opts.color || el.getAttribute('data-color') || '#8e6bb5';
     var fontSize = opts.font || parseInt(el.getAttribute('data-font')) || 48;
-    var font = '700 ' + fontSize + 'px ' + FONT;
-
-    // 离屏采样文字像素
+    // 离屏高分采样：以 3 倍字号渲染，宋体细笔画也能被完整采到
     var off = document.createElement('canvas');
     var offCtx = off.getContext('2d');
-    offCtx.font = font;
-    var tw = Math.ceil(offCtx.measureText(text).width);
-    var th = Math.ceil(fontSize * 1.6);
-    off.width = tw;
-    off.height = th;
-    offCtx.font = font;
+    var sampleSize = fontSize * SAMPLE_SCALE;
+    var sampleFont = '600 ' + sampleSize + 'px ' + FONT;
+    offCtx.font = sampleFont;
+    var twHigh = Math.ceil(offCtx.measureText(text).width);
+    var thHigh = Math.ceil(sampleSize * 1.6);
+    off.width = twHigh;
+    off.height = thHigh;
+    offCtx.font = sampleFont;
     offCtx.textBaseline = 'top';
     offCtx.fillStyle = '#000';
-    offCtx.fillText(text, 0, fontSize * 0.15);
+    offCtx.fillText(text, 0, sampleSize * 0.15);
 
-    var data = offCtx.getImageData(0, 0, tw, th).data;
+    var data = offCtx.getImageData(0, 0, twHigh, thHigh).data;
+    var tw = Math.max(1, Math.round(twHigh / SAMPLE_SCALE));
+    var th = Math.max(1, Math.round(thHigh / SAMPLE_SCALE));
+
     var particles = [];
-    for (var y = 0; y < th; y += STEP) {
-      for (var x = 0; x < tw; x += STEP) {
-        if (data[(y * tw + x) * 4 + 3] > 128) {
-          particles.push({ hx: x, hy: y, x: x, y: y, vx: 0, vy: 0 });
+    for (var y = 0; y < thHigh; y += STEP) {
+      for (var x = 0; x < twHigh; x += STEP) {
+        if (data[(y * twHigh + x) * 4 + 3] > 128) {
+          var px = x / SAMPLE_SCALE, py = y / SAMPLE_SCALE;
+          particles.push({ hx: px, hy: py, x: px, y: py, vx: 0, vy: 0 });
         }
       }
     }
