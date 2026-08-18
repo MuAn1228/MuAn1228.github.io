@@ -269,7 +269,8 @@
   // 点击监听绑在 wrap 上：遮罩层（overlay）盖住画布时，点击也能冒泡到这里
   wrap.addEventListener('click', function () {
     if (state === 'play') {
-      shoot();
+      // 有 pointer lock 时点击射击；无 pointer lock 时射击由下方 mouseup 拖拽判定处理
+      if (document.pointerLockElement === renderer.domElement) shoot();
     } else {
       startOrResume();
     }
@@ -304,6 +305,30 @@
     }
   }
   document.addEventListener('mousemove', onMouseMove);
+
+  // 桌面降级：Pointer Lock 不可用/被拒绝时，按住鼠标拖拽转视角，松开（未拖动）射击
+  var mouseLook = null;
+  wrap.addEventListener('mousedown', function (e) {
+    if (state === 'play' && document.pointerLockElement !== renderer.domElement && e.button === 0) {
+      mouseLook = { x: e.clientX, y: e.clientY, moved: false };
+    }
+  });
+  document.addEventListener('mousemove', function (e) {
+    if (mouseLook && state === 'play') {
+      var dx = e.clientX - mouseLook.x;
+      var dy = e.clientY - mouseLook.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) mouseLook.moved = true;
+      yaw -= dx * 0.004;
+      pitch -= dy * 0.004;
+      pitch = Math.max(-1.4, Math.min(1.4, pitch));
+      mouseLook.x = e.clientX;
+      mouseLook.y = e.clientY;
+    }
+  });
+  document.addEventListener('mouseup', function () {
+    if (mouseLook && !mouseLook.moved && state === 'play') shoot();
+    mouseLook = null;
+  });
 
   // 触屏/无 PointerLock 降级：拖拽视角
   var touchLook = null;
