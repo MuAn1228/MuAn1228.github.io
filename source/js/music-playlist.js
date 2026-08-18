@@ -34,16 +34,16 @@
     "cover": "https://p1.music.126.net/h8fo0jMwdGOfAc54xvYJAg==/109951163446911351.jpg"
   },
   {
-    "id": 1823485320,
-    "name": "De Yang Gatal Gatal Sa (完整版)",
-    "artist": "鑫鑫",
-    "cover": "https://p1.music.126.net/IkimGyDzFoR1AU6-GN_IOg==/109951165764510559.jpg"
+    "id": 1919787845,
+    "name": "De Yang Gatal Gatal Sa",
+    "artist": "布灵布灵Duang",
+    "cover": "/img/music/gatal.jpg"
   },
   {
-    "id": 1294951288,
-    "name": "溯 (Reverse)",
-    "artist": "CORSAK胡梦周",
-    "cover": "https://p1.music.126.net/JwbX37b8n6mZTtHMO84ZQA==/109951173628284613.jpg"
+    "id": 1927395053,
+    "name": "溯",
+    "artist": "三叶",
+    "cover": "/img/music/su.jpg"
   },
   {
     "id": 32835004,
@@ -296,6 +296,12 @@
     "name": "No Matter (Basic Tape vs. Frances)",
     "artist": "Basic Tape",
     "cover": "https://p1.music.126.net/VqDGz0bgQkQgSsFYG35row==/17798894230849117.jpg"
+  },
+  {
+    "id": 1336856864,
+    "name": "形容",
+    "artist": "沈以诚",
+    "cover": "/img/music/xingrong.jpg"
   }
 ];
 
