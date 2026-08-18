@@ -142,6 +142,8 @@ inject:
     - '<script src="/js/music-grid.js"></script>'
     - '<script src="/js/media-grid.js"></script>'
     - '<script src="/js/driftwall.js"></script>'
+    - '<script src="/js/letterglitch.js"></script>'
+    - '<script src="/js/game-ballpit.js"></script>'
     - '<script src="/js/reward-lightbox.js"></script>'
 
 # ---------- 评论系统（Giscus） ----------

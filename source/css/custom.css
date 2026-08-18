@@ -1014,3 +1014,58 @@ canvas.particle-text-canvas {
   background: rgba(142, 107, 181, 0.2);
   color: #6f4d94;
 }
+
+/* ===== 展示页顶部横幅 - LetterGlitch 字母故障背景 ===== */
+#page-header.letterglitch-host {
+  position: relative;
+  overflow: hidden;
+  min-height: 320px;
+}
+#page-header.letterglitch-host #site-info,
+#page-header.letterglitch-host #page-site-info,
+#page-header.letterglitch-host #post-info,
+#page-header.letterglitch-host #scroll-down {
+  position: relative;
+  z-index: 2;
+}
+
+/* ===== 游戏页顶部横幅 - Ballpit 球池背景 ===== */
+#page-header.ballpit-host {
+  position: relative;
+  overflow: hidden;
+  min-height: 480px;
+  background: linear-gradient(180deg, #151030 0%, #241848 55%, #3b245e 100%) !important;
+}
+#page-header.ballpit-host .ballpit-canvas-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+#page-header.ballpit-host .ballpit-canvas-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 46%, rgba(0, 0, 0, 0) 40%, rgba(10, 6, 22, 0.45) 100%);
+  pointer-events: none;
+}
+#page-header.ballpit-host .ballpit-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+#page-header.ballpit-host #site-info,
+#page-header.ballpit-host #page-site-info,
+#page-header.ballpit-host #post-info,
+#page-header.ballpit-host #scroll-down,
+#page-header.ballpit-host #nav {
+  position: relative;
+  z-index: 2;
+}
+@media (max-width: 768px) {
+  #page-header.ballpit-host {
+    min-height: 300px;
+  }
+}
