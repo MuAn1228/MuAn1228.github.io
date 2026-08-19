@@ -1468,3 +1468,35 @@ a,button,input,textarea,label,[role=button],select,option{cursor:inherit!importa
   z-index: 2;
 }
 
+/* ===== 首页挂绳 Lanyard（标题右侧） ===== */
+#site-title-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+#site-title-wrap .particle-text-canvas {
+  display: block;
+}
+#lanyard {
+  position: relative;
+  width: 200px;
+  height: 270px;
+  flex: 0 0 auto;
+}
+#lanyard canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+@media (max-width: 768px) {
+  #site-title-wrap {
+    gap: 10px;
+  }
+  #lanyard {
+    width: 130px;
+    height: 180px;
+  }
+}
+
