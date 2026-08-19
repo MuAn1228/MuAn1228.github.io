@@ -40,11 +40,6 @@
     "img": "/img/games/game08.jpg"
   },
   {
-    "name": "血源诅咒",
-    "sub": "魂游",
-    "img": "/img/games/game09.jpg"
-  },
-  {
     "name": "愤怒的小鸟",
     "sub": "休闲",
     "img": "/img/games/game10.jpg"
@@ -67,17 +62,12 @@
   {
     "name": "植物大战僵尸",
     "sub": "塔防",
-    "img": "/img/games/game14.jpg"
+    "img": "/img/games/game23.jpg"
   },
   {
     "name": "纪念碑谷",
     "sub": "解谜",
     "img": "/img/games/game15.jpg"
-  },
-  {
-    "name": "天天酷跑",
-    "sub": "跑酷",
-    "img": "/img/games/game16.jpg"
   },
   {
     "name": "贪吃蛇大作战",
@@ -98,5 +88,35 @@
     "name": "我的世界",
     "sub": "沙盒",
     "img": "/img/games/game20.jpg"
+  },
+  {
+    "name": "使命召唤",
+    "sub": "FPS",
+    "img": "/img/games/game21.jpg"
+  },
+  {
+    "name": "使命召唤：现代战争2",
+    "sub": "FPS",
+    "img": "/img/games/game22.jpg"
+  },
+  {
+    "name": "元气骑士",
+    "sub": "Roguelike",
+    "img": "/img/games/game30.jpg"
+  },
+  {
+    "name": "祖玛",
+    "sub": "休闲",
+    "img": "/img/games/game31.jpg"
+  },
+  {
+    "name": "滑雪大冒险",
+    "sub": "跑酷",
+    "img": "/img/games/game32.jpg"
+  },
+  {
+    "name": "钢琴块",
+    "sub": "音乐",
+    "img": "/img/games/game33.jpg"
   }
 ]
