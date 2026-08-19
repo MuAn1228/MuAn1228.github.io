@@ -3,7 +3,7 @@
 // 也可对普通元素（如 h1）加 class，脚本会自动把它替换成 canvas
 // 站点标题 #site-title 自动应用（白色，适配深色头部）
 (function () {
-  var STEP = 3, DOT = 2, RADIUS = 70, FORCE = 55;
+  var STEP = 3, DOT = 1.5, RADIUS = 15, FORCE = 55;
   var SAMPLE_SCALE = 3;
   var FONT = 'Georgia, "Times New Roman", "Songti SC", "Noto Serif SC", "SimSun", serif';
 
