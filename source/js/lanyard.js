@@ -1,46 +1,45 @@
-// ===== 首页挂绳 Lanyard（reactbits.dev Lanyard 的 vanilla 移植）=====
-// 挂在首页「Mu An's Blog」标题右侧：金属胸卡（正反面照片）+ 挂绳带。
-// Verlet 绳摆物理模拟摆动，卡片可拖拽。依赖 /lib/three.min.js、/lib/GLTFLoader.js（需先加载）。
+// ===== 导航栏挂绳 Lanyard（reactbits.dev Lanyard 的 vanilla 移植）=====
+// 挂在导航栏左上角站点名右侧：3:4 照片胸卡（正反面占满整卡）+ 挂绳带 + 顶部金属夹。
+// 卡片为程序化 3:4 圆角平面，正反面各贴一张图片（front.jpg / back.jpg），缓慢自转交替展示。
+// 依赖 /lib/three.min.js、/lib/GLTFLoader.js（需先加载）。
 (function () {
   'use strict';
 
-  // 仅首页生效
-  var p = window.location.pathname;
-  if (p.replace(/\/index\.html?$/, '') !== '/' && p !== '/') return;
   if (!window.THREE) return;
+  var siteName = document.querySelector('#blog-info .site-name');
+  if (!siteName) return;
 
-  var title = document.getElementById('site-title');
-  var info = document.getElementById('site-info');
-  if (!title || !info) return;
-
-  // 1) 用 flex 包裹标题 + 挂绳容器（标题在左、挂绳在右）
-  var wrap = document.createElement('div');
-  wrap.id = 'site-title-wrap';
-  info.insertBefore(wrap, title);
-  wrap.appendChild(title);
-
+  // 1) 在站点名右侧插入挂绳容器
+  var info = siteName.closest('#blog-info') || siteName.parentNode;
   var host = document.createElement('div');
   host.id = 'lanyard';
-  wrap.appendChild(host);
+  info.appendChild(host);
   var canvas = document.createElement('canvas');
   host.appendChild(canvas);
 
   var PARAMS = {
-    cameraZ: 11,
-    fov: 26,
-    gravity: 42,
-    bandWidth: 0.15,
-    cardScale: 0.85,
-    anchorY: 2.05,
-    segLen: 0.62,
-    cardLen: 0.95,
-    repeat: 4
+    cameraZ: 3.0,
+    fov: 30,
+    camY: 0,
+    gravity: 26,
+    bandWidth: 0.1,
+    anchorY: 0.8, // 挂点高度（世界坐标；相机可见区 y 上限约 +0.80）
+    strapFrac: 0.12, // 顶部挂绳带占容器可见高度的比例，其余高度全部给卡片
+    fill: 0.98, // 卡片高占「可见高 - 挂绳带」的比例，尽量铺满容器
+    cardRatio: 4 / 3, // 卡片高宽比（照片 3:4 竖版，铺满整卡）
+    repeat: 3,
+    spinSpeed: 0.0005
   };
+  var CARD_W = 0.8, CARD_H = 1.067; // 实际卡片尺寸，由 computeCardSize() 按容器比例计算
+
+  function visibleHeight() {
+    return 2 * Math.tan(PARAMS.fov * Math.PI / 360) * PARAMS.cameraZ;
+  }
 
   var renderer, scene, camera;
-  var anchor, j1, j2, j3, card;
+  var anchor, j1, j2, card;
   var chain = [], restDist = [];
-  var cardGroup, cardMesh, bandMesh;
+  var cardGroup, frontMesh, backMesh, bandMesh;
   var curve, curvePts;
   var dragging = false, grabOff = new THREE.Vector3();
   var target = new THREE.Vector3();
@@ -50,10 +49,10 @@
   var lastT = 0, accT = 0;
   var FIXED_DT = 1 / 60;
   var started = false, cardLoaded = false;
-  window.__ly = { t: 'init' };
+  var frontTex = null, backTex = null;
+  window.__ly = { t: 'init', v: 3 };
 
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
-  function setSRGB(t) { if (t && t.encoding !== undefined && THREE.sRGBEncoding !== undefined) t.encoding = THREE.sRGBEncoding; }
 
   // ============ 场景 / 灯光 ============
   function initScene() {
@@ -63,21 +62,21 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(PARAMS.fov, 1, 0.1, 100);
-    camera.position.set(0, 0, PARAMS.cameraZ);
-    camera.lookAt(0, 0, 0);
+    camera.position.set(0, PARAMS.camY, PARAMS.cameraZ);
+    camera.lookAt(0, PARAMS.camY, 0);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    var key = new THREE.DirectionalLight(0xffffff, 1.15);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    var key = new THREE.DirectionalLight(0xffffff, 1.2);
     key.position.set(2, 4, 6);
     scene.add(key);
-    var fill = new THREE.DirectionalLight(0xc3b0ff, 0.55);
+    var fill = new THREE.DirectionalLight(0xc3b0ff, 0.5);
     fill.position.set(-3, -1, 4);
     scene.add(fill);
-    var rim = new THREE.DirectionalLight(0xffffff, 0.45);
+    var rim = new THREE.DirectionalLight(0xffffff, 0.4);
     rim.position.set(0, -3, 3);
     scene.add(rim);
 
-    // 简易环境光反射（替代原版 Environment / Lightformer）
+    // 简易环境光反射
     var pmrem = new THREE.PMREMGenerator(renderer);
     var env = new THREE.Scene();
     addLF(env, 4, 0.4, [0, 3, 6], 0, 0xffffff, 2.4);
@@ -102,14 +101,17 @@
     return { x: x, y: y, z: z, px: x, py: y, pz: z, fixed: !!fixed };
   }
   function initPhysics() {
-    var a = PARAMS.anchorY, s = PARAMS.segLen;
+    var hv = visibleHeight();
+    var strapLen = hv * PARAMS.strapFrac; // 挂绳带总长（世界单位）
+    var s = strapLen / 2; // 分为两段（anchor-j1、j1-j2）
+    var a = PARAMS.anchorY;
     anchor = makePoint(0, a, 0, true);
-    j1 = makePoint(0.12, a - s, 0);
-    j2 = makePoint(0.22, a - 2 * s, 0);
-    j3 = makePoint(0.3, a - 3 * s, 0);
-    card = makePoint(0.34, a - 3 * s - PARAMS.cardLen, 0);
-    chain = [anchor, j1, j2, j3, card];
-    restDist = [s, s, s, PARAMS.cardLen];
+    j1 = makePoint(0.02, a - s, 0);
+    j2 = makePoint(0.04, a - 2 * s, 0);
+    // card 表示卡片上沿（挂点），卡片几何体从该点向下延伸
+    card = makePoint(0.05, a - 2 * s, 0);
+    chain = [anchor, j1, j2, card];
+    restDist = [s, s, 0];
   }
   function solve(a, b, rest) {
     var dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z;
@@ -122,8 +124,7 @@
   function stepPhysics(dt, t) {
     var g = PARAMS.gravity * dt * dt;
     var damp = 0.995;
-    // 轻微环境摆风，让挂绳保持灵动
-    var wind = dragging ? 0 : Math.sin(t * 0.9) * 0.28 * dt * dt;
+    var wind = dragging ? 0 : Math.sin(t * 0.9) * 0.12 * dt * dt;
     for (var i = 1; i < chain.length; i++) {
       var pt = chain[i];
       var vx = (pt.x - pt.px) * damp;
@@ -136,9 +137,7 @@
     }
     for (var k = 0; k < restDist.length; k++) solve(chain[k], chain[k + 1], restDist[k]);
     if (dragging) {
-      // 卡片被拖到目标点后，把绳子拉紧几轮再钉住卡片
       for (var n = 0; n < 4; n++) {
-        solve(chain[3], chain[4], restDist[3]);
         solve(chain[2], chain[3], restDist[2]);
         solve(chain[1], chain[2], restDist[1]);
         solve(chain[0], chain[1], restDist[0]);
@@ -150,105 +149,154 @@
     }
   }
 
-  // ============ 卡片 ============
-  var FRONT_UV = { x: 0, y: 0, w: 0.5, h: 0.755 };
-  var BACK_UV = { x: 0.5, y: 0, w: 0.5, h: 0.757 };
-
-  function drawFit(ctx, img, r, W, H) {
-    if (!img) return;
-    var rx = r.x * W, ry = r.y * H, rw = r.w * W, rh = r.h * H;
-    var scale = Math.max(rw / img.width, rh / img.height);
-    var dw = img.width * scale, dh = img.height * scale;
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(rx, ry, rw, rh);
-    ctx.clip();
-    ctx.drawImage(img, rx + (rw - dw) / 2, ry + (rh - dh) / 2, dw, dh);
-    ctx.restore();
-  }
-  function makeCardMap(baseMap, f, b) {
-    var W = 1024, H = 1024;
-    if (baseMap && baseMap.image && baseMap.image.width) { W = baseMap.image.width; H = baseMap.image.height; }
+  // ============ 卡片（3:4 圆角平面，正反面各一图）============
+  // mirror=true 时水平镜像（背面平面绕 Y 旋转 π 后从背面看方向正确）
+  function makeCardTex(img, mirror) {
+    var W = img.width || img.naturalWidth, H = img.height || img.naturalHeight;
     var c = document.createElement('canvas');
     c.width = W; c.height = H;
     var ctx = c.getContext('2d');
-    if (baseMap && baseMap.image) ctx.drawImage(baseMap.image, 0, 0, W, H);
-    drawFit(ctx, f.image, FRONT_UV, W, H);
-    drawFit(ctx, b.image, BACK_UV, W, H);
+    if (mirror) { ctx.translate(W, 0); ctx.scale(-1, 1); }
+    ctx.drawImage(img, 0, 0, W, H);
     var tex = new THREE.CanvasTexture(c);
     tex.encoding = THREE.sRGBEncoding;
-    tex.flipY = baseMap ? baseMap.flipY : true;
     tex.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy());
     tex.needsUpdate = true;
     return tex;
   }
-  function setupCard(gltf) {
-    var nodes = {}, first = null;
-    gltf.scene.traverse(function (o) {
-      if (o.isMesh) { nodes[o.name] = o; if (!first) first = o; }
-    });
-    var geo = nodes.card ? nodes.card.geometry : first.geometry;
-    var baseMat = gltf.materials && gltf.materials.base;
-    var baseMap = baseMat && baseMat.map ? baseMat.map : null;
-    var metal = (gltf.materials && gltf.materials.metal) ||
-      new THREE.MeshStandardMaterial({ color: 0x9aa0a8, metalness: 0.9, roughness: 0.3 });
-    var frontTex = null, backTex = null;
-
-    function tryBuild() {
-      if (!frontTex || !backTex || !geo) { window.__ly.t = 'tryBuild-wait'; return; }
-      window.__ly.built = 'yes';
-      var map = makeCardMap(baseMap, frontTex, backTex);
+  // 3:4 圆角卡片平面（raw BufferGeometry，兼容 three r121 旧 Geometry 无 .attributes 的问题）
+  // 局部原点 = 卡片上沿中心，卡片向下延伸；UV 线性映射，照片正立铺满整卡
+  function roundedRectBufferGeometry(w, h, r, seg) {
+    var n = seg, rows = n + 1, cols = n + 1;
+    var positions = [], uvs = [], normals = [], idx = [];
+    var halfW = w / 2, innerL = -halfW + r, innerR = halfW - r, innerT = -r, innerB = -h + r;
+    for (var ry = 0; ry < rows; ry++) {
+      for (var rx = 0; rx < cols; rx++) {
+        var u = rx / n, v = ry / n;
+        var x = -halfW + u * w;
+        var y = -v * h;
+        var cx = clamp(x, innerL, innerR);
+        var cy = clamp(y, innerB, innerT);
+        var dx = x - cx, dy = y - cy;
+        var d = Math.sqrt(dx * dx + dy * dy);
+        if (d > 1e-5) { x = cx + dx / d * r; y = cy + dy / d * r; }
+        else { x = cx; y = cy; }
+        positions.push(x, y, 0);
+        // u 左0右1；v 顶部1底部0（配合 flipY=true 让照片正立）
+        uvs.push(u, 1 - v);
+        normals.push(0, 0, 1);
+      }
+    }
+    for (var ry2 = 0; ry2 < n; ry2++) {
+      for (var rx2 = 0; rx2 < n; rx2++) {
+        var a = ry2 * cols + rx2;
+        idx.push(a, a + 1, a + cols, a + 1, a + cols + 1, a + cols);
+      }
+    }
+    var g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+    g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
+    g.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(normals), 3));
+    g.setIndex(idx);
+    return g;
+  }
+  // 程序化金属夹：卡片上沿银色夹条 + 挂环（raw 六面盒，无需外部 glb）
+  function makeBox(w, h, d) {
+    var x = w / 2, y = h / 2, z = d / 2;
+    var p = [
+      -x, -y, z,  x, -y, z,  x, y, z,  -x, y, z,
+      x, -y, -z,  -x, -y, -z,  -x, y, -z,  x, y, -z,
+      -x, y, z,  x, y, z,  x, y, -z,  -x, y, -z,
+      -x, -y, -z,  x, -y, -z,  x, -y, z,  -x, -y, z,
+      x, -y, z,  x, -y, -z,  x, y, -z,  x, y, z,
+      -x, -y, -z,  -x, -y, z,  -x, y, z,  -x, y, -z
+    ];
+    var g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(p), 3));
+    g.computeVertexNormals();
+    return g;
+  }
+  // 按容器实际宽高比计算卡片世界尺寸：卡片高度铺满「可见高 - 挂绳带」，宽按 3:4
+  function computeCardSize() {
+    var hv = visibleHeight();
+    var strapLen = hv * PARAMS.strapFrac;
+    var cardH = (hv - strapLen) * PARAMS.fill;
+    var cardW = cardH / PARAMS.cardRatio; // H/W = cardRatio → W = H / cardRatio
+    return { cardW: cardW, cardH: cardH };
+  }
+  function addMetalClip() {
+    var metal = new THREE.MeshStandardMaterial({ color: 0xaeb4bd, metalness: 0.9, roughness: 0.3 });
+    var cw = CARD_W;
+    var bar = new THREE.Mesh(makeBox(cw * 0.9, cw * 0.13, cw * 0.09), metal);
+    bar.position.set(0, -cw * 0.065, 0.012);
+    cardGroup.add(bar);
+    var eye = new THREE.Mesh(makeBox(cw * 0.1, cw * 0.11, cw * 0.09), metal);
+    eye.position.set(0, cw * 0.01, 0.012);
+    cardGroup.add(eye);
+    window.__ly.metal = 'procedural';
+  }
+  function buildCard() {
+    try {
+      var sz = computeCardSize();
+      CARD_W = sz.cardW; CARD_H = sz.cardH;
       cardGroup = new THREE.Group();
-      cardGroup.scale.setScalar(PARAMS.cardScale);
-      cardMesh = new THREE.Mesh(geo.clone(), new THREE.MeshPhysicalMaterial({
-        map: map,
-        clearcoat: 1,
-        clearcoatRoughness: 0.15,
-        roughness: 0.9,
-        metalness: 0.8
-      }));
-      cardGroup.add(cardMesh);
-      if (nodes.clip) cardGroup.add(new THREE.Mesh(nodes.clip.geometry.clone(), metal));
-      if (nodes.clamp) cardGroup.add(new THREE.Mesh(nodes.clamp.geometry.clone(), metal));
+      var geo = roundedRectBufferGeometry(CARD_W, CARD_H, CARD_W * 0.1, 12);
+
+      var mFront = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.75, metalness: 0.15 });
+      var mBack = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.75, metalness: 0.15 });
+      frontMesh = new THREE.Mesh(geo, mFront);
+      frontMesh.position.z = 0.006;
+      frontMesh.frustumCulled = false;
+      backMesh = new THREE.Mesh(geo, mBack);
+      backMesh.rotation.y = Math.PI;
+      backMesh.position.z = -0.006;
+      backMesh.frustumCulled = false;
+      cardGroup.add(frontMesh);
+      cardGroup.add(backMesh);
+
+      addMetalClip();
+
       scene.add(cardGroup);
+      cardLoaded = true;
+      window.__ly.scene = scene;
+      window.__ly.camera = camera;
+      window.__ly.renderer = renderer;
+      window.__ly.cardGroup = cardGroup;
+      window.__ly.bandMesh = bandMesh;
+      maybeStart();
+    } catch (e) {
+      window.__ly.buildErr = (e && e.message ? e.message : String(e)) + '\n' + (e && e.stack ? e.stack : '');
       cardLoaded = true;
       maybeStart();
     }
-    new THREE.TextureLoader().load('/img/lanyard/front.jpg', function (t) { window.__ly.front = 'ok'; setSRGB(t); frontTex = t; tryBuild(); });
-    new THREE.TextureLoader().load('/img/lanyard/back.jpg', function (t) { window.__ly.back = 'ok'; setSRGB(t); backTex = t; tryBuild(); });
   }
 
   var _xAxis = new THREE.Vector3(), _yAxis = new THREE.Vector3(), _zAxis = new THREE.Vector3();
   var _m4 = new THREE.Matrix4();
-  var _pivot = new THREE.Vector3(), _qYaw = new THREE.Quaternion(), _qBasis = new THREE.Quaternion();
-  var _UP = new THREE.Vector3(0, 1, 0);
+  var _pivot = new THREE.Vector3(), _center = new THREE.Vector3();
+  var _qSpin = new THREE.Quaternion(), _qBasis = new THREE.Quaternion();
   function updateCard(now) {
-    // 缓慢自转展示正反面（绕卡片顶部挂点旋转），拖拽时停止自转
-    var yaw = dragging ? 0 : Math.sin(now * 0.00032) * 2.4;
-    var center = _pivot.copy(card).clone();
-    var pivot = _pivot.copy(j3);
+    // 卡片绕挂绳方向（up）持续缓慢自转，正反面交替可见
+    var spin = dragging ? 0 : now * PARAMS.spinSpeed;
+    var center = _center.copy(card);
+    var pivot = _pivot.copy(j2);
     var up = _yAxis.copy(pivot).sub(center).normalize();
+    cardGroup.position.copy(center);
 
-    // 绕「顶部挂点」的竖直轴旋转中心点（保持与挂点距离不变）
-    _qYaw.setFromAxisAngle(_UP, yaw);
-    var vc = center.sub(pivot).applyQuaternion(_qYaw).add(pivot);
-    cardGroup.position.copy(vc);
-
-    // 姿态：正面(+Z)朝相机，顶部(+Y)朝挂点，再叠加 yaw
     _zAxis.set(0, 0, 1);
     _xAxis.crossVectors(up, _zAxis).normalize();
     if (_xAxis.lengthSq() < 1e-6) _xAxis.set(1, 0, 0);
     _yAxis.crossVectors(_zAxis, _xAxis).normalize();
     _qBasis.setFromRotationMatrix(_m4.makeBasis(_xAxis, _yAxis, _zAxis));
-    cardGroup.quaternion.copy(_qYaw.multiply(_qBasis));
+    _qSpin.setFromAxisAngle(up, spin);
+    cardGroup.quaternion.copy(_qSpin.multiply(_qBasis));
 
-    // 微小速度摇摆，更生动
     cardGroup.rotateX(clamp((card.z - card.pz) * 0.05, -0.2, 0.2));
     cardGroup.rotateZ(clamp(-(card.x - card.px) * 0.06, -0.25, 0.25));
   }
 
   // ============ 挂绳带（面向相机的丝带）============
-  var BAND_SEGS = 20;
+  var BAND_SEGS = 16;
   function initBand() {
     var n = (BAND_SEGS + 1) * 2;
     var geo = new THREE.BufferGeometry();
@@ -273,7 +321,7 @@
       curve = new THREE.CatmullRomCurve3(curvePts);
       curve.curveType = 'chordal';
     }
-    curvePts[0].set(j3.x, j3.y, j3.z);
+    curvePts[0].set(card.x, card.y, card.z);
     curvePts[1].set(j2.x, j2.y, j2.z);
     curvePts[2].set(j1.x, j1.y, j1.z);
     curvePts[3].set(anchor.x, anchor.y, anchor.z);
@@ -311,8 +359,8 @@
     var v = new THREE.Vector3();
     raycaster.ray.intersectPlane(planeZ, v);
     if (v) target.copy(v);
-    target.x = clamp(target.x, -2.7, 2.7);
-    target.y = clamp(target.y, -2.2, 2.0);
+    target.x = clamp(target.x, -0.42, 0.42);
+    target.y = clamp(target.y, 0.0, 1.2);
     target.z = 0;
   }
   function onDown(e) {
@@ -354,21 +402,25 @@
     requestAnimationFrame(animate);
   }
   function animate(now) {
-    window.__ly.frames = (window.__ly.frames || 0) + 1;
     requestAnimationFrame(animate);
     var dt = now - lastT;
     lastT = now;
     if (dt > 100) dt = 100;
     accT += dt / 1000;
-    var n = 0;
-    while (accT >= FIXED_DT && n < 6) {
-      stepPhysics(FIXED_DT, now / 1000);
-      accT -= FIXED_DT;
-      n++;
+    try {
+      var n = 0;
+      while (accT >= FIXED_DT && n < 6) {
+        stepPhysics(FIXED_DT, now / 1000);
+        accT -= FIXED_DT;
+        n++;
+      }
+      if (cardLoaded) updateCard(now);
+      updateBand();
+      renderer.render(scene, camera);
+    } catch (e) {
+      window.__ly.err = (window.__ly.err || 0) + 1 + ':' + e.message;
+      if ((window.__ly.errs = (window.__ly.errs || 0)) < 5) console.error('lanyard animate', e);
     }
-    if (cardLoaded) updateCard();
-    updateBand();
-    renderer.render(scene, camera);
   }
 
   // ============ 启动 ============
@@ -378,9 +430,19 @@
   window.__ly.t = 'physics-ok';
   initBand();
   window.__ly.t = 'band-ok';
-  new THREE.GLTFLoader().load('/lib/lanyard/card.glb', function (g) { window.__ly.gltf = 'ok'; setupCard(g); }, undefined, function (e) {
-    window.__ly.gltf = 'fail:' + (e && e.message);
-    console.warn('lanyard: card.glb 加载失败', e);
-  });
+  loadImage('/img/lanyard/front.jpg', function (img) { window.__ly.front = 'ok'; frontTex = makeCardTex(img, false); tryBuild(); });
+  loadImage('/img/lanyard/back.jpg', function (img) { window.__ly.back = 'ok'; backTex = makeCardTex(img, true); tryBuild(); });
+  function loadImage(url, onLoad) {
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function () { onLoad(img); };
+    img.onerror = function () { window.__ly.err = (window.__ly.err || '') + ' load fail: ' + url; };
+    img.src = url;
+  }
+  function tryBuild() {
+    if (frontTex && backTex) { window.__ly.built = 'yes'; buildCard(); }
+  }
   window.__ly.t = 'load-issued';
+  // 调试钩子：后台标签页 RAF 不触发时，可手动驱动渲染一帧（正式环境不影响）
+  window.__ly.step = function () { animate(performance.now()); };
 })();

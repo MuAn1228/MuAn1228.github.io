@@ -150,7 +150,7 @@ inject:
     - '<script src="/js/arcade.js"></script>'
     - '<script src="/js/flappy-bird.js"></script>'
     - '<script src="/js/pixel-snow.js" defer></script>'
-    - '<script src="/js/lanyard.js" defer></script>'
+    - '<script src="/js/lanyard.js?v=5" defer></script>'
     
 
 # ---------- 评论系统（Giscus） ----------
