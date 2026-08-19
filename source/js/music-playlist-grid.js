@@ -1,35 +1,29 @@
-// ===== 音乐页顶部紫色区块：我喜欢的音乐（全量列表，可滚动） =====
-// 读取 /data/music-playlist.json（由网易云公开歌单 2793973232 生成）
+// ===== 音乐页顶部紫色横幅：内嵌网易云官方外链播放器（我喜欢的音乐） =====
+// 将网易云官方播放器 iframe 注入到页面顶部页头（#page-site-info 之后），
+// 歌单 2793973232（落别恨喜欢的音乐）共 394 首，由官方播放器展示与播放。
 (function () {
-  var listEl = document.getElementById('music-favs-list');
-  if (!listEl) return;
-
-  function esc(str) {
-    return String(str || '').replace(/[&<>"']/g, function (ch) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
-    });
-  }
-
-  function render(songs) {
-    var countEl = document.getElementById('music-favs-count');
-    if (countEl) countEl.textContent = songs.length;
-    listEl.innerHTML = songs.map(function (s, i) {
-      var url = 'https://music.163.com/#/song?id=' + s.id;
-      return '<a class="mf-row" href="' + url + '" target="_blank" rel="noopener">' +
-        '<span class="mf-idx">' + (i + 1) + '</span>' +
-        '<img class="mf-cover" src="' + esc(s.cover) + '" alt="" loading="lazy">' +
-        '<span class="mf-meta">' +
-        '<span class="mf-title">' + esc(s.name) + '</span>' +
-        '<span class="mf-artist">' + esc(s.artist) + '</span>' +
-        '</span>' +
-        '</a>';
-    }).join('');
-  }
+  var header = document.getElementById('page-header');
+  var info = document.getElementById('page-site-info');
+  if (!header || !info) return;
 
   fetch('/data/music-playlist.json')
     .then(function (r) { return r.json(); })
-    .then(render)
-    .catch(function () {
-      listEl.innerHTML = '<p style="color:#fff;text-align:center;padding:20px;">歌单加载失败</p>';
-    });
+    .then(function (songs) {
+      var box = document.createElement('div');
+      box.className = 'music-favs';
+      box.innerHTML =
+        '<div class="music-favs-header">' +
+          '<i class="fas fa-heart music-favs-heart"></i>' +
+          '<span class="music-favs-title">我喜欢的音乐</span>' +
+          '<span class="music-favs-subtitle">共 ' + songs.length + ' 首</span>' +
+        '</div>' +
+        '<iframe class="music-favs-iframe" ' +
+          'src="https://music.163.com/outchain/player?type=1&id=2793973232&auto=0&height=450" ' +
+          'frameborder="no" border="0" marginwidth="0" marginheight="0" ' +
+          'allowtransparency="true" scrolling="no"></iframe>';
+      // 标记页头以放大紫色空间，并把模块排进标题下方
+      header.classList.add('music-favs-host');
+      info.appendChild(box);
+    })
+    .catch(function () {});
 })();
