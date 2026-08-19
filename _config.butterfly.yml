@@ -117,7 +117,6 @@ inject:
     - '<link rel="stylesheet" href="/lib/leaflet/leaflet.css">'
   bottom:
     - '<script src="/js/sakura.js"></script>'
-    - '<script src="/js/cursor.js"></script>'
     - '<script src="/js/click-effect.js"></script>'
     - '<script src="/js/live2d.js"></script>'
     - '<script src="/lib/APlayer.min.js"></script>'
