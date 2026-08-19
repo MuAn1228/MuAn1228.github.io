@@ -1,65 +1,71 @@
-# Handoff Document -- 2026-08-19（最终版 v4）
+# Handoff Document -- 2026-08-19（最终版 v6）
 
 ## Context
-本次会话完成两件事：删除 FPS 小游戏模块 + 更新游戏模块海报。
+本次会话完成：游戏海报补齐与调整、为书籍/游戏/电影网格统一添加 note 悬停气泡、填充 16 本书阅读笔记。所有改动已推送，等待部署。
 
 ## 完成的工作
 
-### 1. 小游戏模块（/fun/arcade/）-- 已推送（f84870d），待部署
-- 已删除 FPS 射击模块
-- 剩余：Flappy Bird / 魔方 两个标签
+### 1. 游戏模块（/fun/games/）-- 已推送（d35f709 + 0612214），待部署
+- **已删除**：使命召唤：现代战争2、祖玛
+- **已替换海报**：使命召唤、元气骑士、滑雪大冒险、钢琴块、我的世界
+- **已新增 9 款海报**：拳皇97、保卫萝卜2、鲨鱼的复仇、疯狂小人战斗、air attack、非现实生活、超级玛丽、饥饿鲨鱼进化、侠盗猎车手罪恶都市
+- 当前共 **31 款游戏**
+- 海报文件：`source/img/games/game01-43.jpg/png`（game09、game16、game20、game22、game31 已无对应条目）
 
-### 2. 游戏模块（/fun/games/）-- 进行中，待部署
-- **已删除**：血源诅咒、天天酷跑
-- **已替换**：植物大战僵尸使用Steam电脑版海报
-- **已新增**（6款，有海报）：使命召唤、MW2、元气骑士、祖玛、滑雪大冒险、钢琴块
-- **待补充**（9款无海报）：拳皇97、保卫萝卜2、鲨鱼复仇、疯狂小人战斗、air attack、非现实生活、超级玛丽、饥饿鲨鱼进化、GTA罪恶都市
+### 2. 书籍 / 游戏 / 电影 note 悬停气泡 -- 已推送（0612214），待部署
+- 填充 16 本书的阅读笔记到 `source/data/books.json`
+- 为 `games.json` 和 `movies.json` 添加空 `note` 字段
+- `media-grid.js` 渲染网格时附加 `data-name/data-sub/data-note`
+- 新增 `.media-grid-tip` 鼠标跟随气泡，无 note 时显示「理解待补充…」
+- 样式与书籍「漂移墙」气泡保持一致（紫色渐变 + 毛玻璃）
 
-### 3. 搜索功能（local search）-- 已部署
-### 4. 书籍模块（fun/books）-- 已推送
-### 5. 音乐模块修正 -- 已推送
-### 6. 电影模块更新 -- 已推送
-### 7. 导航栏中文渲染修复 -- 已推送
+### 3. 小游戏模块（/fun/arcade/）-- 无变动
+- 仍保留 Flappy Bird / 魔方 两个标签
 
-## 详细变更记录
+### 4. 其他已完成模块（历史）
+- 搜索功能（local search）-- 已部署
+- 书籍模块（fun/books）-- 已推送
+- 音乐模块修正 -- 已推送
+- 电影模块更新 -- 已推送
+- 导航栏中文渲染修复 -- 已推送
 
-| 时间 | 内容 |
+## 提交记录
+| Commit | 内容 |
 |---|---|
-| 本次会话（待推送） | 更新游戏模块：删除血源诅咒、天天酷跑；替换植物大战僵尸海报；新增6款游戏（使命召唤系列、元气骑士、祖玛、滑雪大冒险、钢琴块） |
-| 本次会话（f84870d） | 删除 FPS 射击小游戏模块 |
-| 更早 | 新建小游戏模块 /fun/arcade/：Flappy Bird（固定60Hz时间步长）、魔方（从主页迁入）；导航菜单加「小游戏」入口 |
-| 上会话 | 书籍封面路径修正、导航栏中文渲染修复、音乐/电影/书籍模块更新 |
+| f84870d | 删除 FPS 射击小游戏模块 |
+| c13b683 | 更新游戏模块：删除血源诅咒/天天酷跑，新增6款，替换植物大战僵尸海报 |
+| d35f709 | 更新游戏模块：替换海报、新增9款游戏、删除现代战争2和祖玛 |
+| 0612214 | 为书籍/游戏/电影网格添加 note 悬停气泡，并填充书籍阅读笔记 |
 
 ## 待处理问题
-- **小游戏模块需重新部署**：f84870d 已推送，需手动触发「Update Contributions & Deploy」工作流
-- **游戏模块待部署**：需确认本地预览无误后推送
-- **9款移动游戏海报缺失**：拳皇97、保卫萝卜2、鲨鱼复仇、疯狂小人战斗、air attack、非现实生活、超级玛丽、饥饿鲨鱼进化、GTA罪恶都市 — 这些游戏没有 Steam 版，需手动从 TapTap/4399/官网等渠道下载海报
+- 最新提交 `0612214` 需手动触发 **「Update Contributions & Deploy」** 工作流
+- 游戏和电影的 `note` 字段为空，后续可补充阅读理解
+
+## 如何补充游戏 / 电影笔记
+1. 编辑 `source/data/games.json` 或 `source/data/movies.json`
+2. 找到对应条目，在 `"note": ""` 中填入理解
+3. 多段用 `\n\n` 分隔，双引号 `"` 转义为 `\"`
+4. 保存后本地 `hexo s` 预览
+5. `git add` 相关文件，`commit`，`git push origin source:main`
+6. 提醒用户手动触发部署
 
 ## 关键文件
-- source/fun/games/index.md（游戏页面）
-- source/data/games.json（游戏数据，含封面路径，共24款）
-- source/img/games/game01-33.jpg（游戏海报图片）
-- source/js/media-grid.js（网格渲染）
-- source/js/game-ballpit.js（球池特效，使用游戏封面作为球体贴图）
-- source/css/custom.css（媒体网格样式）
-- _config.butterfly.yml（菜单 + inject.bottom）
-- source/fun/arcade/index.md（小游戏页面，两个标签：Flappy Bird / 魔方）
-- source/js/flappy-bird.js、rubik.js、arcade.js
-
-## 常用命令
-```bash
-cd /d/blog && hexo clean && hexo s   # 本地预览
-git add -A && git commit -m "..." && git push origin source:main  # 推送
-```
-
-## 部署
-禁止 hexo d，必须 git push origin source:main 触发 GitHub Actions，然后手动触发「Update Contributions & Deploy」。
+- `source/fun/games/index.md`
+- `source/data/games.json`（31 款游戏）
+- `source/data/books.json`（16 本书，已填充 note）
+- `source/data/movies.json`（16 部电影，已添加空 note）
+- `source/js/media-grid.js`（网格渲染 + note 气泡）
+- `source/css/custom.css`（`.media-grid-tip` 样式）
+- `source/img/games/game01-43.jpg/png`
+- `source/fun/arcade/index.md`
+- `source/js/flappy-bird.js`、`rubik.js`、`arcade.js`
 
 ## 踩坑记录
-1. **Flappy Bird 高刷屏加速**：物理按帧计算在 144Hz 下以 2.4 倍速运行，须用固定时间步长（accumulator 累加 delta，按 1/60s 步进）
-2. **three.min.js 是 r121 且带 defer**：依赖它的脚本注入时也须加 defer，否则 window.THREE 未定义直接退出
-3. **文件名必须 ASCII**：Hexo 服务器不支持中文路径，含中文的文件名会返回 500
+1. **Flappy Bird 高刷屏加速**：固定 60Hz 时间步长
+2. **three.min.js 是 r121 且带 defer**：依赖脚本注入须加 defer
+3. **文件名必须 ASCII**
 4. **books.json 路径必须与实际文件名严格匹配**
-5. **Windows Chrome backdrop-filter 渲染 Bug**：.nav-fixed 的 blur + will-change 导致中文亚像素错位
-6. **游戏海报来源**：优先使用 Steam CDN（cdn.akamai.steamstatic.com/steam/apps/[appid]/header.jpg），无 Steam 版的移动游戏需从 TapTap/4399 等平台获取，部分经典游戏可从 Wikipedia 获取
-7. **Steam API 限制**：中国网络环境下 Steam Store API 可能返回 403/连接超时，建议直接用 CDN URL 下载图片
+5. **Windows Chrome backdrop-filter 渲染 Bug**
+6. **游戏海报来源**：优先 Steam CDN；无 Steam 版的从 TapTap/4399/Google 找
+7. **媒体网格 tooltip 定位**：使用 `position: fixed`，需做视口边缘检测，避免溢出
+8. **`.media-card` 有 `overflow: hidden`**：tooltip 不能作为子元素放在卡片内部，否则会被裁切
