@@ -1441,3 +1441,30 @@ canvas.particle-text-canvas {
 html { animation: cursor-anim 1800ms step-end infinite; }
 a,button,input,textarea,label,[role=button],select,option{cursor:inherit!important}
 
+/* ===== 电影页标题横幅：像素雪背景 ===== */
+#page-header {
+  position: relative;
+}
+#page-header .pixel-snow-banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border-radius: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(ellipse at 50% 30%, #23234a 0%, #0d0d1f 72%);
+}
+#page-header .pixel-snow-banner canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+#page-header #page-site-info {
+  position: relative;
+  z-index: 2;
+}
+
