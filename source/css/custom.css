@@ -1152,4 +1152,98 @@ canvas.particle-text-canvas {
   touch-action: none;
 }
 
+/* ===== 音乐页顶部紫色区块：我喜欢的音乐（全量可滚动列表） ===== */
+.music-favs {
+  margin-top: 1.5em;
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #8e6bb5 0%, #5a42a0 100%);
+  box-shadow: 0 8px 24px rgba(90, 66, 160, 0.35);
+}
+.music-favs-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  color: #fff;
+}
+.music-favs-icon {
+  font-size: 20px;
+}
+.music-favs-title {
+  font-size: 1.05em;
+  font-weight: 600;
+}
+.music-favs-subtitle {
+  margin-left: auto;
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.16);
+  padding: 3px 12px;
+  border-radius: 999px;
+}
+.music-favs-scroll {
+  height: 440px;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.07);
+}
+.mf-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px;
+  text-decoration: none;
+  color: #fff;
+  transition: background 0.2s ease;
+}
+.mf-row:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+.mf-row:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+.mf-idx {
+  width: 28px;
+  text-align: right;
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.6);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.mf-cover {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.mf-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.mf-title {
+  font-size: 0.95em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mf-artist {
+  font-size: 0.78em;
+  color: rgba(255, 255, 255, 0.65);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.music-favs-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.music-favs-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 3px;
+}
+.music-favs-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 
