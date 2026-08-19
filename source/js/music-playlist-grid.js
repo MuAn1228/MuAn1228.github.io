@@ -3,6 +3,8 @@
 // 渲染为占满顶部空间的紫色播放器：歌单信息 + 现在播放条 + 可滚动歌曲列表。
 // 点击歌曲通过网易云官方直链播放；版权受限的歌曲会提示不可播放，可点击跳转网易云。
 (function () {
+  // 只在音乐页渲染紫色播放器，避免误渲染到游戏/电影等其它子页面
+  if (!/\/fun\/music\/?($|\?|#)/.test(window.location.pathname)) return;
   var header = document.getElementById('page-header');
   var info = document.getElementById('page-site-info');
   if (!header || !info) return;
