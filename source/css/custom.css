@@ -1152,55 +1152,213 @@ canvas.particle-text-canvas {
   touch-action: none;
 }
 
-/* ===== 音乐页顶部紫色横幅：内嵌网易云官方播放器 ===== */
-/* 页头默认固定 400px 高、标题绝对定位；带 music-favs-host 时改为流式并加高，容纳官方播放器 */
+/* ===== 音乐页顶部紫色横幅：网易云「我喜欢的音乐」大播放器 ===== */
+/* 页头默认固定 400px 高、标题绝对定位；带 music-favs-host 时改为流式并加高，容纳大播放器 */
 #page-header.music-favs-host.not-home-page {
   height: auto;
   min-height: 400px;
-  padding-bottom: 60px;
+  padding-bottom: 70px;
 }
 #page-header.music-favs-host #page-site-info {
   position: static;
   padding-top: 110px;
 }
 .music-favs {
-  margin-top: 18px;
-  text-align: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 20px auto 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(160deg, rgba(26, 26, 46, 0.85) 0%, rgba(61, 53, 97, 0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.45);
+  text-align: left;
 }
-.music-favs-header {
+.mf-head {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  color: #fff;
-  font-size: 0.98em;
+  gap: 14px;
+  padding: 18px 22px;
 }
-.music-favs-heart {
-  color: #f0667f;
-  font-size: 0.92em;
-}
-.music-favs-title {
-  font-weight: 600;
-  letter-spacing: 1px;
-}
-.music-favs-subtitle {
-  font-size: 0.85em;
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(255, 255, 255, 0.16);
-  padding: 3px 12px;
-  border-radius: 999px;
-}
-.music-favs-iframe {
-  display: block;
-  margin: 0 auto;
-  width: 340px;
-  max-width: 92vw;
-  height: 450px;
-  border: 0;
+.mf-plcover {
+  width: 64px;
+  height: 64px;
   border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 12px 34px rgba(26, 26, 46, 0.45);
+  object-fit: cover;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+.mf-plinfo {
+  flex: 1;
+  min-width: 0;
+}
+.mf-plname {
+  color: #fff;
+  font-size: 1.15em;
+  font-weight: 600;
+}
+.mf-pldesc {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.82em;
+  margin-top: 3px;
+}
+.mf-open {
+  flex-shrink: 0;
+  color: #fff;
+  font-size: 0.8em;
+  text-decoration: none;
+  background: rgba(161, 140, 209, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 6px 14px;
+  border-radius: 999px;
+  transition: background 0.2s;
+}
+.mf-open:hover {
+  background: rgba(161, 140, 209, 0.45);
+}
+.mf-now {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 22px;
+  background: rgba(161, 140, 209, 0.16);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.mf-now-icon {
+  color: #f0c8e0;
+  font-size: 1.05em;
+}
+.mf-now-text {
+  flex: 1;
+  min-width: 0;
+  color: #fff;
+  font-size: 0.92em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mf-now-ctrl {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.mf-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+.mf-btn:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+.mf-btn:active {
+  transform: scale(0.94);
+}
+.mf-btn.mf-play {
+  width: 46px;
+  height: 46px;
+  background: #8e6bb5;
+  font-size: 17px;
+}
+.mf-btn.mf-play:hover {
+  background: #a18cd1;
+}
+.mf-list {
+  height: 440px;
+  overflow-y: auto;
+}
+.mf-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 22px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.mf-row:hover {
+  background: rgba(161, 140, 209, 0.18);
+}
+.mf-row.mf-active {
+  background: rgba(161, 140, 209, 0.3);
+  box-shadow: inset 3px 0 0 #a18cd1;
+}
+.mf-row.mf-err {
+  opacity: 0.55;
+}
+.mf-idx {
+  width: 30px;
+  text-align: right;
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.5);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.mf-cov {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.mf-ti {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.93em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mf-ar {
+  flex-shrink: 0;
+  max-width: 40%;
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mf-st {
+  width: 16px;
+  color: #f0c8e0;
+  flex-shrink: 0;
+  font-size: 14px;
+  text-align: center;
+}
+.mf-list::-webkit-scrollbar {
+  width: 6px;
+}
+.mf-list::-webkit-scrollbar-thumb {
+  background: rgba(161, 140, 209, 0.5);
+  border-radius: 3px;
+}
+.mf-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.mf-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 120px;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(26, 26, 46, 0.92);
+  color: #fff;
+  font-size: 0.85em;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 10005;
+}
+.mf-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 
