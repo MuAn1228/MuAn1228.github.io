@@ -1157,16 +1157,27 @@ canvas.particle-text-canvas {
 #page-header.music-favs-host.not-home-page {
   height: auto;
   min-height: 400px;
-  padding-bottom: 70px;
+  padding-bottom: 40px;
 }
+/* 蒙版只做视觉压暗，不拦截指针事件（否则播放器点击/滚动条拖动全被挡掉） */
+#page-header.music-favs-host::before {
+  pointer-events: none;
+}
+/* 页面预加载动画（#loading-box 半屏面板）同样只做视觉，永不拦截点击/滚动 */
+#loading-box {
+  pointer-events: none;
+}
+/* 标题与播放器流式定位：去掉主题 200px 的 top 偏移，缩小标题「音乐」与播放器间距 */
 #page-header.music-favs-host #page-site-info {
-  position: static;
-  padding-top: 110px;
+  position: relative;
+  top: auto;
+  z-index: 2;
+  padding-top: 30px;
 }
 .music-favs {
   width: 100%;
   max-width: 1200px;
-  margin: 20px auto 0;
+  margin: 8px auto 0;
   border-radius: 16px;
   overflow: hidden;
   background: linear-gradient(160deg, rgba(26, 26, 46, 0.85) 0%, rgba(61, 53, 97, 0.8) 100%);
@@ -1178,11 +1189,11 @@ canvas.particle-text-canvas {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 18px 22px;
+  padding: 12px 20px;
 }
 .mf-plcover {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 12px;
   object-fit: cover;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
@@ -1219,7 +1230,7 @@ canvas.particle-text-canvas {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 22px;
+  padding: 8px 20px;
   background: rgba(161, 140, 209, 0.16);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -1269,7 +1280,7 @@ canvas.particle-text-canvas {
   background: #a18cd1;
 }
 .mf-list {
-  height: 440px;
+  height: 280px;
   overflow-y: auto;
 }
 .mf-row {
@@ -1288,8 +1299,13 @@ canvas.particle-text-canvas {
   background: rgba(161, 140, 209, 0.3);
   box-shadow: inset 3px 0 0 #a18cd1;
 }
-.mf-row.mf-err {
+.mf-row.mf-err .mf-ti,
+.mf-row.mf-err .mf-ar,
+.mf-row.mf-err .mf-idx {
   opacity: 0.55;
+}
+.mf-row.mf-err .mf-st {
+  color: #f0c8e0;
 }
 .mf-idx {
   width: 30px;
