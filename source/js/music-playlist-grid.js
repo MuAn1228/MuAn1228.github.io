@@ -32,6 +32,11 @@
       var i = parseInt(r.getAttribute('data-i'), 10);
       var st = r.querySelector('.mf-st');
       var active = i === current;
+      if (r.classList.contains('mf-err')) {
+        r.classList.toggle('mf-active', false);
+        st.className = 'fas fa-lock mf-st'; // 版权受限：保持锁图标
+        return;
+      }
       r.classList.toggle('mf-active', active);
       st.className = active ? 'fas fa-volume-up mf-st' : 'fas mf-st';
     });
@@ -98,7 +103,15 @@
 
     listEl.addEventListener('click', function (e) {
       var row = e.target.closest('.mf-row');
-      if (row) play(parseInt(row.getAttribute('data-i'), 10));
+      if (!row) return;
+      var i = parseInt(row.getAttribute('data-i'), 10);
+      if (row.classList.contains('mf-err')) {
+        // 版权/VIP 受限歌曲无法在此播放，直接带用户去网易云收听
+        toast('「' + songs[i].name + '」受版权限制无法播放，为你打开网易云收听');
+        window.open('https://music.163.com/#/song?id=' + songs[i].id, '_blank');
+        return;
+      }
+      play(i);
     });
     el('mf-toggle').addEventListener('click', function () {
       if (current < 0) { play(0); return; }
@@ -114,7 +127,7 @@
       var row = listEl.querySelector('.mf-row[data-i="' + current + '"]');
       if (row) row.classList.add('mf-err');
       setState(false);
-      toast('「' + songs[current].name + '」暂不支持在线播放，可点封面去网易云收听');
+      toast('「' + songs[current].name + '」受版权限制无法播放，再点一次可去网易云收听');
     });
   }
 
