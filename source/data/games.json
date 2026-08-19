@@ -87,7 +87,7 @@
   {
     "name": "我的世界",
     "sub": "沙盒",
-    "img": "/img/games/game20.jpg"
+    "img": "/img/games/game43.png"
   },
   {
     "name": "使命召唤",
@@ -95,19 +95,9 @@
     "img": "/img/games/game21.jpg"
   },
   {
-    "name": "使命召唤：现代战争2",
-    "sub": "FPS",
-    "img": "/img/games/game22.jpg"
-  },
-  {
     "name": "元气骑士",
     "sub": "Roguelike",
     "img": "/img/games/game30.jpg"
-  },
-  {
-    "name": "祖玛",
-    "sub": "休闲",
-    "img": "/img/games/game31.jpg"
   },
   {
     "name": "滑雪大冒险",
@@ -118,5 +108,50 @@
     "name": "钢琴块",
     "sub": "音乐",
     "img": "/img/games/game33.jpg"
+  },
+  {
+    "name": "拳皇97",
+    "sub": "格斗",
+    "img": "/img/games/game34.jpg"
+  },
+  {
+    "name": "保卫萝卜2",
+    "sub": "塔防",
+    "img": "/img/games/game35.png"
+  },
+  {
+    "name": "鲨鱼的复仇",
+    "sub": "休闲",
+    "img": "/img/games/game36.png"
+  },
+  {
+    "name": "疯狂小人战斗",
+    "sub": "动作",
+    "img": "/img/games/game37.jpg"
+  },
+  {
+    "name": "非现实生活",
+    "sub": "冒险",
+    "img": "/img/games/game38.jpg"
+  },
+  {
+    "name": "超级玛丽",
+    "sub": "平台",
+    "img": "/img/games/game39.jpg"
+  },
+  {
+    "name": "air attack",
+    "sub": "射击",
+    "img": "/img/games/game40.jpg"
+  },
+  {
+    "name": "饥饿鲨鱼进化",
+    "sub": "休闲",
+    "img": "/img/games/game41.png"
+  },
+  {
+    "name": "侠盗猎车手罪恶都市",
+    "sub": "开放世界",
+    "img": "/img/games/game42.jpg"
   }
 ]
