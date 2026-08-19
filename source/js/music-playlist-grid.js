@@ -1,29 +1,125 @@
-// ===== 音乐页顶部紫色横幅：内嵌网易云官方外链播放器（我喜欢的音乐） =====
-// 将网易云官方播放器 iframe 注入到页面顶部页头（#page-site-info 之后），
-// 歌单 2793973232（落别恨喜欢的音乐）共 394 首，由官方播放器展示与播放。
+// ===== 音乐页顶部紫色横幅：自绘网易云「我喜欢的音乐」大播放器 =====
+// 读取 /data/music-playlist.json（网易云公开歌单 2793973232，394 首），
+// 渲染为占满顶部空间的紫色播放器：歌单信息 + 现在播放条 + 可滚动歌曲列表。
+// 点击歌曲通过网易云官方直链播放；版权受限的歌曲会提示不可播放，可点击跳转网易云。
 (function () {
   var header = document.getElementById('page-header');
   var info = document.getElementById('page-site-info');
   if (!header || !info) return;
 
+  var songs = [];
+  var current = -1;
+  var audio = new Audio();
+  var toastTimer = null;
+  var PLAYLIST_ID = 2793973232;
+  var COVER = 'https://p1.music.126.net/xPbF9DU762nUv1drpF5d9A==/109951172557075457.jpg';
+
+  function el(id) { return document.getElementById(id); }
+
+  function toast(msg) {
+    var t = el('mf-toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2400);
+  }
+
+  function setState(playing) {
+    var icon = el('mf-toggle').querySelector('i');
+    icon.className = playing ? 'fas fa-pause' : 'fas fa-play';
+    document.querySelectorAll('.mf-row').forEach(function (r) {
+      var i = parseInt(r.getAttribute('data-i'), 10);
+      var st = r.querySelector('.mf-st');
+      var active = i === current;
+      r.classList.toggle('mf-active', active);
+      st.className = active ? 'fas fa-volume-up mf-st' : 'fas mf-st';
+    });
+  }
+
+  function play(i) {
+    if (i < 0 || i >= songs.length) return;
+    var row = document.querySelector('.mf-row[data-i="' + i + '"]');
+    if (row) row.classList.remove('mf-err');
+    if (current === i && !audio.paused) { audio.pause(); return; }
+    current = i;
+    el('mf-now-text').textContent = songs[i].name + ' - ' + songs[i].artist;
+    audio.src = 'https://music.163.com/song/media/outer/url?id=' + songs[i].id + '.mp3';
+    audio.play();
+  }
+
+  function step(d) {
+    if (songs.length === 0) return;
+    play(current < 0 ? 0 : (current + d + songs.length) % songs.length);
+  }
+
+  function build(list) {
+    songs = list;
+    var box = document.createElement('div');
+    box.className = 'music-favs';
+    box.innerHTML =
+      '<div class="mf-head">' +
+        '<img class="mf-plcover" src="' + COVER + '" alt="">' +
+        '<div class="mf-plinfo">' +
+          '<div class="mf-plname">落别恨喜欢的音乐</div>' +
+          '<div class="mf-pldesc">我喜欢的音乐 · 共 ' + list.length + ' 首</div>' +
+        '</div>' +
+        '<a class="mf-open" href="https://music.163.com/#/playlist?id=' + PLAYLIST_ID + '" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> 打开网易云</a>' +
+      '</div>' +
+      '<div class="mf-now">' +
+        '<i class="fas fa-music mf-now-icon"></i>' +
+        '<span class="mf-now-text" id="mf-now-text">点击下方歌曲开始播放</span>' +
+        '<div class="mf-now-ctrl">' +
+          '<button class="mf-btn" id="mf-prev" title="上一首"><i class="fas fa-step-backward"></i></button>' +
+          '<button class="mf-btn mf-play" id="mf-toggle" title="播放 / 暂停"><i class="fas fa-play"></i></button>' +
+          '<button class="mf-btn" id="mf-next" title="下一首"><i class="fas fa-step-forward"></i></button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="mf-list" id="mf-list"></div>';
+    info.appendChild(box);
+    header.classList.add('music-favs-host');
+
+    // toast 挂到 body，避免被 .music-favs 的 overflow:hidden 裁剪
+    var toast = document.createElement('div');
+    toast.className = 'mf-toast';
+    toast.id = 'mf-toast';
+    document.body.appendChild(toast);
+
+    var listEl = el('mf-list');
+    listEl.innerHTML = list.map(function (s, i) {
+      return '<div class="mf-row" data-i="' + i + '">' +
+        '<span class="mf-idx">' + (i + 1) + '</span>' +
+        '<img class="mf-cov" src="' + s.cover + '" loading="lazy" alt="">' +
+        '<span class="mf-ti" title="' + s.name + '">' + s.name + '</span>' +
+        '<span class="mf-ar">' + s.artist + '</span>' +
+        '<i class="fas mf-st"></i>' +
+        '</div>';
+    }).join('');
+
+    listEl.addEventListener('click', function (e) {
+      var row = e.target.closest('.mf-row');
+      if (row) play(parseInt(row.getAttribute('data-i'), 10));
+    });
+    el('mf-toggle').addEventListener('click', function () {
+      if (current < 0) { play(0); return; }
+      if (audio.paused) audio.play(); else audio.pause();
+    });
+    el('mf-prev').addEventListener('click', function () { step(-1); });
+    el('mf-next').addEventListener('click', function () { step(1); });
+
+    audio.addEventListener('play', function () { setState(true); });
+    audio.addEventListener('pause', function () { setState(false); });
+    audio.addEventListener('ended', function () { step(1); });
+    audio.addEventListener('error', function () {
+      var row = listEl.querySelector('.mf-row[data-i="' + current + '"]');
+      if (row) row.classList.add('mf-err');
+      setState(false);
+      toast('「' + songs[current].name + '」暂不支持在线播放，可点封面去网易云收听');
+    });
+  }
+
   fetch('/data/music-playlist.json')
     .then(function (r) { return r.json(); })
-    .then(function (songs) {
-      var box = document.createElement('div');
-      box.className = 'music-favs';
-      box.innerHTML =
-        '<div class="music-favs-header">' +
-          '<i class="fas fa-heart music-favs-heart"></i>' +
-          '<span class="music-favs-title">我喜欢的音乐</span>' +
-          '<span class="music-favs-subtitle">共 ' + songs.length + ' 首</span>' +
-        '</div>' +
-        '<iframe class="music-favs-iframe" ' +
-          'src="https://music.163.com/outchain/player?type=1&id=2793973232&auto=0&height=450" ' +
-          'frameborder="no" border="0" marginwidth="0" marginheight="0" ' +
-          'allowtransparency="true" scrolling="no"></iframe>';
-      // 标记页头以放大紫色空间，并把模块排进标题下方
-      header.classList.add('music-favs-host');
-      info.appendChild(box);
-    })
+    .then(build)
     .catch(function () {});
 })();
