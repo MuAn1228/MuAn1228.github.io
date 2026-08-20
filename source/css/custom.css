@@ -1492,6 +1492,8 @@ a,button,input,textarea,label,[role=button],select,option{cursor:inherit!importa
   transform: translateY(-50%);
   overflow: visible;
 }
+.travel-reel-stage { opacity: 0; transition: opacity 0.6s ease; }
+.travel-reel.travel-reel-ready .travel-reel-stage { opacity: 1; }
 .travel-reel-tilt {
   position: relative;
   width: 100%;

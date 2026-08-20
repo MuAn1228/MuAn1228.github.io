@@ -28,7 +28,6 @@
     speedVariance: 0.6,  // 各条速度差异
     autoScroll: 24,      // 每秒自动漂移 px
     inertia: 0.92,       // 惯性保持
-    damping: 0.1,        // 追平输入收敛
     dragSensitivity: 1.6,
     wheelSensitivity: 1.0,
     radius: 8,           // 照片圆角
@@ -37,44 +36,86 @@
     focusStrength: 0.85, // 聚焦恢复强度
     dim: 0.45,           // 外侧条变暗
     taper: 0.18,         // 外侧条缩放
-    fade: 0.14           // 左右边缘淡出
+    preloadTimeout: 4000 // 预加载最长等待(ms)，超时也继续渲染
   };
 
   var stage, rect, viewW, viewH;
   var pointer = { x: -9999, y: -9999, active: false };
   var userOffset = 0;          // 用户输入累计
-  var velocity = 0;            // 惯性速度
-  var dragX = null, dragMoved = false;
-  var reels = [];              // 每条：{ el, plates[], w, speed, row, dir }
+  var dragX = null;
+  var reels = [];              // 每条：{ el, plates[], w, speed, row, mid, centers[] }
   var running = false;
   var lastT = 0;
 
-  function loadImages(cb) {
-    fetch(IMG_JSON)
-      .then(function (r) { return r.json(); })
-      .then(function (d) { cb(d.images || []); })
-      .catch(function () { cb([]); });
+  // 预加载所有图片，收集自然宽高（用于按真实比例定宽）
+  function preload(images, done) {
+    var metas = [];
+    var loaded = 0;
+    var total = images.length;
+    var fired = false;
+
+    function finish() {
+      if (fired) return;
+      fired = true;
+      done(metas);
+    }
+
+    images.forEach(function (src) {
+      var img = new Image();
+      img.onload = function () {
+        loaded++;
+        metas.push({ src: src, w: img.naturalWidth, h: img.naturalHeight });
+        if (loaded >= total) finish();
+      };
+      img.onerror = function () {
+        loaded++;
+        metas.push({ src: src, w: null, h: null });
+        if (loaded >= total) finish();
+      };
+      img.src = src;
+    });
+
+    // 兜底超时
+    setTimeout(finish, CFG.preloadTimeout);
   }
 
-  function build(images) {
+  // 根据真实宽高比 + 目标高度，得出块宽（竖图窄、横图宽）
+  function aspectW(meta, h) {
+    var ratio = meta && meta.w && meta.h ? meta.w / meta.h : 1.3;
+    var w = h * Math.min(2.0, Math.max(0.6, ratio));
+    return Math.round(w);
+  }
+
+  function build(metas) {
     stage = document.createElement('div');
     stage.className = 'travel-reel-stage';
     container.appendChild(stage);
 
-    var n = images.length;
+    var n = metas.length;
     if (!n) { stage.innerHTML = ''; return; }
 
     measure();
+
+    // 此刻视口已有内容，先显示淡入容器（避免半图感）
+    container.classList.add('travel-reel-ready');
 
     var tiltEl = document.createElement('div');
     tiltEl.className = 'travel-reel-tilt';
     stage.appendChild(tiltEl);
 
-    // 外排缩放系数
     var mid = (CFG.rows - 1) / 2;
 
+    // 校准行高：让整堆在标题横幅内纵向铺满而非溢出
+    var maxH = container.offsetHeight || viewH;
+    var stackH = CFG.rows * CFG.rowHeight + (CFG.rows - 1) * CFG.rowGap;
+    if (stackH > maxH * 0.95) {
+      CFG._scale = maxH * 0.9 / stackH;
+    } else {
+      CFG._scale = 1;
+    }
+
     for (var r = 0; r < CFG.rows; r++) {
-      var reel = buildReel(images, n, r, mid);
+      var reel = buildReel(metas, r, mid);
       tiltEl.appendChild(reel.el);
       reels.push(reel);
     }
@@ -87,62 +128,58 @@
     requestAnimationFrame(tick);
   }
 
-  function buildReel(images, n, row, mid) {
+  function buildReel(metas, row, mid) {
     var el = document.createElement('div');
     el.className = 'travel-reel-row';
-    el.style.height = CFG.rowHeight + 'px';
-    el.style.top = (row * (CFG.rowHeight + CFG.rowGap)) + 'px';
+    var rowH = Math.round(CFG.rowHeight * (CFG._scale || 1));
+    el.style.height = rowH + 'px';
+    el.style.top = (row * (rowH + CFG.rowGap)) + 'px';
 
-    // 每条随机取一组序列（可复用图片），铺到足够长为止
-    var seq = [];
-    for (var i = 0; i < 14; i++) {
-      seq.push(images[Math.floor(Math.random() * n)]);
+    // 每条按行波动随机打乱图片顺序
+    var shuffled = metas.slice();
+    var seed = row * 97 % 31;
+    for (var i = shuffled.length - 1; i > 0; i--) {
+      var j = (i * 7 + seed * 13 + Math.floor(Math.random() * (i + 1))) % (i + 1);
+      var t = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = t;
     }
 
-    // 速度：中间快(1)，两侧按 speedVariance 偏移
     var speed = CFG.speed * (1 + ((row - mid) / mid || 0) * CFG.speedVariance * 2);
 
     var plates = [];
     var totalW = 0;
 
-    function addPlates() {
-      for (var i = 0; i < seq.length; i++) {
-        var img = new Image();
-        img.className = 'travel-reel-plate';
-        img.src = seq[i];
-        img.draggable = false;
-        img.style.borderRadius = CFG.radius + 'px';
-        img.style.height = '100%';
-        // 随机宽高比（minAspect~maxAspect）
-        var aspect = 0.6 + Math.random() * 1.4;
-        img.style.width = Math.round(CFG.rowHeight * aspect) + 'px';
-        img.style.transform = 'rotate(' + (Math.random() * 2 - 1) * CFG.randTilt + 'deg)';
-        el.appendChild(img);
-        plates.push(img);
-        totalW += CFG.rowHeight * aspect + CFG.itemGap;
-      }
-    }
-
-    addPlates();
-    // 确保铺满 2.2 倍视口宽（滚动循环）
-    var target = viewW * 2.2;
+    // 逐块添加：轮流取序列中的图，铺到约 1.3 倍视口宽即停（配合 translateX 取模循环）
+    var target = viewW * 1.3;
     var guard = 0;
-    while (totalW < target && guard++ < 12) addPlates();
+    while (totalW < target && guard++ < 40) {
+      var meta = shuffled[(guard - 1) % shuffled.length];
+      var img = new Image();
+      img.className = 'travel-reel-plate';
+      img.src = meta.src;
+      img.draggable = false;
+      img.style.borderRadius = CFG.radius + 'px';
+      img.style.height = '100%';
+      var w = aspectW(meta, rowH);
+      img.style.width = w + 'px';
+      img.style.transform = 'rotate(' + (Math.random() * 2 - 1) * CFG.randTilt + 'deg)';
+      el.appendChild(img);
+      plates.push(img);
+      totalW += w + CFG.itemGap;
+    }
 
     el.style.width = totalW + 'px';
     el.style.left = (-totalW / 2) + 'px';
 
-    return { el: el, plates: plates, w: totalW, speed: speed, row: row, mid: mid };
+    return { el: el, plates: plates, w: totalW, speed: speed, row: row, mid: mid, rowH: rowH, centers: [] };
   }
 
-  // 每个 item 相对条中心 x（用于灰度聚焦计算，在 tick 中增量更新）
   function platesCenters() {
     for (var i = 0; i < reels.length; i++) {
       var r = reels[i];
-      r.centerXArr = [];
+      r.centers = [];
       var cx = -r.w / 2;
       for (var j = 0; j < r.plates.length; j++) {
-        r.centerXArr.push(cx + parseFloat(r.plates[j].style.width) / 2);
+        r.centers.push(cx + parseFloat(r.plates[j].style.width) / 2);
         cx += parseFloat(r.plates[j].style.width) + CFG.itemGap;
       }
     }
@@ -154,7 +191,7 @@
   }
 
   function bindEvents() {
-    stage.addEventListener('wheel', onWheel, { passive: false });
+    stage.addEventListener('wheel', onWheel);
     stage.addEventListener('pointerdown', onDown);
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
@@ -173,20 +210,18 @@
     // 不阻止页面滚动，滚轮微调胶片偏移
     userOffset += e.deltaY * CFG.wheelSensitivity * CFG.speed;
   }
-
   function onDown(e) {
-    dragX = e.clientX; dragMoved = false; velocity = 0;
+    dragX = e.clientX;
   }
   function onMove(e) {
     if (dragX === null) return;
     var dx = e.clientX - dragX;
-    if (Math.abs(dx) > 3) dragMoved = true;
     dragX = e.clientX;
     userOffset += dx * CFG.dragSensitivity;
   }
   function onUp() { dragX = null; }
   function onResize() {
-    measure(); platesCenters();
+    measure();
     rect = container.getBoundingClientRect();
   }
 
@@ -194,14 +229,6 @@
     if (!running) return;
     requestAnimationFrame(tick);
 
-    var dt = Math.min(0.05, (now - lastT) / 1000);
-    lastT = now;
-
-    // 惯性
-    velocity *= CFG.inertia;
-    userOffset += velocity * dt * CFG.speed;
-
-    // 自动漂移
     var elapsed = now / 1000;
     var base = -elapsed * CFG.autoScroll + userOffset;
 
@@ -209,10 +236,14 @@
     tiltEl.style.transform = 'translateZ(0) rotate(' + (-CFG.tilt) + 'deg)';
     tiltEl.style.height = (reels.length * (CFG.rowHeight + CFG.rowGap)) + 'px';
 
-    // 拱形基线：每行居中上移 CFG.arch，两侧下移
+    var mouseLocal = null;
+    if (pointer.active) {
+      mouseLocal = { x: pointer.x - rect.left, y: pointer.y - rect.top };
+    }
+
     for (var i = 0; i < reels.length; i++) {
       var r = reels[i];
-      // 按行宽取模实现无缝循环（中心相对 + 半宽为基准）
+      // 按行宽取模实现无缝循环
       var off = ((base * r.speed) % r.w + r.w) % r.w - r.w / 2;
       var rowOff = (r.row - r.mid) / (r.mid || 1);
       var arch = rowOff * rowOff * CFG.arch;
@@ -225,43 +256,54 @@
         'translateY(' + arch + 'px)' +
         'scale(' + taper + ')';
 
-      // 灰度聚焦：更新每块
-      var g = CFG.grayscale;
-      var bri = 1;
-      // 条中心在视口中的水平位置 = off + viewW/2（含 left=-w/2 的居中）
+      // 灰度聚焦：仅在指针位于该行附近时更新各块，否则统一应用静态灰度
       var centerOnScreen = off + viewW / 2;
-      if (pointer.active && r.centerXArr) {
-        var prx = pointer.x - rect.left;
-        var pry = pointer.y - rect.top;
-        // 行中心纵向位置：行 top + 行高一半
-        var rowCenterY = r.row * (CFG.rowHeight + CFG.rowGap) + CFG.rowHeight / 2;
+      var rowCenterY = r.row * (r.rowH + CFG.rowGap) + r.rowH / 2;
+
+      if (mouseLocal) {
+        var near = Math.abs(mouseLocal.y - (arch + rowCenterY)) < CFG.focusRadius;
         for (var j = 0; j < r.plates.length; j++) {
-          var px = centerOnScreen + r.centerXArr[j];
-          var dxp = px - prx;
-          var dyp = arch - pry + rowCenterY;
-          var dist = Math.sqrt(dxp * dxp + dyp * dyp);
-          if (dist < CFG.focusRadius) {
-            var k = 1 - (dist / CFG.focusRadius) * CFG.focusStrength;
-            g = CFG.grayscale * (1 - k);
-            bri = 1 + k * 0.12;
+          var g = CFG.grayscale;
+          var bri = 1;
+          if (near) {
+            var px = centerOnScreen + r.centers[j];
+            var dy = arch - mouseLocal.y + rowCenterY;
+            var dist = Math.sqrt(Math.pow(px - mouseLocal.x, 2) + dy * dy);
+            if (dist < CFG.focusRadius) {
+              var k = 1 - (dist / CFG.focusRadius) * CFG.focusStrength;
+              g = CFG.grayscale * (1 - k);
+              bri = 1 + k * 0.12;
+            }
           }
-          var rt = r.plates[j];
-          rt.style.filter = 'grayscale(' + g.toFixed(2) + ') brightness(' + bri.toFixed(2) + ')';
+          var f = 'grayscale(' + g.toFixed(2) + ') brightness(' + bri.toFixed(2) + ')';
+          if (r.plates[j]._f !== f) {
+            r.plates[j].style.filter = f;
+            r.plates[j]._f = f;
+          }
         }
       } else {
+        var cg = 'grayscale(' + CFG.grayscale + ') brightness(1)';
         for (var j2 = 0; j2 < r.plates.length; j2++) {
-          var rp = r.plates[j2];
-          var cg = 'grayscale(' + CFG.grayscale + ')';
-          if (rp._g !== cg) { rp.style.filter = cg + ' brightness(1)'; rp._g = cg; }
+          if (r.plates[j2]._f !== cg) {
+            r.plates[j2].style.filter = cg;
+            r.plates[j2]._f = cg;
+          }
         }
       }
     }
   }
 
   function init() {
-    loadImages(function (images) {
-      if (images.length) build(images);
-    });
+    fetch(IMG_JSON)
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var images = d.images || [];
+        if (!images.length) return;
+        preload(images, function (metas) {
+          if (metas.length) build(metas);
+        });
+      })
+      .catch(function () {});
   }
 
   if (document.readyState === 'loading') {
