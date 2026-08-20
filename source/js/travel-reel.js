@@ -131,9 +131,9 @@
       return { el: el, plates: [], w: 0, period: 0, speed: speed, row: row, mid: mid, rowH: rowH, centers: [] };
     }
 
-    // 行总宽：视口 + 左右各一个完整周期，按周期整数倍铺满，
-    // 平移按“周期宽”取模，任何偏移下屏幕都被照片填满、回绕无缝
-    var total = Math.ceil((viewW + 2 * cycleW) / cycleW) * cycleW;
+    // 行总宽：视口 + 一个完整周期即可覆盖任意偏移（offset 在 ±period/2 内来回），
+    // 移位时始终填满屏幕、回绕无缝。比原「+2 周期」省约 1/3 的重复图片，加载更快。
+    var total = Math.max(cycleW, Math.ceil((viewW + cycleW) / cycleW) * cycleW);
 
     var plates = [];
     var elWidth = 0;
@@ -141,6 +141,7 @@
     while (elWidth < total && guard++ < 300) {
       var c = cycle[guard % cycle.length];
       var img = new Image();
+      img.loading = 'lazy';       // 视口外的胶片块延后加载，避免几千个请求同时冲垮网络
       img.className = 'travel-reel-plate';
       img.src = c.meta.src;
       img.decoding = 'async';   // 异步解码，先出结构再填充像素，加快首屏

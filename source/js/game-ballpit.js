@@ -114,12 +114,32 @@
 
     balls.push({
       mesh: mesh,
+      textured: !!tex,   // 标记是否已用封面贴图球
       size: size,
       vx: (Math.random() - 0.5) * 1.5,
       vy: (Math.random() - 0.5) * 1.5,
       vz: (Math.random() - 0.5) * 1.5,
       spinY: (Math.random() - 0.5) * 2 * CFG.spin
     });
+  }
+
+  // 把一个尚未贴图的纯色球替换成封面贴图球（贴图随到随换，无需等全部加载）
+  function rethemeBall(tex) {
+    for (var i = 0; i < balls.length; i++) {
+      var b = balls[i];
+      if (!b.textured) {
+        if (b.mesh.material && typeof b.mesh.material.dispose === 'function') b.mesh.material.dispose();
+        b.mesh.material = new THREE.MeshStandardMaterial({
+          map: tex,
+          roughness: 0.42,
+          metalness: 0.12,
+          color: 0xffffff
+        });
+        b.textured = true;
+        return true;
+      }
+    }
+    return false;
   }
 
   function updatePhysics(dt) {
@@ -264,33 +284,22 @@
 
   function buildBalls(games) {
     var urls = games.map(function (g) { return g.img; }).filter(Boolean);
-    if (!urls.length) { for (var i = 0; i < 30; i++) spawnBall(null); return; }
 
-    var target = Math.min(56, Math.max(30, urls.length * 2));
-    var textures = {};
-    var loaded = 0;
-
-    function finish() {
-      for (var idx = 0; idx < target; idx++) {
-        spawnBall(textures[idx % urls.length] || null);
-      }
+    // 先立即用纯色球填满球池，保证一进入就有画面，无需等待贴图
+    var target = urls.length ? Math.min(56, Math.max(30, urls.length * 2)) : 30;
+    if (!urls.length) {
+      for (var i = 0; i < 30; i++) spawnBall(null);
+      return;
     }
+    for (var k = 0; k < target; k++) spawnBall(null);
 
-    urls.forEach(function (u, i) {
+    // 贴图每加载完成一张，就替换一个纯色球为封面球；失败忽略
+    urls.forEach(function (u) {
       new THREE.TextureLoader().load(u, function (t) {
         setColorSpace(t);
-        textures[i] = t;
-        done();
-      }, undefined, function () {
-        textures[i] = null;
-        done();
-      });
+        rethemeBall(t);
+      }, undefined, function () {});
     });
-
-    function done() {
-      loaded++;
-      if (loaded >= urls.length) finish();
-    }
   }
 
   function init() {

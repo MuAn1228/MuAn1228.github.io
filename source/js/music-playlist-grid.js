@@ -60,8 +60,9 @@
     play(current < 0 ? 0 : (current + d + songs.length) % songs.length);
   }
 
-  function build(list) {
-    songs = list;
+  // 先同步构建播放器骨架（歌单信息 + 播放条），避免进入时短暂停留旧布局；
+  // 歌曲列表数据通过 fetch 异步填充。
+  function buildSkeleton() {
     var box = document.createElement('div');
     box.className = 'music-favs';
     box.innerHTML =
@@ -69,7 +70,7 @@
         '<img class="mf-plcover" src="' + COVER + '" alt="">' +
         '<div class="mf-plinfo">' +
           '<div class="mf-plname">落别恨喜欢的音乐</div>' +
-          '<div class="mf-pldesc">我喜欢的音乐 · 共 ' + list.length + ' 首</div>' +
+          '<div class="mf-pldesc" id="mf-pldesc">我喜欢的音乐 · 加载中…</div>' +
         '</div>' +
         '<a class="mf-open" href="https://music.163.com/#/playlist?id=' + PLAYLIST_ID + '" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> 打开网易云</a>' +
       '</div>' +
@@ -91,6 +92,29 @@
     toast.className = 'mf-toast';
     toast.id = 'mf-toast';
     document.body.appendChild(toast);
+
+    el('mf-toggle').addEventListener('click', function () {
+      if (current < 0) { play(0); return; }
+      if (audio.paused) audio.play(); else audio.pause();
+    });
+    el('mf-prev').addEventListener('click', function () { step(-1); });
+    el('mf-next').addEventListener('click', function () { step(1); });
+
+    audio.addEventListener('play', function () { setState(true); });
+    audio.addEventListener('pause', function () { setState(false); });
+    audio.addEventListener('ended', function () { step(1); });
+    audio.addEventListener('error', function () {
+      var listEl = el('mf-list');
+      var row = listEl && listEl.querySelector('.mf-row[data-i="' + current + '"]');
+      if (row) row.classList.add('mf-err');
+      setState(false);
+      toast('「' + songs[current].name + '」受版权限制无法播放，再点一次可去网易云收听');
+    });
+  }
+
+  function populateList(list) {
+    songs = list;
+    el('mf-pldesc').textContent = '我喜欢的音乐 · 共 ' + list.length + ' 首';
 
     var listEl = el('mf-list');
     listEl.innerHTML = list.map(function (s, i) {
@@ -115,26 +139,11 @@
       }
       play(i);
     });
-    el('mf-toggle').addEventListener('click', function () {
-      if (current < 0) { play(0); return; }
-      if (audio.paused) audio.play(); else audio.pause();
-    });
-    el('mf-prev').addEventListener('click', function () { step(-1); });
-    el('mf-next').addEventListener('click', function () { step(1); });
-
-    audio.addEventListener('play', function () { setState(true); });
-    audio.addEventListener('pause', function () { setState(false); });
-    audio.addEventListener('ended', function () { step(1); });
-    audio.addEventListener('error', function () {
-      var row = listEl.querySelector('.mf-row[data-i="' + current + '"]');
-      if (row) row.classList.add('mf-err');
-      setState(false);
-      toast('「' + songs[current].name + '」受版权限制无法播放，再点一次可去网易云收听');
-    });
   }
 
+  buildSkeleton();
   fetch('/data/music-playlist.json')
     .then(function (r) { return r.json(); })
-    .then(build)
+    .then(populateList)
     .catch(function () {});
 })();
