@@ -40,6 +40,7 @@
   };
 
   var stage, rect, viewW, viewH;
+  var tiltEl = null;                 // 缓存倾斜层引用，避免每帧 querySelector
   var pointer = { x: -9999, y: -9999, active: false };
   var userOffset = 0;          // 用户输入累计
   var dragX = null;
@@ -67,7 +68,7 @@
     // 此刻视口已有内容，先显示淡入容器（避免半图感）
     container.classList.add('travel-reel-ready');
 
-    var tiltEl = document.createElement('div');
+    tiltEl = document.createElement('div');
     tiltEl.className = 'travel-reel-tilt';
     stage.appendChild(tiltEl);
 
@@ -224,7 +225,6 @@
     var elapsed = now / 1000;
     var base = -elapsed * CFG.autoScroll + userOffset;
 
-    var tiltEl = stage.querySelector('.travel-reel-tilt');
     tiltEl.style.transform = 'translateZ(0) rotate(' + (-CFG.tilt) + 'deg)';
     tiltEl.style.height = (CFG._stackH || reels.length * (CFG.rowHeight + CFG.rowGap)) + 'px';
 
@@ -232,6 +232,9 @@
     if (pointer.active) {
       mouseLocal = { x: pointer.x - rect.left, y: pointer.y - rect.top };
     }
+
+    // 静态灰度字符串（统一 toFixed，与聚焦态的写法一致，确保 _f 缓存跨模式命中）
+    var cg = 'grayscale(' + CFG.grayscale.toFixed(2) + ') brightness(1.00)';
 
     for (var i = 0; i < reels.length; i++) {
       var r = reels[i];
@@ -247,33 +250,37 @@
         'translateX(' + off + 'px)' +
         'scale(' + taper + ')';
 
-      // 灰度聚焦：仅在指针位于该行附近时更新各块，否则统一应用静态灰度
       var centerOnScreen = off + viewW / 2;
       var rowCenterY = r.row * (r.rowH + (CFG._gap || CFG.rowGap)) + r.rowH / 2;
 
-      if (mouseLocal) {
-        var near = Math.abs(mouseLocal.y - (arch + rowCenterY)) < CFG.focusRadius;
-        for (var j = 0; j < r.plates.length; j++) {
+      // 是否靠近鼠标的聚焦带
+      var near = mouseLocal && Math.abs(mouseLocal.y - (arch + rowCenterY)) < CFG.focusRadius;
+
+      if (near) {
+        // 靠近鼠标：逐块做聚焦（全量循环，行内块数有限）
+        r.staticDone = false; // 离开后需要重新铺静态
+        var plates = r.plates;
+        var centers = r.centers;
+        for (var j = 0; j < plates.length; j++) {
           var g = CFG.grayscale;
           var bri = 1;
-          if (near) {
-            var px = centerOnScreen + r.centers[j];
-            var dy = arch - mouseLocal.y + rowCenterY;
-            var dist = Math.sqrt(Math.pow(px - mouseLocal.x, 2) + dy * dy);
-            if (dist < CFG.focusRadius) {
-              var k = 1 - (dist / CFG.focusRadius) * CFG.focusStrength;
-              g = CFG.grayscale * (1 - k);
-              bri = 1 + k * 0.12;
-            }
+          var px = centerOnScreen + centers[j];
+          var dy = arch - mouseLocal.y + rowCenterY;
+          var dist = Math.sqrt(px * px - 2 * px * mouseLocal.x + mouseLocal.x * mouseLocal.x + dy * dy);
+          if (dist < CFG.focusRadius) {
+            var k = 1 - (dist / CFG.focusRadius) * CFG.focusStrength;
+            g = CFG.grayscale * (1 - k);
+            bri = 1 + k * 0.12;
           }
           var f = 'grayscale(' + g.toFixed(2) + ') brightness(' + bri.toFixed(2) + ')';
-          if (r.plates[j]._f !== f) {
-            r.plates[j].style.filter = f;
-            r.plates[j]._f = f;
+          if (plates[j]._f !== f) {
+            plates[j].style.filter = f;
+            plates[j]._f = f;
           }
         }
-      } else {
-        var cg = 'grayscale(' + CFG.grayscale + ') brightness(1)';
+      } else if (!r.staticDone) {
+        // 远离鼠标（或整页静置）：整行铺一次静态灰度，之后不再重复遍历
+        r.staticDone = true;
         for (var j2 = 0; j2 < r.plates.length; j2++) {
           if (r.plates[j2]._f !== cg) {
             r.plates[j2].style.filter = cg;
@@ -281,6 +288,7 @@
           }
         }
       }
+      // else：距离远且静态已铺好 -> 该行本帧零遍历
     }
   }
 
