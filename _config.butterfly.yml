@@ -122,7 +122,6 @@ inject:
     - '<script src="/lib/APlayer.min.js"></script>'
     - '<script src="/js/music-playlist.js"></script>'
     - '<script src="/lib/three.min.js" defer></script>'
-    - '<script src="/lib/GLTFLoader.js" defer></script>'
     - '<script src="/lib/vanta.birds.min.js" defer></script>'
     - '<script src="/js/vanta.js" defer></script>'
     - '<script src="/js/hero-3d.js" defer></script>'
@@ -150,7 +149,6 @@ inject:
     - '<script src="/js/arcade.js"></script>'
     - '<script src="/js/flappy-bird.js"></script>'
     - '<script src="/js/pixel-snow.js" defer></script>'
-    - '<script src="/js/lanyard.js?v=5" defer></script>'
     
 
 # ---------- 评论系统（Giscus） ----------
