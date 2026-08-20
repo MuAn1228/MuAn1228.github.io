@@ -114,32 +114,12 @@
 
     balls.push({
       mesh: mesh,
-      textured: !!tex,   // 标记是否已用封面贴图球
       size: size,
       vx: (Math.random() - 0.5) * 1.5,
       vy: (Math.random() - 0.5) * 1.5,
       vz: (Math.random() - 0.5) * 1.5,
       spinY: (Math.random() - 0.5) * 2 * CFG.spin
     });
-  }
-
-  // 把一个尚未贴图的纯色球替换成封面贴图球（贴图随到随换，无需等全部加载）
-  function rethemeBall(tex) {
-    for (var i = 0; i < balls.length; i++) {
-      var b = balls[i];
-      if (!b.textured) {
-        if (b.mesh.material && typeof b.mesh.material.dispose === 'function') b.mesh.material.dispose();
-        b.mesh.material = new THREE.MeshStandardMaterial({
-          map: tex,
-          roughness: 0.42,
-          metalness: 0.12,
-          color: 0xffffff
-        });
-        b.textured = true;
-        return true;
-      }
-    }
-    return false;
   }
 
   function updatePhysics(dt) {
@@ -284,21 +264,27 @@
 
   function buildBalls(games) {
     var urls = games.map(function (g) { return g.img; }).filter(Boolean);
+    if (!urls.length) { for (var i = 0; i < 30; i++) spawnBall(null); return; }
 
-    // 先立即用纯色球填满球池，保证一进入就有画面，无需等待贴图
-    var target = urls.length ? Math.min(56, Math.max(30, urls.length * 2)) : 30;
-    if (!urls.length) {
-      for (var i = 0; i < 30; i++) spawnBall(null);
-      return;
+    var target = Math.min(56, Math.max(30, urls.length * 2));
+    var ready = [];      // 已加载完成、等待生成球体的封面贴图
+    var spawned = 0;
+
+    // 每就绪一张封面就立即生成一个「真实封面球」；球池随加载逐渐铺满，
+    // 从头到尾都是封面贴图球，无纯色占位球，也不用等全部加载完才出现。
+    function pump() {
+      while (ready.length && spawned < target) {
+        spawnBall(ready.shift());
+        spawned++;
+      }
     }
-    for (var k = 0; k < target; k++) spawnBall(null);
 
-    // 贴图每加载完成一张，就替换一个纯色球为封面球；失败忽略
     urls.forEach(function (u) {
       new THREE.TextureLoader().load(u, function (t) {
         setColorSpace(t);
-        rethemeBall(t);
-      }, undefined, function () {});
+        ready.push(t);
+        pump();
+      }, undefined, function () { /* 个别封面加载失败则忽略 */ });
     });
   }
 

@@ -32,7 +32,7 @@ function loadExternalResource(url, type) {
   });
 }
 
-(async () => {
+async function runWidget() {
   // If you are concerned about display issues on mobile devices, you can use screen.width to determine whether to load
   // 如果担心手机上显示效果不佳，可以根据屏幕宽度来判断是否加载
   // if (screen.width < 768) return;
@@ -67,7 +67,27 @@ function loadExternalResource(url, type) {
     drag: false,
     mobileShow: true,
   });
-})();
+}
+
+// 不在首屏加载时跟 hero/vanta/粒子特效等重型资源抢带宽：
+// 等页面主内容就绪后用「空闲调度」启动看板娘，既能更快加载、也不拖慢首屏。
+function scheduleWidget() {
+  function start() {
+    runWidget();
+  }
+  if ('requestIdleCallback' in window) {
+    // 兜底：即使一直没空闲（如持续动画），3s 内也必须启动
+    window.requestIdleCallback(start, { timeout: 3000 });
+  } else {
+    setTimeout(start, 800);
+  }
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  scheduleWidget();
+} else {
+  window.addEventListener('DOMContentLoaded', scheduleWidget);
+}
 
 console.log(`\n%cLive2D%cWidget%c\n`, 'padding: 8px; background: #cd3e45; font-weight: bold; font-size: large; color: white;', 'padding: 8px; background: #ff5450; font-size: large; color: #eee;', '');
 
