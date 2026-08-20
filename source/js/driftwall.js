@@ -83,6 +83,15 @@
       mq.addEventListener('change', function (e) { self.reduced = e.matches; });
     }
 
+    // 墙不可见（视口外/后台）时暂停动画，节省 CPU 与网络带宽
+    this.inView = true;
+    if (typeof IntersectionObserver === 'function') {
+      var io = new IntersectionObserver(function (entries) {
+        self.inView = !!entries[0].isIntersecting;
+      }, { threshold: 0 });
+      io.observe(container);
+    }
+
     this.createTip();
     this.build(container);
     this.computeVelocities();
@@ -327,7 +336,7 @@
 
   DriftWall.prototype.tick = function (ts) {
     var self = this;
-    if (this.container.style.display === 'none' || document.visibilityState === 'hidden') {
+    if (this.container.style.display === 'none' || document.visibilityState === 'hidden' || !this.inView) {
       this.raf = requestAnimationFrame(function (t2) { self.tick(t2); });
       return;
     }

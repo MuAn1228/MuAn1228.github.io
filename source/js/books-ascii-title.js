@@ -249,15 +249,11 @@
 
   CanvAscii.prototype.init = function () {
     var self = this;
-    return document.fonts.ready
-      .then(function () {
-        self.setMesh();
-        self.setRenderer();
-      })
-      .catch(function () {
-        self.setMesh();
-        self.setRenderer();
-      });
+    // 文字用系统等宽字体，无需等待整页远程字体（document.fonts.ready 可能被 CDN 字体挂起），
+    // 直接同步渲染，标题特效瞬时出现。
+    self.setMesh();
+    self.setRenderer();
+    return Promise.resolve();
   };
 
   CanvAscii.prototype.setMesh = function () {
