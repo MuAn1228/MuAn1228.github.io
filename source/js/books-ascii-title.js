@@ -337,6 +337,7 @@
     var self = this;
     var animateFrame = function () {
       self.animationFrameId = requestAnimationFrame(animateFrame);
+      if (document.visibilityState === 'hidden') return; // 后台暂停
       self.render();
     };
     animateFrame();

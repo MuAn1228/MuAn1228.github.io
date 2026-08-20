@@ -22,13 +22,14 @@
   overlay.querySelector('.lightbox-close').addEventListener('click', function (e) { e.stopPropagation(); closeLightbox(); });
 
   function loop() {
+    requestAnimationFrame(loop);
+    if (document.visibilityState === 'hidden') return; // 后台暂停
     // 灯箱打开时暂停自动滚动
     if (playing && !overlay.classList.contains('active')) {
       offset -= SPEED;
       if (-offset >= halfW) offset += halfW;
       track.style.transform = 'translate3d(' + offset + 'px, 0, 0)';
     }
-    requestAnimationFrame(loop);
   }
 
   function manual(dir) {

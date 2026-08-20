@@ -188,7 +188,7 @@
     stencil: false,
     depth: false
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(window.__gGuard ? window.__gGuard.pixelRatio(2) : Math.min(window.devicePixelRatio, 2));
   renderer.setSize(container.offsetWidth, container.offsetHeight);
   renderer.setClearColor(0x000000, 0);
   container.appendChild(renderer.domElement);
@@ -234,12 +234,15 @@
   }
   window.addEventListener('resize', handleResize);
 
-  // 不可见时暂停渲染
+  // 不可见时暂停渲染（滚出视野或切后台）
   var isVisible = true;
   var io = new IntersectionObserver(function (entries) {
-    isVisible = entries[0].isIntersecting;
+    isVisible = entries[0].isIntersecting && document.visibilityState !== 'hidden';
   }, { threshold: 0 });
   io.observe(container);
+  document.addEventListener('visibilitychange', function () {
+    isVisible = document.visibilityState !== 'hidden';
+  });
 
   var startTime = performance.now();
   function animate() {

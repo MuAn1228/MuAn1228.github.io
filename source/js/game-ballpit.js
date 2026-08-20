@@ -86,7 +86,7 @@
     var w = header.clientWidth || window.innerWidth;
     var h = header.clientHeight || 320;
     if (!w || !h) return;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(window.__gGuard ? window.__gGuard.pixelRatio(2) : Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
@@ -249,9 +249,14 @@
 
     if (typeof IntersectionObserver === 'function') {
       var io = new IntersectionObserver(function (entries) {
-        entries[0].isIntersecting ? start() : stop();
+        var vis = typeof document !== 'undefined' && document.visibilityState !== 'hidden';
+        entries[0].isIntersecting && vis ? start() : stop();
       }, { threshold: 0 });
       io.observe(header);
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') stop();
+        else if (io) start(); // 重新可见时恢复
+      });
     } else {
       start();
     }

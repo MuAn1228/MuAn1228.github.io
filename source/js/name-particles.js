@@ -65,6 +65,8 @@
     });
 
     function frame() {
+      requestAnimationFrame(frame);
+      if (document.visibilityState === 'hidden') return; // 后台暂停
       ctx.clearRect(0, 0, tw, th);
       ctx.fillStyle = color;
       for (var i = 0; i < particles.length; i++) {
@@ -86,7 +88,6 @@
         p.y += p.vy;
         ctx.fillRect(p.x, p.y, DOT, DOT);
       }
-      requestAnimationFrame(frame);
     }
     frame();
 

@@ -327,7 +327,7 @@
 
   DriftWall.prototype.tick = function (ts) {
     var self = this;
-    if (this.container.style.display === 'none') {
+    if (this.container.style.display === 'none' || document.visibilityState === 'hidden') {
       this.raf = requestAnimationFrame(function (t2) { self.tick(t2); });
       return;
     }
