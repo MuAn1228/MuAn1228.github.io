@@ -682,15 +682,20 @@ html.page-showcase #nav {
   background: transparent !important;
 }
 html.page-showcase #content-inner.layout {
-  padding-top: 0;
-  margin-top: 0;
+  padding: 0;
+  margin: 0;
   position: relative;
+  max-width: none;
+  width: 100%;
 }
+/* 让黑洞下方的展示内容同样铺满全屏，宽度与黑洞一致，避免窄条观感差 */
 html.page-showcase #showcase {
-  padding-top: 0;
-  padding-left: 0;
-  padding-right: 0;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
   margin-top: 0;
+  max-width: none;
+  padding: 56px 6vw 64px;
+  background: var(--card-bg);
 }
 html.page-showcase .blackhole-hero {
   position: relative;
@@ -704,7 +709,7 @@ html.page-showcase .blackhole-hero {
   margin-top: 0;
   background: #000;
 }
-/* 底部渐变过渡：从黑色过度到页面背景（自适应明/暗模式） */
+/* 底部渐变过渡：从黑色过度到下方内容卡片背景（自适应明/暗模式） */
 html.page-showcase .blackhole-hero::after {
   content: '';
   position: absolute;
@@ -712,7 +717,7 @@ html.page-showcase .blackhole-hero::after {
   right: 0;
   bottom: 0;
   height: 160px;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), var(--global-bg));
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), var(--card-bg));
   pointer-events: none;
   z-index: 2;
 }
