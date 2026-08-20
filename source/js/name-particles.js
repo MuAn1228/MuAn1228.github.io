@@ -96,6 +96,8 @@
   }
 
   function init() {
+    // 展示页顶部由黑洞(blackhole.js)取代，不再做粒子标题
+    if (/\/showcase\/?($|\?|#)/.test(window.location.pathname)) return;
     document.querySelectorAll('.particle-text').forEach(function (el) {
       makeParticleText(el);
     });
