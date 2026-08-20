@@ -255,6 +255,7 @@
 
     function animate() {
       requestAnimationFrame(animate);
+      if (document.visibilityState === 'hidden') { clock.getDelta(); return; } // 后台暂停
       var delta = clock.getDelta();
       shaderTime = (shaderTime || 0) + delta;
       // 由球坐标更新相机位置（轨道控制）

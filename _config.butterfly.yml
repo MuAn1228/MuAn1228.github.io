@@ -119,6 +119,7 @@ inject:
     - '<link rel="stylesheet" href="/lib/APlayer.min.css">'
     - '<link rel="stylesheet" href="/lib/leaflet/leaflet.css">'
   bottom:
+    - '<script src="/js/device-guard.js"></script>'
     - '<script src="/js/sakura.js"></script>'
     - '<script src="/js/click-effect.js"></script>'
     - '<script src="/js/live2d.js"></script>'

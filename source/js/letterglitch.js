@@ -172,12 +172,14 @@
   LetterGlitch.prototype.animate = function () {
     var self = this;
     var now = Date.now();
-    if (now - this.lastGlitchTime >= this.speed) {
-      this.updateLetters();
-      this.draw();
-      this.lastGlitchTime = now;
+    if (document.visibilityState !== 'hidden') {
+      if (now - this.lastGlitchTime >= this.speed) {
+        this.updateLetters();
+        this.draw();
+        this.lastGlitchTime = now;
+      }
+      if (this.smooth) this.handleSmooth();
     }
-    if (this.smooth) this.handleSmooth();
     this.raf = requestAnimationFrame(function () { self.animate(); });
   };
 

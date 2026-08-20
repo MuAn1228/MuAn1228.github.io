@@ -221,7 +221,7 @@
   function tick(now) {
     if (!running) return;
     requestAnimationFrame(tick);
-
+    if (document.visibilityState === 'hidden') { lastT = now; return; } // 后台暂停，重新可见时不跳变
     var elapsed = now / 1000;
     var base = -elapsed * CFG.autoScroll + userOffset;
 

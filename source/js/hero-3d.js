@@ -11,7 +11,7 @@
 
   var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
   renderer.setSize(el.clientWidth, el.clientHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(window.__gGuard ? window.__gGuard.pixelRatio(2) : Math.min(window.devicePixelRatio, 2));
   var canvas = renderer.domElement;
   canvas.style.position = 'absolute';
   canvas.style.top = '0';
@@ -58,7 +58,12 @@
   });
 
   var start = performance.now();
+  var hidden = false;
+  var animating = false;
   function animate(now) {
+    if (!animating) return;
+    requestAnimationFrame(animate);
+    if (document.visibilityState === 'hidden') return; // 后台暂停渲染，恢复回调生效
     var t = (now - start) / 1000;
 
     // 顶点波浪形变：径向波动 + 垂直波动，让表面明显起伏
@@ -86,9 +91,13 @@
     ring.position.copy(knot.position);
 
     renderer.render(scene, camera);
-    requestAnimationFrame(animate);
   }
+  animating = true;
   requestAnimationFrame(animate);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') { animating = false; }
+    else if (!animating) { animating = true; requestAnimationFrame(animate); }
+  });
 
   window.addEventListener('resize', function () {
     camera.aspect = el.clientWidth / el.clientHeight;

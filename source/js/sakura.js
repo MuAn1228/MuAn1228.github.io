@@ -37,6 +37,10 @@
     var angle = random(0, 360);
 
     function fall() {
+      if (document.visibilityState === 'hidden') { // 后台暂停，减少移动端 CPU 开销
+        requestAnimationFrame(fall);
+        return;
+      }
       top += fallSpeed;
       angle += rotateSpeed;
       var x = startX + Math.sin(top * swaySpeed) * swayAmp / 10;

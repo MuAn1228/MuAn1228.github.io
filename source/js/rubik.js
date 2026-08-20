@@ -16,7 +16,7 @@
 
   var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
   renderer.setSize(264, 264);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(window.__gGuard ? window.__gGuard.pixelRatio(2) : Math.min(window.devicePixelRatio, 2));
   renderer.domElement.style.display = 'block';
   wrap.appendChild(renderer.domElement);
 
@@ -220,10 +220,10 @@
   hint.style.cssText = 'margin-top:6px;font-size:11px;color:rgba(80,80,100,0.75);text-align:center;pointer-events:none;';
   wrap.appendChild(hint);
 
-  // 初始慢速自转展示（按可见帧计时，面板隐藏时暂停）
+  // 初始慢速自转展示（按可见帧计时，面板隐藏或后台时暂停）
   var spinFrames = 180;
   function render() {
-    if (wrap.offsetParent !== null) {
+    if (wrap.offsetParent !== null && document.visibilityState !== 'hidden') {
       if (spinFrames > 0 && !interaction) {
         spinFrames--;
         var q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0.006);

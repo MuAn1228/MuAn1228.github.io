@@ -93,6 +93,8 @@
       drop();
 
       (function render() {
+        requestAnimationFrame(render);
+        if (document.visibilityState === 'hidden') return; // 后台暂停物理与渲染
         Engine.update(engine, 1000 / 60);
         ctx.clearRect(0, 0, W, H);
         // 钉子（高尔顿板圆圈）
@@ -126,7 +128,6 @@
             ctx.restore();
           }
         });
-        requestAnimationFrame(render);
       })();
     }
 
