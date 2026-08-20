@@ -272,6 +272,13 @@ body.music-collapsed .music-toggle {
   margin-right: 3px;
   flex-shrink: 0;
 }
+/* 热力图等级配色（紫色调）：随夜间模式渐变，等级 0 「空白格」在深色下用深色 */
+.gh-cell.gh-lv0 { background: #ebedf0; }
+.gh-cell.gh-lv1 { background: #c9b3e6; }
+.gh-cell.gh-lv2 { background: #9d7cc2; }
+.gh-cell.gh-lv3 { background: #6b5b95; }
+.gh-cell.gh-lv4 { background: #3d3561; }
+[data-theme='dark'] .gh-cell.gh-lv0 { background: #2b2e3d; }
 .gh-legend {
   display: flex;
   align-items: center;
@@ -362,6 +369,13 @@ body.music-collapsed .music-toggle {
 }
 .card-widget .item-headline {
   color: #6b5b95 !important;
+}
+
+/* ===== 夜间模式：左侧侧边栏卡片 & GitHub 热力图卡片换深色毛玻璃 ===== */
+[data-theme='dark'] .card-widget,
+[data-theme='dark'] .github-heatmap-wrap {
+  background: rgba(18, 18, 24, 0.78) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35) !important;
 }
 
 /* ===== 标签动态效果（悬停放大 + 高亮） ===== */

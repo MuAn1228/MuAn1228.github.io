@@ -1,7 +1,8 @@
 // ===== GitHub 贡献热力图（紫色调，数据源 source/data/contributions.json，与 GitHub 周结构一致） =====
 (function () {
   var API = '/data/contributions.json';
-  var PURPLE = ['#ebedf0', '#c9b3e6', '#9d7cc2', '#6b5b95', '#3d3561'];
+  // 等级配色改由 CSS 定义（.gh-lv0..4），随夜间模式切换自动适配
+  var OCTAVES = ['gh-lv0', 'gh-lv1', 'gh-lv2', 'gh-lv3', 'gh-lv4'];
   var CELL = 10;
   var GAP = 3;
 
@@ -43,9 +44,9 @@
       for (var wi = 0; wi < weeks.length; wi++) {
         var day = weeks[wi].days && weeks[wi].days[row];
         if (day) {
-          var color = PURPLE[levelFromCount(day.count)];
+          var cls = 'gh-cell ' + OCTAVES[levelFromCount(day.count)];
           var t = day.date + '：' + day.count + ' 次提交';
-          html += '<span class="gh-cell" style="background:' + color + ';" title="' + t + '"></span>';
+          html += '<span class="' + cls + '" title="' + t + '"></span>';
         } else {
           html += '<span class="gh-cell" style="background:transparent;"></span>';
         }
@@ -55,8 +56,8 @@
     html += '</div>';
 
     html += '<div class="gh-legend"><span>少</span>';
-    PURPLE.forEach(function (c) {
-      html += '<span class="gh-cell" style="background:' + c + ';"></span>';
+    OCTAVES.forEach(function (c) {
+      html += '<span class="gh-cell ' + c + '"></span>';
     });
     html += '<span>多</span></div>';
 
