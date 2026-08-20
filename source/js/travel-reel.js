@@ -117,33 +117,47 @@
 
     var speed = CFG.speed * (1 + ((row - mid) / mid || 0) * CFG.speedVariance * 2);
 
-    var plates = [];
-    var totalW = 0;
+    // 先构造一个完整周期：所有照片各出现一次，record 每张的布局宽，累计出周期宽周期宽
+    var cycle = [];
+    var cycleW = 0;
+    for (var ci = 0; ci < shuffled.length; ci++) {
+      var meta = shuffled[ci];
+      var w = aspectW(meta, rowH);
+      cycle.push({ meta: meta, w: w });
+      cycleW += w + CFG.itemGap;
+    }
+    if (!cycleW) {
+      return { el: el, plates: [], w: 0, period: 0, speed: speed, row: row, mid: mid, rowH: rowH, centers: [] };
+    }
 
-    // 逐块添加：铺到约 3 倍视口宽，配合 translateX 取模 + 边缘淡出实现无缝无限循环
-    var target = viewW * 3;
+    // 行总宽：视口 + 左右各一个完整周期，按周期整数倍铺满，
+    // 平移按“周期宽”取模，任何偏移下屏幕都被照片填满、回绕无缝
+    var total = Math.ceil((viewW + 2 * cycleW) / cycleW) * cycleW;
+
+    var plates = [];
+    var elWidth = 0;
     var guard = 0;
-    while (totalW < target && guard++ < 150) {
-      var meta = shuffled[(guard - 1) % shuffled.length];
+    while (elWidth < total && guard++ < 300) {
+      var c = cycle[guard % cycle.length];
       var img = new Image();
       img.className = 'travel-reel-plate';
-      img.src = meta.src;
+      img.src = c.meta.src;
       img.decoding = 'async';   // 异步解码，先出结构再填充像素，加快首屏
       img.draggable = false;
       img.style.borderRadius = CFG.radius + 'px';
       img.style.height = '100%';
-      var w = aspectW(meta, rowH);
-      img.style.width = w + 'px';
+      img.style.width = c.w + 'px';
       img.style.transform = 'rotate(' + (Math.random() * 2 - 1) * CFG.randTilt + 'deg)';
       el.appendChild(img);
       plates.push(img);
-      totalW += w + CFG.itemGap;
+      elWidth += c.w + CFG.itemGap;
     }
 
-    el.style.width = totalW + 'px';
-    el.style.left = (-totalW / 2) + 'px';
+    el.style.width = elWidth + 'px';
+    el.style.left = (-elWidth / 2) + 'px';
 
-    return { el: el, plates: plates, w: totalW, speed: speed, row: row, mid: mid, rowH: rowH, centers: [] };
+    // period=周期宽；w=实际总宽（可能多个周期）。循环取模用 period，保证无缝
+    return { el: el, plates: plates, w: elWidth, period: cycleW, speed: speed, row: row, mid: mid, rowH: rowH, centers: [] };
   }
 
   function platesCenters() {
@@ -221,8 +235,8 @@
 
     for (var i = 0; i < reels.length; i++) {
       var r = reels[i];
-      // 按行宽取模实现无缝循环
-      var off = ((base * r.speed) % r.w + r.w) % r.w - r.w / 2;
+      // 按“周期宽”取模实现无缝循环（回绕处序列一致，天然无缝）
+      var off = ((base * r.speed) % r.period + r.period) % r.period - r.period / 2;
       var rowOff = (r.row - r.mid) / (r.mid || 1);
       var arch = rowOff * rowOff * CFG.arch;
       var dim = 1 - Math.abs(rowOff) * CFG.dim;
