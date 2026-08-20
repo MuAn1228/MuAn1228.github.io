@@ -23,35 +23,6 @@ title: 展示
 </section>
 
 <section class="showcase-sec">
-<h2>摄影</h2>
-
-<p class="showcase-muted">正在入门，还没拥有第一台正式相机。下面是一些我喜欢的照片。</p>
-
-<div class="showcase-photos">
-<img src="/img/blog/img01.jpg" alt="照片">
-<img src="/img/blog/img06.jpg" alt="照片">
-<img src="/img/blog/img11.jpg" alt="照片">
-<img src="/img/blog/img16.jpg" alt="照片">
-<img src="/img/blog/img21.jpg" alt="照片">
-<img src="/img/blog/img26.jpg" alt="照片">
-</div>
-</section>
-
-<section class="showcase-sec">
-<h2>编程之路</h2>
-
-<ul class="showcase-list">
-<li><strong>Python</strong>· 编程入门语言</li>
-<li><strong>C</strong>· 数据结构课设「列车管理系统」</li>
-<li><strong>C++</strong>· 面向对象</li>
-<li><strong>Go</strong>· 基础，云原生方向</li>
-<li><strong>Java</strong>· 下学期计划，第一个软件项目</li>
-</ul>
-
-<p class="showcase-muted">目标：成为一名全栈工程师，以后端为主。</p>
-</section>
-
-<section class="showcase-sec">
 <h2>Skills</h2>
 <div id="skills-bucket" class="skills-bucket"></div>
 </section>
