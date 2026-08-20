@@ -23,19 +23,19 @@
     itemGap: 14,         // 块水平间距
     randTilt: 0.55,      // 每块随机旋转幅度(deg)，模拟胶片错落
     tilt: 5,             // 整堆倾斜角(deg)
-    arch: 46,            // 拱形高度(px)
+    arch: 0,             // 纵向拱形高度(px，0=平直，避免行间空隙过大/重叠)
     speed: 1,            // 输入倍率
     speedVariance: 0.6,  // 各条速度差异
     autoScroll: 24,      // 每秒自动漂移 px
     inertia: 0.92,       // 惯性保持
     dragSensitivity: 1.6,
     wheelSensitivity: 1.0,
-    radius: 8,           // 照片圆角
+    radius: 0,           // 照片圆角(0=标准直角矩形，更有胶片感)
     grayscale: 0.5,      // 静止灰度(0-1)
     focusRadius: 220,    // 聚焦范围
     focusStrength: 0.85, // 聚焦恢复强度
-    dim: 0.45,           // 外侧条变暗
-    taper: 0.18,         // 外侧条缩放
+    dim: 0.35,           // 外侧条变暗
+    taper: 0.12,         // 外侧条缩放
     preloadTimeout: 4000 // 预加载最长等待(ms)，超时也继续渲染
   };
 
@@ -113,6 +113,10 @@
     } else {
       CFG._scale = 1;
     }
+    // 行高/行距随缩放同步 -> 行间间距始终均匀，不重叠不过疏
+    CFG._rowH = Math.round(CFG.rowHeight * CFG._scale);
+    CFG._gap = Math.max(6, Math.round(CFG.rowGap * CFG._scale));
+    CFG._stackH = CFG.rows * CFG._rowH + (CFG.rows - 1) * CFG._gap;
 
     for (var r = 0; r < CFG.rows; r++) {
       var reel = buildReel(metas, r, mid);
@@ -131,9 +135,9 @@
   function buildReel(metas, row, mid) {
     var el = document.createElement('div');
     el.className = 'travel-reel-row';
-    var rowH = Math.round(CFG.rowHeight * (CFG._scale || 1));
+    var rowH = CFG._rowH;
     el.style.height = rowH + 'px';
-    el.style.top = (row * (rowH + CFG.rowGap)) + 'px';
+    el.style.top = (row * (rowH + CFG._gap)) + 'px';
 
     // 每条按行波动随机打乱图片顺序
     var shuffled = metas.slice();
@@ -148,10 +152,10 @@
     var plates = [];
     var totalW = 0;
 
-    // 逐块添加：轮流取序列中的图，铺到约 1.3 倍视口宽即停（配合 translateX 取模循环）
-    var target = viewW * 1.3;
+    // 逐块添加：铺到约 3 倍视口宽，配合 translateX 取模 + 边缘淡出实现无缝无限循环
+    var target = viewW * 3;
     var guard = 0;
-    while (totalW < target && guard++ < 40) {
+    while (totalW < target && guard++ < 150) {
       var meta = shuffled[(guard - 1) % shuffled.length];
       var img = new Image();
       img.className = 'travel-reel-plate';
@@ -234,7 +238,7 @@
 
     var tiltEl = stage.querySelector('.travel-reel-tilt');
     tiltEl.style.transform = 'translateZ(0) rotate(' + (-CFG.tilt) + 'deg)';
-    tiltEl.style.height = (reels.length * (CFG.rowHeight + CFG.rowGap)) + 'px';
+    tiltEl.style.height = (CFG._stackH || reels.length * (CFG.rowHeight + CFG.rowGap)) + 'px';
 
     var mouseLocal = null;
     if (pointer.active) {
@@ -253,12 +257,11 @@
       r.el.style.opacity = dim;
       r.el.style.transform =
         'translateX(' + off + 'px)' +
-        'translateY(' + arch + 'px)' +
         'scale(' + taper + ')';
 
       // 灰度聚焦：仅在指针位于该行附近时更新各块，否则统一应用静态灰度
       var centerOnScreen = off + viewW / 2;
-      var rowCenterY = r.row * (r.rowH + CFG.rowGap) + r.rowH / 2;
+      var rowCenterY = r.row * (r.rowH + (CFG._gap || CFG.rowGap)) + r.rowH / 2;
 
       if (mouseLocal) {
         var near = Math.abs(mouseLocal.y - (arch + rowCenterY)) < CFG.focusRadius;
