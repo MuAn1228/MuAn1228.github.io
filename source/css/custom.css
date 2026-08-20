@@ -1609,6 +1609,32 @@ a,button,input,textarea,label,[role=button],select,option{cursor:inherit!importa
   z-index: 2;
 }
 
+/* ===== 书籍页标题横幅：ASCIIText 背景 ===== */
+#page-header .ascii-title-banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border-radius: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(ellipse at 50% 35%, #1c1630 0%, #0b0818 78%);
+}
+#page-header .ascii-title-banner canvas,
+#page-header .ascii-title-banner pre {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* 书籍页替换默认标题「书籍」：name-particles 会把 #site-title 替换成 canvas.particle-text-canvas，需隐藏该粒子标题 */
+html:has(#book-ascii-title) #page-header #page-site-info canvas,
+html:has(#book-ascii-title) #page-header #page-site-info h1#site-title {
+  display: none;
+}
+
 /* ===== 旅行页标题横幅：胶片画廊背景 ===== */
 #page-header .travel-reel {
   position: absolute;
