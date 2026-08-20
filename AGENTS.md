@@ -25,6 +25,7 @@
 | `source/js/driftwall.js` | 书籍页：漂移墙效果 |
 | `source/js/name-particles.js` | 大多数页标题：粒子文本（鼠标排斥） |
 | `source/js/pixel-snow.js` | 电影页标题横幅：像素雪背景 |
+| `source/js/travel-reel.js` | 旅行页标题横幅：胶片画廊（React Bits Pro ReelGallery 原生 JS 复刻，倾斜胶片条随滚动漂移） |
 | `source/js/cursor.js` | 鼠标指针：RGB Cursor Dark 动画（不再有紫色光点） |
 
 ## 当前状态 & 重要决策（务必记住）
@@ -34,6 +35,12 @@
 - **挂绳特效（lanyard）已删除**：曾加入首页（导航栏 Mu An's Blog 右侧的 3:4 照片胸卡 + 物理摆动），期间经历过位置/尺寸/图片方向多轮修改（fe22e45），最终用户决定整体删除（5e954f8）。相关文件 `lanyard.js`、`lib/GLTFLoader.js`、`img/lanyard/`、`lib/lanyard/` 均已删除。**`lib/three.min.js` 必须保留**（hero-3d / rubik / pixel-snow / game-ballpit 都在用）。
 - 以上特效及其样式均已提交并推送上线。
 - 球池可调参数在 `game-ballpit.js` 顶部的 `CFG` 对象里。
+
+## 旅行页胶片画廊（travel-reel）
+- 展示源 `source/data/travel-gallery.json`，缩略图目录 `source/img/travel/`（md5 命名 .jpg，源图在 `D:\photo\lvxing\`）。
+- 可调参数在 `travel-reel.js` 顶部的 `CFG`：直角矩形（`radius:0`）、无纵向拱形（`arch:0`）、加宽 3 倍视口实现无缝循环（`target=viewW*3`）。
+- EXIF 方向映射容易出错（脚本曾漏掉 orient 4、错映射 orient 6 导致照片倒放）。**若某张照片方向错误，与其纠结 EXIF 映射表，用户更接受直接把该缩略图旋转 180° 的简单方案。** 修正后需浏览器目视核对（源图浏览器会自动应用 EXIF，作对照）。
+- 最近一次修复：4bab6/1287988 两张照片方向（提交 10b753c，已推送远端 main）。
 
 ## 后续工作方式
 1. 改代码 → 本地 `hexo s` 预览验证 → `git commit` → `git push origin source:main` → 提醒用户手动触发部署工作流。
