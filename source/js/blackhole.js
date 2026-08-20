@@ -27,7 +27,8 @@
 
     // 手动轨道控制状态：左键旋转、右键平移、滚轮缩放
     var target = new THREE.Vector3(0, 0.5, 0);
-    var sph = new THREE.Spherical().setFromVector3(new THREE.Vector3(0, 3, 13).sub(target));
+    // 初始相机放得更远，进入页面时黑洞看起来更小（可滚轮放大）
+    var sph = new THREE.Spherical().setFromVector3(new THREE.Vector3(0, 5, 55).sub(target));
     // 初始相机位置
     var camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
     camera.position.copy(target).add(new THREE.Vector3().setFromSpherical(sph));
