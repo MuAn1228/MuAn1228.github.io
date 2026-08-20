@@ -149,6 +149,7 @@ inject:
     - '<script src="/js/arcade.js"></script>'
     - '<script src="/js/flappy-bird.js"></script>'
     - '<script src="/js/pixel-snow.js" defer></script>'
+    - '<script src="/js/travel-reel.js" defer></script>'
     
 
 # ---------- 评论系统（Giscus） ----------
