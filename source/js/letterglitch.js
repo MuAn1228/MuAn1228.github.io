@@ -201,6 +201,8 @@
 
   // 仅在「展示」页的顶部横幅自动初始化
   function initShowcase() {
+    // 展示页顶部特效已由黑洞(blackhole.js)取代，这里不再启用字母故障
+    return;
     if (!/\/showcase\/?$/.test(window.location.pathname)) return;
     var header = document.getElementById('page-header');
     if (!header) return;
