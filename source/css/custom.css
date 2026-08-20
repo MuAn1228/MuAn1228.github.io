@@ -711,6 +711,11 @@ html:has(#showcase) #content-inner #article-container {
   box-shadow: none;
   border-radius: 0;
 }
+/* 展示页是极简个人页，隐藏桌面端右侧侧边栏（个人简介/热门文章/打赏等），
+   避免被整宽黑洞 hero 盖住，也让内容区独占整行 */
+html:has(#showcase) #content-inner #aside-content {
+  display: none !important;
+}
 /* 让黑洞下方的展示内容铺满全屏，宽度与黑洞一致；顶部 padding 为 0 使黑洞到顶 */
 html:has(#showcase) #showcase {
   width: 100vw;
