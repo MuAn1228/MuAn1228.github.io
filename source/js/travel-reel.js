@@ -47,38 +47,6 @@
   var running = false;
   var lastT = 0;
 
-  // 预加载所有图片，收集自然宽高（用于按真实比例定宽）
-  function preload(images, done) {
-    var metas = [];
-    var loaded = 0;
-    var total = images.length;
-    var fired = false;
-
-    function finish() {
-      if (fired) return;
-      fired = true;
-      done(metas);
-    }
-
-    images.forEach(function (src) {
-      var img = new Image();
-      img.onload = function () {
-        loaded++;
-        metas.push({ src: src, w: img.naturalWidth, h: img.naturalHeight });
-        if (loaded >= total) finish();
-      };
-      img.onerror = function () {
-        loaded++;
-        metas.push({ src: src, w: null, h: null });
-        if (loaded >= total) finish();
-      };
-      img.src = src;
-    });
-
-    // 兜底超时
-    setTimeout(finish, CFG.preloadTimeout);
-  }
-
   // 根据真实宽高比 + 目标高度，得出块宽（竖图窄、横图宽）
   function aspectW(meta, h) {
     var ratio = meta && meta.w && meta.h ? meta.w / meta.h : 1.3;
@@ -160,6 +128,7 @@
       var img = new Image();
       img.className = 'travel-reel-plate';
       img.src = meta.src;
+      img.decoding = 'async';   // 异步解码，先出结构再填充像素，加快首屏
       img.draggable = false;
       img.style.borderRadius = CFG.radius + 'px';
       img.style.height = '100%';
@@ -195,7 +164,9 @@
   }
 
   function bindEvents() {
-    stage.addEventListener('wheel', onWheel);
+    // 滚轮绑定在容器上：仅当指针悬停在画廊内时接管滚轮（up/down 双向浏览胶片），
+    // 离开画廊则不做处理，交给页面正常上下滚动。
+    container.addEventListener('wheel', onWheel, { passive: false });
     stage.addEventListener('pointerdown', onDown);
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
@@ -211,7 +182,10 @@
   }
 
   function onWheel(e) {
-    // 不阻止页面滚动，滚轮微调胶片偏移
+    // 指针没在画廊内：不拦截，页面正常滚动（浏览画廊下方的旅行内容）
+    if (!pointer.active) return;
+    // 指针在画廊内：阻止页面滚动，双向滚轮都用来微调胶片偏移
+    e.preventDefault();
     userOffset += e.deltaY * CFG.wheelSensitivity * CFG.speed;
   }
   function onDown(e) {
@@ -300,11 +274,10 @@
     fetch(IMG_JSON)
       .then(function (r) { return r.json(); })
       .then(function (d) {
-        var images = d.images || [];
-        if (!images.length) return;
-        preload(images, function (metas) {
-          if (metas.length) build(metas);
-        });
+        // JSON 已内置每张图片的 w/h，可直接布局，无需再阻塞等待全部图片下载
+        var metas = d.images || [];
+        if (!metas.length) return;
+        build(metas);
       })
       .catch(function () {});
   }
