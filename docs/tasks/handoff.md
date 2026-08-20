@@ -1,7 +1,30 @@
-# Handoff Document -- 2026-08-19（最终版 v6）
+# Handoff Document -- 2026-08-20（最终版 v7）
 
 ## Context
-本次会话完成：游戏海报补齐与调整、为书籍/游戏/电影网格统一添加 note 悬停气泡、填充 16 本书阅读笔记。所有改动已推送，等待部署。
+本次会话完成：粒子标题参数调优、鼠标指针换 RGB Cursor Dark、电影页像素雪、以及「首页挂绳特效」的加入与最终删除。所有改动已推送，等待部署。
+
+## 本次会话完成的工作（2026-08-20）
+
+### 1. 粒子标题参数调优 -- 已推送（4ada2cb）
+- 排斥半径 `RADIUS` 从 70 逐步调到 **15**，粒径 `DOT` 从 2 调到 **1.5**
+- 文件：`source/js/name-particles.js`
+
+### 2. 鼠标指针换成 RGB Cursor Dark -- 已推送（832e794）
+- 移除旧的紫色渐变光点光标（cursor.js 源文件已删除），改为 RGB Cursor Dark 动画
+- 样式在 `source/css/custom.css`（`* { cursor: url(...) }` 段）
+
+### 3. 电影页标题横幅：像素雪 -- 已推送（3a7c167）
+- `source/js/pixel-snow.js` + `movies/index.md` 容器 + custom.css 样式 + inject.bottom 注入
+- 最终调整为：像素雪铺满电影标题横幅，标题文字 `#page-site-info`（z-index:2）在雪之上
+
+### 4. 首页挂绳特效（lanyard）-- 已加入后整体删除
+- 加入：`source/js/lanyard.js`（原生 Three.js + Verlet 物理）+ 3:4 照片胸卡 + 程序化金属夹，挂在导航栏 Mu An's Blog 右侧
+- 期间多轮修改位置/尺寸/图片方向/调试层（fe22e45），最终用户决定**整体删除**
+- 删除（5e954f8）：`lanyard.js`、`lib/GLTFLoader.js`、`img/lanyard/`、`lib/lanyard/`、custom.css 样式、inject 注入
+- **`lib/three.min.js` 保留**（hero-3d / rubik / pixel-snow / game-ballpit 都在用）
+
+### 5. 更早的会话（2026-08-19）
+- 游戏海报补齐与调整、为书籍/游戏/电影网格统一添加 note 悬停气泡、填充 16 本书阅读笔记 -- 已推送
 
 ## 完成的工作
 
@@ -32,13 +55,19 @@
 ## 提交记录
 | Commit | 内容 |
 |---|---|
+| 4ada2cb | 缩小粒子标题鼠标排斥半径与粒径（RADIUS=15 / DOT=1.5） |
+| 832e794 | 鼠标指针换成 RGB Cursor Dark，移除旧紫色光点光标 |
+| 3a7c167 | 电影页标题横幅新增像素雪特效 |
+| f3d85d4 | 首页标题右侧添加挂绳特效（后经多轮修改） |
+| fe22e45 | 挂绳修正：移到导航栏站点名右侧、3:4 照片铺满、修图正立、移除调试层 |
+| 5e954f8 | **删除首页挂绳特效**（lanyard.js / GLTFLoader / 资源 / CSS / 注入） |
 | f84870d | 删除 FPS 射击小游戏模块 |
 | c13b683 | 更新游戏模块：删除血源诅咒/天天酷跑，新增6款，替换植物大战僵尸海报 |
 | d35f709 | 更新游戏模块：替换海报、新增9款游戏、删除现代战争2和祖玛 |
 | 0612214 | 为书籍/游戏/电影网格添加 note 悬停气泡，并填充书籍阅读笔记 |
 
 ## 待处理问题
-- 最新提交 `0612214` 需手动触发 **「Update Contributions & Deploy」** 工作流
+- 最新提交 `5e954f8` 需手动触发 **「Update Contributions & Deploy」** 工作流（连同此前未部署的改动一起上线）
 - 游戏和电影的 `note` 字段为空，后续可补充阅读理解
 
 ## 如何补充游戏 / 电影笔记
