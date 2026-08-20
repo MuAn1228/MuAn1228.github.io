@@ -658,46 +658,69 @@ canvas.particle-text-canvas {
 }
 
 /* ===== 展示页顶部黑洞横幅（/showcase/）===== */
-/* 移除页面顶部粒子标题与 banner，让黑洞铺满上方 */
-html.page-showcase {
+/* html 上无 page-showcase 类，用 :has(#showcase) 精确作用到展示页 */
+html:has(#showcase) {
   overflow-x: clip;
 }
-html.page-showcase #page-site-info {
+html:has(#showcase) #page-site-info {
   display: none;
 }
-html.page-showcase #page-header.not-home-page {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+/* 加载层遮盖顶部白色背景，直接隐藏 */
+html:has(#showcase) #loading-box {
+  display: none !important;
+}
+/* 页头透明、绝对定位（脱离文档流），让 content-inner 从 y=0 开始 */
+html:has(#showcase) #page-header.not-home-page {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
   background: transparent !important;
-  box-shadow: none;
-  min-height: 0;
-  height: auto;
-  padding: 0;
-  z-index: 5;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  z-index: 5 !important;
+}
+/* 消除 header 上任何伪元素/横幅可能带来的浅色条 */
+html:has(#showcase) #page-header.not-home-page::before,
+html:has(#showcase) #page-header.not-home-page::after,
+html:has(#showcase) #page-header #banner,
+html:has(#showcase) #page-header .banner {
+  display: none !important;
+  background: transparent !important;
 }
 /* 导航栏透明，浮在黑面上方，保持可点击 */
-html.page-showcase #nav {
+html:has(#showcase) #nav {
   background: transparent !important;
 }
-html.page-showcase #content-inner.layout {
+/* 清空 content-inner 及其子容器默认间距。
+   .layout 首个子节点 #page 是白色卡片(padding 50px 40px / width 74%)，
+   正是它造成顶部白条与窄条观感；一并清零让黑洞贴到页顶并铺满全宽 */
+html:has(#showcase) #content-inner.layout,
+html:has(#showcase) #content-inner #page,
+html:has(#showcase) #content-inner #article-container {
   padding: 0;
   margin: 0;
   position: relative;
   max-width: none;
-  width: 100%;
+  width: 100% !important;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
 }
-/* 让黑洞下方的展示内容同样铺满全屏，宽度与黑洞一致，避免窄条观感差 */
-html.page-showcase #showcase {
+/* 让黑洞下方的展示内容铺满全屏，宽度与黑洞一致；顶部 padding 为 0 使黑洞到顶 */
+html:has(#showcase) #showcase {
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-top: 0;
   max-width: none;
-  padding: 56px 6vw 64px;
+  padding: 0 6vw 64px;
   background: var(--card-bg);
 }
-html.page-showcase .blackhole-hero {
+html:has(#showcase) .blackhole-hero {
   position: relative;
   z-index: 1;
   width: 100vw;
@@ -709,8 +732,8 @@ html.page-showcase .blackhole-hero {
   margin-top: 0;
   background: #000;
 }
-/* 底部渐变过渡：从黑色过度到下方内容卡片背景（自适应明/暗模式） */
-html.page-showcase .blackhole-hero::after {
+/* 底部渐变过渡：从黑色过渡到下方内容卡片背景（自适应明/暗模式） */
+html:has(#showcase) .blackhole-hero::after {
   content: '';
   position: absolute;
   left: 0;
@@ -721,8 +744,12 @@ html.page-showcase .blackhole-hero::after {
   pointer-events: none;
   z-index: 2;
 }
-html.page-showcase .blackhole-hero .blackhole-hero-hint {
+html:has(#showcase) .blackhole-hero .blackhole-hero-hint {
   z-index: 3;
+}
+/* 黑洞之后的头像撑起顶部间距（#showcase 顶部 padding 已清为 0） */
+html:has(#showcase) #showcase .showcase-avatar {
+  margin-top: 44px;
 }
 
 /* ===== 娱乐板块 ===== */
