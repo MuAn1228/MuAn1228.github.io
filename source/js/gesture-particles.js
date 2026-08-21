@@ -359,7 +359,48 @@
     dom.loading.innerHTML = '<div class="gp-spinner"></div><div>摄像头初始化中…</div>';
     dom.wrap.appendChild(dom.loading);
 
+    // 摄像头超时回退：5 秒后自动隐藏 loading，粒子以自动旋转展示
+    dom.loading._hideTimeout = setTimeout(function () {
+      if (!dom.loading) return;
+      if (dom.loading.style.display === 'none') return; // 摄像头已正常启动
+      hideLoadingSpinner();
+    }, 5000);
+
     bindUI();
+  }
+
+  // 隐藏 loading 提示（渐隐动画），同时强制粒子收敛到形状
+  var _hidingLoading = false;
+  function hideLoadingSpinner() {
+    if (_hidingLoading) return;
+    _hidingLoading = true;
+    if (!dom.loading || dom.loading.style.display === 'none') return;
+    // 强制粒子收敛到形状（无视摄像头状态）
+    STATE.handOpenness = 0;
+    STATE.handDetected = false;
+    // 直接把粒子快照到目标位置，用户立刻看到形状
+    snapParticlesToShape();
+    dom.loading.innerHTML = '<div class="gp-spinner" style="opacity:0.3"></div><div style="color:#8892b0">摄像头不可用，粒子以自动旋转模式展示<br><span style="font-size:12px">（点击「镜头画面」开关可查看摄像头状态）</span></div>';
+    dom.loading.style.opacity = '0.7';
+    setTimeout(function () {
+      if (!dom.loading) return;
+      dom.loading.style.transition = 'opacity 0.8s';
+      dom.loading.style.opacity = '0';
+      setTimeout(function () { if (dom.loading) dom.loading.style.display = 'none'; }, 800);
+    }, 3000);
+  }
+
+  // 直接把所有粒子快照到当前位置的目标形状
+  function snapParticlesToShape() {
+    if (!particles || !STATE.targetPositions) return;
+    var pos = particles.geometry.attributes.position.array;
+    for (var i = 0; i < CONFIG.particleCount; i++) {
+      var i3 = i * 3;
+      pos[i3] = STATE.targetPositions[i3];
+      pos[i3+1] = STATE.targetPositions[i3+1];
+      pos[i3+2] = STATE.targetPositions[i3+2];
+    }
+    particles.geometry.attributes.position.needsUpdate = true;
   }
 
   function bindUI() {
@@ -469,9 +510,21 @@
   }
 
   /* ============ 动画 ============ */
+  var _animFrameCount = 0;
   function animate() {
     if (!running) return;
+    // 包 try-catch 防止任何异常阻止动画继续
+    try { _animateTick(); } catch (e) { /* 静默 */ }
     requestAnimationFrame(animate);
+  }
+  function _animateTick() {
+    // 安全兜底：动画跑了 240 帧（~4 秒）后不管摄像头状态都隐藏 loading
+    _animFrameCount++;
+    if (_animFrameCount === 240) {
+      if (dom.loading && dom.loading.style.display !== 'none') {
+        hideLoadingSpinner();
+      }
+    }
     STATE.time += 0.03;
     shaderMaterial.uniforms.time.value = STATE.time;
     shaderMaterial.uniforms.handOpenness.value = STATE.handOpenness;
