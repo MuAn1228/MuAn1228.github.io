@@ -50,7 +50,7 @@
   var CONFIG = {
     particleCount: 15000,
     baseSize: 1.1,
-    defaultColor: 0x40c9ff,
+    defaultColor: 0x8e6bb5,
     cameraZ: 25,
     scatterRadius: 35
   };
@@ -68,7 +68,7 @@
   var scene, camera, renderer, shaderMaterial, particles, geometry;
   var particleColors;     // 逐粒子颜色 (aColor attribute)
   var earthTextureData;   // 地球纹理采样 (用于地球着色)
-  var lastColor = 0x40c9ff; // 上次用户选色
+  var lastColor = 0x8e6bb5; // 上次用户选色
   var previewVisible = false;
 
   /* ------------- 顶点/片元着色器 ------------- */
@@ -242,7 +242,7 @@
     var textPoints = [];
 
     if (shapeType === 'text') {
-      textPoints = getPointsFromText('我爱杭州');
+      textPoints = getPointsFromText('我❤️杭州');
     } else if (shapeType === 'heart') {
       textPoints = getPointsFromText('❤️');
     }
@@ -336,8 +336,8 @@
       '</div>' +
       '<div class="gp-row">' +
         '<span class="gp-label">颜色</span>' +
-        '<span class="gp-code" id="gp-colorCode">#40c9ff</span>' +
-        '<input type="color" id="gp-colorPicker" value="#40c9ff">' +
+        '<span class="gp-code" id="gp-colorCode">#8e6bb5</span>' +
+        '<input type="color" id="gp-colorPicker" value="#8e6bb5">' +
       '</div>' +
       '<div class="gp-row">' +
         '<span class="gp-label">镜头画面</span>' +
