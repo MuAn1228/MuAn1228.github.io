@@ -16,6 +16,6 @@ title: 小游戏
 </div>
 <div id="arcade-panel-particles" class="arcade-panel" style="display:none;">
   <div id="particle-stage" class="particle-stage">
-    <p class="particle-stage-tip">此效果需开启摄像头识别手势：握拳收拢粒子、张手散开粒子、移动手掌控制旋转。仅支持 PC 网页。</p>
+    <p class="particle-stage-tip">此效果需开启摄像头识别手势：握拳收拢粒子、张手散开粒子、移动手掌控制旋转。<br>仅支持 PC 网页。</p>
   </div>
 </div>

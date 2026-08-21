@@ -1543,14 +1543,15 @@ html:has(#showcase) #showcase .showcase-avatar {
 .particle-stage-tip {
   position: absolute;
   top: 12px;
-  left: 0;
-  right: 0;
+  left: 170px;
+  right: 14px;
   text-align: center;
   color: rgba(255, 255, 255, 0.6);
   font-size: 12px;
   letter-spacing: 0.5px;
   z-index: 15;
   pointer-events: none;
+  line-height: 1.6;
 }
 /* 手势识别等待提示 */
 .particle-stage .gp-loading {
