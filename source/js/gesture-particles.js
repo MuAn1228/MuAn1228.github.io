@@ -351,7 +351,11 @@
         '<span class="gp-label">镜头画面</span>' +
         '<label class="gp-switch"><input type="checkbox" id="gp-camToggle"><span></span></label>' +
       '</div>' +
-      '<div class="gp-tip">握拳收拢粒子 · 张开散开粒子 · 移动手掌控制旋转</div>';
+      '<div class="gp-tip">捏合(&lt;拇指-食指&gt;)收拢粒子 · 张开散开粒子 · 移动手掌控制旋转</div>' +
+      '<div class="gp-row gp-debug-row" style="display:none" id="gp-debug-row">' +
+        '<span class="gp-label">Pinch</span>' +
+        '<span class="gp-code" id="gp-debug-val">0.00</span>' +
+      '</div>';
     dom.wrap.appendChild(dom.ui);
 
     dom.loading = document.createElement('div');
@@ -369,17 +373,12 @@
     bindUI();
   }
 
-  // 隐藏 loading 提示（渐隐动画），同时强制粒子收敛到形状
+  // 隐藏 loading 提示（渐隐动画）
   var _hidingLoading = false;
   function hideLoadingSpinner() {
     if (_hidingLoading) return;
     _hidingLoading = true;
     if (!dom.loading || dom.loading.style.display === 'none') return;
-    // 强制粒子收敛到形状（无视摄像头状态）
-    STATE.handOpenness = 0;
-    STATE.handDetected = false;
-    // 直接把粒子快照到目标位置，用户立刻看到形状
-    snapParticlesToShape();
     dom.loading.innerHTML = '<div class="gp-spinner" style="opacity:0.3"></div><div style="color:#8892b0">摄像头不可用，粒子以自动旋转模式展示<br><span style="font-size:12px">（点击「镜头画面」开关可查看摄像头状态）</span></div>';
     dom.loading.style.opacity = '0.7';
     setTimeout(function () {
@@ -390,17 +389,16 @@
     }, 3000);
   }
 
-  // 直接把所有粒子快照到当前位置的目标形状
-  function snapParticlesToShape() {
-    if (!particles || !STATE.targetPositions) return;
-    var pos = particles.geometry.attributes.position.array;
-    for (var i = 0; i < CONFIG.particleCount; i++) {
-      var i3 = i * 3;
-      pos[i3] = STATE.targetPositions[i3];
-      pos[i3+1] = STATE.targetPositions[i3+1];
-      pos[i3+2] = STATE.targetPositions[i3+2];
-    }
-    particles.geometry.attributes.position.needsUpdate = true;
+  // 调试指示器：显示当前手势值
+  function updateDebugValue() {
+    var el = document.getElementById('gp-debug-val');
+    if (!el) return;
+    el.textContent = (STATE.handOpenness * 100).toFixed(0) + '%';
+    // 根据值改变颜色：低值(收拢)蓝，高值(散开)绿
+    var pct = STATE.handOpenness;
+    if (pct < 0.3) el.style.color = '#40c9ff';
+    else if (pct < 0.6) el.style.color = '#facc15';
+    else el.style.color = '#22c55e';
   }
 
   function bindUI() {
@@ -466,33 +464,50 @@
     var Conec = WM.HAND_CONNECTIONS;
 
     hands = new WM.Hands({ locateFile: function (file) { return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + file; } });
-    hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
+    // 使用 lite 模型（modelComplexity:0）降低 CPU 开销
+    hands.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
     hands.onResults(function onResults(results) {
       STATE.lastResultAt = Date.now();
       pctx.drawImage(results.image, 0, 0, dom.preview.width, dom.preview.height);
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        STATE.handDetected = true;
-        var dot = document.getElementById('gp-dot');
-        if (dot) { dot.style.background = '#22c55e'; dot.style.boxShadow = '0 0 8px #22c55e'; }
-        if (dom.loading) dom.loading.style.display = 'none';
+        // 手势已检测到
+        if (!STATE.handDetected) {
+          // 首次检测到手 → 立即隐藏 loading，显示调试行
+          STATE.handDetected = true;
+          if (dom.loading) dom.loading.style.display = 'none';
+          var debugRow = document.getElementById('gp-debug-row');
+          if (debugRow) debugRow.style.display = 'flex';
+          var dot = document.getElementById('gp-dot');
+          if (dot) { dot.style.background = '#22c55e'; dot.style.boxShadow = '0 0 8px #22c55e'; }
+        }
         var lm = results.multiHandLandmarks[0];
-        if (Conec && WM.drawConnectors) WM.drawConnectors(pctx, lm, Conec, { color: '#40c9ff', lineWidth: 1 });
+        if (Conec && WM.drawConnectors) pctx.strokeStyle = '#40c9ff';
+        if (Conec) WM.drawConnectors(pctx, lm, Conec, { color: '#40c9ff', lineWidth: 1 });
+
+        // ---- Pinch 手势（拇指-食指距离）匹配原项目 ----
+        // 原项目使用 "Pinch to Gather · Release to Scatter"
+        // 捏合(手指靠近) → 粒子收拢；张开(手指远离) → 粒子散开
+        var thumb = lm[4];
+        var index = lm[8];
+        var pinchDist = Math.hypot(thumb.x - index.x, thumb.y - index.y);
+        // pinchDist 范围 ~0.01(捏紧) ~ 0.3(完全张开)
+        // 映射到 [0, 1]：捏紧→0(收拢)，张开→1(散开)
+        var raw = Math.max(0, Math.min(1, (pinchDist - 0.015) / 0.18));
+        STATE.handOpenness += (raw - STATE.handOpenness) * 0.15; // 更快响应
+
+        // 手掌中心位置 → 控制旋转
         var wrist = lm[0];
-        var tips = [4, 8, 12, 16, 20].map(function (i) { return lm[i]; });
-        var dists = tips.map(function (t) { return Math.hypot(t.x - wrist.x, t.y - wrist.y); });
-        var avg = dists.reduce(function (a, b) { return a + b; }, 0) / 5;
-        var raw = Math.max(0, Math.min(1, (avg - 0.2) * 3.3));
-        STATE.handOpenness += (raw - STATE.handOpenness) * 0.1;
         var mid = lm[9];
-        var hx = (wrist.x + mid.x) / 2, hy = (wrist.y + mid.y) / 2;
-        STATE.handPosition.x += (hx - STATE.handPosition.x) * 0.1;
-        STATE.handPosition.y += (hy - STATE.handPosition.y) * 0.1;
+        STATE.handPosition.x += ((wrist.x + mid.x) / 2 - STATE.handPosition.x) * 0.15;
+        STATE.handPosition.y += ((wrist.y + mid.y) / 2 - STATE.handPosition.y) * 0.15;
       } else {
         STATE.handDetected = false;
         var dot2 = document.getElementById('gp-dot');
         if (dot2) { dot2.style.background = '#eab308'; dot2.style.boxShadow = '0 0 8px #eab308'; }
-        STATE.handOpenness += (0.0 - STATE.handOpenness) * 0.05;
+        STATE.handOpenness += (0.0 - STATE.handOpenness) * 0.03;
       }
+      // 更新调试指示器
+      updateDebugValue();
     });
 
     cameraUtils = new WM.Camera(videoElement, {
