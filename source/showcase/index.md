@@ -33,7 +33,7 @@ title: 展示
 
   <!-- 教育背景 -->
   <section class="resume-sec">
-    <h2 class="resume-sec-title">教育背景 Education</h2>
+    <h2 class="resume-sec-title">🧑‍🎓 教育背景 Education</h2>
     <div class="resume-sec-body">
       <p class="resume-school"><strong>浙江理工大学 (Zhejiang Sci-Tech University)</strong> <span class="resume-loc">杭州</span></p>
       <p class="resume-major">智能科学与技术 (Intelligent Science and Technology) · 本科 · 2025–2029（预期）</p>
@@ -46,7 +46,7 @@ title: 展示
 
   <!-- 技术栈 -->
   <section class="resume-sec">
-    <h2 class="resume-sec-title">技术栈 Skills</h2>
+    <h2 class="resume-sec-title">💻 技术栈 Skills</h2>
     <div class="resume-sec-body">
       <table class="resume-table">
         <tr><td class="resume-tag">编程语言</td><td>C, Go, JavaScript, HTML/CSS</td></tr>
@@ -61,7 +61,7 @@ title: 展示
 
   <!-- 项目经历 -->
   <section class="resume-sec">
-    <h2 class="resume-sec-title">项目经历 Projects</h2>
+    <h2 class="resume-sec-title">🚀 项目经历 Projects</h2>
     <div class="resume-sec-body">
       <div class="resume-project">
         <p class="resume-project-title">个人博客 — MuAn1228.github.io <span class="resume-project-date">2025–至今</span></p>
@@ -104,7 +104,7 @@ title: 展示
 
   <!-- 个人文章 -->
   <section class="resume-sec">
-    <h2 class="resume-sec-title">个人文章 Blog Posts</h2>
+    <h2 class="resume-sec-title">📚 个人文章 Blog Posts</h2>
     <div class="resume-sec-body">
       <ul class="resume-posts">
         <li>《我的前半生》— 个人成长回忆录 (小学/初中/高中经历)</li>
@@ -118,7 +118,7 @@ title: 展示
 
   <!-- 兴趣爱好 -->
   <section class="resume-sec">
-    <h2 class="resume-sec-title">兴趣爱好 Interests</h2>
+    <h2 class="resume-sec-title">🎮 兴趣爱好 Interests</h2>
     <div class="resume-sec-body">
       <ul class="resume-interests">
         <li><strong>游戏</strong>：涉猎广泛，精通 200+ 款，实际玩过远不止此数</li>
@@ -131,7 +131,7 @@ title: 展示
 
   <!-- 目标与愿景 -->
   <section class="resume-sec">
-    <h2 class="resume-sec-title">目标与愿景 Goals</h2>
+    <h2 class="resume-sec-title">🎯 目标与愿景 Goals</h2>
     <div class="resume-sec-body">
       <ul>
         <li><strong>短期</strong>：掌握 Python 机器学习与 Java 后端，丰富项目经验</li>
@@ -143,7 +143,7 @@ title: 展示
 
   <!-- 联系方式 -->
   <section class="resume-sec">
-    <h2 class="resume-sec-title">联系方式 Contact</h2>
+    <h2 class="resume-sec-title">📬 联系方式 Contact</h2>
     <div class="resume-sec-body">
       <p class="resume-contact-line">
         <strong>邮箱</strong> <a href="mailto:lib893431@gmail.com">lib893431@gmail.com</a> &nbsp;|&nbsp;

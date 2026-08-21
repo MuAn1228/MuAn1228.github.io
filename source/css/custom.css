@@ -642,6 +642,7 @@ canvas.particle-text-canvas {
   font-family: "Noto Serif SC", "Songti SC", Georgia, "Times New Roman", serif;
   line-height: 1.8;
   color: #2c2c3a;
+  text-align: left;
 }
 [data-theme='dark'] .resume-wrap {
   background: rgba(18, 18, 24, 0.82);
@@ -666,6 +667,7 @@ canvas.particle-text-canvas {
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: 0 !important;
 }
 .resume-header-info {
   flex: 1;
