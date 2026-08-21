@@ -13,11 +13,11 @@ bottom:
     icon: fas fa-fire
     html: |
       <div style="padding:4px;">
-        <a href="/2025/12/31/hello-world/" style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:10px;background:rgba(107,91,149,0.08);transition:all .3s;text-decoration:none;">
+        <a href="/2026/08/21/my-first-half-life/" style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:10px;background:rgba(107,91,149,0.08);transition:all .3s;text-decoration:none;">
           <span style="font-size:20px;">🔥</span>
           <div>
-            <div style="color:#333;font-weight:500;">Hello World</div>
-            <div style="font-size:12px;color:#999;margin-top:2px;">2026-01-01</div>
+            <div style="color:#333;font-weight:500;">我的前半生</div>
+            <div style="font-size:12px;color:#999;margin-top:2px;">2026-08-21</div>
           </div>
         </a>
       </div>
