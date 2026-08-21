@@ -9,7 +9,6 @@ display_mode: dark
 # ---------- 导航菜单 ----------
 menu:
   首页: / || fas fa-home
-  搜索: /search/ || fas fa-search
   旅行: /travel/ || fas fa-map-marked-alt
   娱乐||fas fa-gamepad:
     音乐: /fun/music/ || fas fa-music
