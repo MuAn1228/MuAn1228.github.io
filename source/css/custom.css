@@ -1307,6 +1307,200 @@ html:has(#showcase) #showcase .showcase-avatar {
   touch-action: none;
 }
 
+/* ===== 小游戏·光点地球（手势粒子）面板 ===== */
+.particle-stage {
+  position: relative;
+  width: 100%;
+  max-width: 860px;
+  height: 560px;
+  margin: 0 auto;
+  border-radius: 16px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at center, #141a2b 0%, #0a0c14 70%);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
+}
+.particle-stage-tip {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  z-index: 15;
+  pointer-events: none;
+}
+/* 手势识别等待提示 */
+.particle-stage .gp-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  text-align: center;
+  pointer-events: none;
+  color: #b9c2d8;
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+.particle-stage .gp-spinner {
+  width: 38px;
+  height: 38px;
+  margin: 0 auto 14px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #40c9ff;
+  border-radius: 50%;
+  animation: gp-spin 1s linear infinite;
+}
+@keyframes gp-spin {
+  to { transform: rotate(360deg); }
+}
+/* 控制面板 */
+.particle-stage .gp-panel {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 25;
+  width: 218px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(10, 12, 20, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  color: #fff;
+}
+.particle-stage .gp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.particle-stage .gp-title {
+  font-weight: 700;
+  font-size: 14px;
+  background: linear-gradient(90deg, #7dd3fc, #c4b5fd, #f9a8d4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.particle-stage .gp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #eab308;
+  box-shadow: 0 0 8px #eab308;
+}
+.particle-stage .gp-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+  font-size: 12px;
+}
+.particle-stage .gp-label {
+  width: 100%;
+  color: #8d97ad;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+.particle-stage .gp-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd2e0;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.25s ease;
+}
+.particle-stage .gp-btn:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+.particle-stage .gp-btn.is-active {
+  background: rgba(64, 201, 255, 0.22);
+  border-color: rgba(64, 201, 255, 0.65);
+  color: #e0f2fe;
+  box-shadow: 0 0 14px rgba(64, 201, 255, 0.25);
+}
+.particle-stage .gp-code {
+  font-family: monospace;
+  font-size: 11px;
+  color: #9aa4bd;
+}
+.particle-stage input[type="color"] {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: auto;
+}
+.particle-stage .gp-tip {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #7b8498;
+}
+.particle-stage .gp-switch {
+  margin-left: auto;
+  display: inline-flex;
+}
+.particle-stage .gp-switch input {
+  display: none;
+}
+.particle-stage .gp-switch span {
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.25s;
+}
+.particle-stage .gp-switch span::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.25s;
+}
+.particle-stage .gp-switch input:checked + span {
+  background: #40c9ff;
+}
+.particle-stage .gp-switch input:checked + span::after {
+  transform: translateX(16px);
+}
+/* 摄像头预览（右下角） */
+.particle-stage #gp-cam-preview {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 200px;
+  height: 150px;
+  z-index: 18;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #000;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+}
+@media (max-width: 720px) {
+  .particle-stage { height: 380px; }
+  .particle-stage .gp-panel { width: 46%; }
+  .particle-stage #gp-cam-preview { width: 120px; height: 90px; bottom: 10px; right: 10px; }
+}
+
 /* ===== 音乐页顶部紫色横幅：网易云「我喜欢的音乐」大播放器 ===== */
 /* 页头默认固定 400px 高、标题绝对定位；带 music-favs-host 时改为流式并加高，容纳大播放器 */
 #page-header.music-favs-host.not-home-page {
