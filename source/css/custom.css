@@ -672,6 +672,7 @@ canvas.particle-text-canvas {
 .resume-header-info {
   flex: 1;
   padding-top: 0.2em;
+  text-align: center;
 }
 .resume-name {
   font-size: 1.9em;
