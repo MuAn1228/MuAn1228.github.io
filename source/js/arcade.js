@@ -4,7 +4,8 @@
   if (!tabs.length) return;
   var panels = {
     flappy: document.getElementById('arcade-panel-flappy'),
-    rubik: document.getElementById('arcade-panel-rubik')
+    rubik: document.getElementById('arcade-panel-rubik'),
+    particles: document.getElementById('arcade-panel-particles')
   };
 
   tabs.forEach(function (tab) {
