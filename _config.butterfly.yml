@@ -11,6 +11,7 @@ menu:
   首页: / || fas fa-home
   旅行: /travel/ || fas fa-map-marked-alt
   展示: /showcase/ || fas fa-id-card
+  关于本站: /about-site/ || fas fa-info-circle
   娱乐||fas fa-gamepad:
     音乐: /fun/music/ || fas fa-music
     电影: /fun/movies/ || fas fa-film

@@ -27,6 +27,7 @@
 | `source/js/pixel-snow.js` | 电影页标题横幅：像素雪背景 |
 | `source/js/travel-reel.js` | 旅行页标题横幅：胶片画廊（React Bits Pro ReelGallery 原生 JS 复刻，倾斜胶片条随滚动漂移） |
 | `source/js/cursor.js` | 鼠标指针：RGB Cursor Dark 动画（不再有紫色光点） |
+| `source/js/blackhole.js` | 展示页(`/showcase/`)顶部：Three.js 黑洞 hero（吸积盘+引力透镜+缩放运镜，左键旋转/右键平移/滚轮缩放） |
 
 ## 当前状态 & 重要决策（务必记住）
 - 游戏页顶部横幅的球池（`game-ballpit.js`）用 `/data/games.json` 里的游戏封面作为球体贴图，这是**最终采用方案**。
@@ -41,6 +42,33 @@
 - 可调参数在 `travel-reel.js` 顶部的 `CFG`：直角矩形（`radius:0`）、无纵向拱形（`arch:0`）、加宽 3 倍视口实现无缝循环（`target=viewW*3`）。
 - EXIF 方向映射容易出错（脚本曾漏掉 orient 4、错映射 orient 6 导致照片倒放）。**若某张照片方向错误，与其纠结 EXIF 映射表，用户更接受直接把该缩略图旋转 180° 的简单方案。** 修正后需浏览器目视核对（源图浏览器会自动应用 EXIF，作对照）。
 - 最近一次修复：4bab6/1287988 两张照片方向（提交 10b753c，已推送远端 main）。
+
+## 展示页黑洞 hero（/showcase/，重要坑）
+- 黑洞效果整体呈现叠在 **展示页顶部**（铺满 100vw），下方是原「极简居中」展示内容，中间用渐变过渡，适配明/暗模式（`var(--card-bg)`）。
+- 黑洞 hero 容器在 `source/showcase/index.md` 里是 `#showcase` 内最顶部的 `<div id="blackhole-hero" class="blackhole-hero">`，canvas 由 `blackhole.js` 注入，用容器宽高自适应。
+- 展示页相关 CSS 统一放在 custom.css 的「展示页顶部黑洞横幅」块，**选择器必须写 `html:has(#showcase) …`，不能写 `html.page-showcase …`**——Hexo/Butterfly 生成的 `<html>` 上**没有** `page-showcase` 类，写 `html.page-showcase` 会让所有样式失效，导致顶部白条、内容铺不满宽度。
+- 顶部白条/窄条的另一个元凶：theme 默认 `.layout` 首个子节点 `#page` 是白色卡片（`padding:50px 40px; width:74%`），黑洞被包在里面就露出白条。需要在展示页把 `#content-inner #page` / `#article-container` 的 `padding/margin` 清零、`width:100%`、背景透明。
+- 初始相机已拉远（进入页面时黑洞较小、可滚轮放大）；`sph.phi` 上限放宽到 `0.95π` 才能看到南极（不然只能转到赤道）。
+- 展示页桌面端已**隐藏侧边栏**（`html:has(#showcase) #content-inner #aside-content { display:none }`，提交 f273a34）——黑洞整宽铺顶会盖住右侧卡片列（个人简介/热门文章/打赏等），用户最终选择隐藏该列保持极简，不单独显示右侧模块。
+
+## 夜间模式适配（默认 dark，重要）
+- 打开即夜间模式通过 `_config.butterfly.yml` 的 `display_mode: dark` 实现：Butterfly 由服务端把 `<html data-theme="dark">` 渲染出来，**前端 localStorage 不会覆盖这个初始值**（提交 36d1b1f）。
+- Butterfly 的明/暗模式由 `<html>` 上的 `data-theme` 属性驱动，自定义深色样式统一用属性选择器 `[data-theme='dark'] …`（单双引号均可，与渲染值 `dark` 匹配）。**务必用这种方式写夜间样式，不要改内联 JS。**
+- 已适配的模块（提交 c65ff2b）：
+  - 左侧侧边栏全部卡片：`[data-theme='dark'] .card-widget` → 深色毛玻璃 `background: rgba(18,18,24,0.78) !important`。
+  - 首页底部 GitHub 热力图卡片：`[data-theme='dark'] .github-heatmap-wrap` 同样换深色毛玻璃。
+  - 热力图格子颜色：由 `github-heatmap.js` 的硬编码改为 CSS 类 `.gh-lv0..4`，并在 custom.css 定义，深色模式下 `.gh-lv0`（空白格）用 `#2b2e3d`，随主题自动切换。热力图 `#github-heatmap` 由 `github-heatmap.js` 动态 append 到 `#recent-posts` 底部。
+- **坑**：改夜间模式样式后，旧构建缓存会让人误以为样式没生效（背景仍显示白色半透明）。必须 `hexo clean` 重建再验证，用浏览器实测 `getComputedStyle` 的 backgroundColor 而非肉眼看旧页面。
+
+## 展示页文字内容（Obsidian 存档）
+- 展示页正文文字已存档到本地 Obsidian：`D:\obsidian\Obsidian Vault\博客\展示.md`（含 关于我/摄影/编程之路/Skills/作品/联系 全量文字）。**用户以后会在该文件里改文字**，改完再同步回 `source/showcase/index.md`。
+- 网页端展示页现仅保留 关于我 → Skills → 作品 → 联系（提交 0fba330 已删除「摄影」含 6 张图、以及「编程之路」板块；这两段内容以「网页端已移除」标注保留在 展示.md 里）。
+- **注意**：本机 Write/Edit 工具只允许写 `d:\blog` 工作目录，写 `D:\obsidian\...` 会被拒绝。往 Obsidian 写文件须用终端 PowerShell 的 `[System.IO.File]::WriteAllText(...)`（UTF-8 无 BOM）。
+
+## 关于本站模块（/about-site/，新增）
+- 页面内容源 `source/about-site/index.md`（导航顶层项，位于 展示 之后，与 旅行/展示/娱乐 并列）。
+- 文案存档在本地 Obsidian：`D:\obsidian\Obsidian Vault\博客\关于本站.md`（含原始段落；用户后续改文字再同步回 `source/about-site/index.md`，网页端版本已润色+分节）。
+- 该页为标准页面布局，标题由 name-particles 粒子化；无独立 canvas 横幅。
 
 ## 后续工作方式
 1. 改代码 → 本地 `hexo s` 预览验证 → `git commit` → `git push origin source:main` → 提醒用户手动触发部署工作流。
