@@ -48,7 +48,7 @@
 
   // ===== 配置 =====
   var CONFIG = {
-    particleCount: 26000,
+    particleCount: 15000,
     baseSize: 1.1,
     defaultColor: 0x40c9ff,
     cameraZ: 25,
@@ -58,7 +58,6 @@
   var STATE = {
     currentShape: 'text',
     targetPositions: null,
-    randomOffsets: null,
     handOpenness: 1.0,
     handPosition: { x: 0.5, y: 0.5 },
     handDetected: false,
@@ -122,10 +121,9 @@
     camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 200);
     camera.position.z = CONFIG.cameraZ;
 
-    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
     renderer.setSize(w, h);
-    var pr = Math.max(window.devicePixelRatio || 1, 1.5);
-    renderer.setPixelRatio(pr);
+    renderer.setPixelRatio(1); // 强制 1x，避免 Retina 屏幕下 MediaPipe 和 Three.js 抢 GPU
     dom.canvas = renderer.domElement;
     dom.canvas.style.display = 'block';
     dom.canvas.style.background = 'radial-gradient(ellipse at center,#141a2b 0%,#0a0c14 70%)';
@@ -135,7 +133,7 @@
       uniforms: {
         time: { value: 0 },
         color: { value: new THREE.Color(CONFIG.defaultColor) },
-        pixelRatio: { value: pr },
+        pixelRatio: { value: 1 },
         handOpenness: { value: 1.0 }
       },
       vertexShader: vshader,
@@ -146,10 +144,7 @@
     });
 
     initParticleGeometry();
-    STATE.randomOffsets = new Float32Array(CONFIG.particleCount * 3);
     STATE.targetPositions = generateTargetPositions(STATE.currentShape);
-    prefillOffsets();
-
     buildUI();
     return true;
   }
@@ -179,18 +174,15 @@
     geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
     geometry.setAttribute('aColor', new THREE.BufferAttribute(particleColors, 3));
 
+    // 初始化随机偏移（散开位置）和目标位置
+    STATE.randomOffsets = new Float32Array(positions);
+    STATE.targetPositions = new Float32Array(positions);
+
     particles = new THREE.Points(geometry, shaderMaterial);
     scene.add(particles);
   }
 
-  function prefillOffsets() {
-    var pos = particles.geometry.attributes.position.array;
-    for (var i = 0; i < CONFIG.particleCount; i++) {
-      STATE.randomOffsets[i*3] = pos[i*3];
-      STATE.randomOffsets[i*3+1] = pos[i*3+1];
-      STATE.randomOffsets[i*3+2] = pos[i*3+2];
-    }
-  }
+  function prefillOffsets() { /* 不再需要，随机偏移已存为 aRandomOffset attribute */ }
 
   /* ============ 形状生成 ============ */
   function getPointsFromText(textString, sizePx) {
@@ -363,12 +355,12 @@
     dom.loading.innerHTML = '<div class="gp-spinner"></div><div>摄像头初始化中…</div>';
     dom.wrap.appendChild(dom.loading);
 
-    // 摄像头超时回退：5 秒后自动隐藏 loading，粒子以自动旋转展示
+    // 摄像头超时回退：15 秒后自动隐藏 loading（给 MediaPipe 模型加载留足时间）
     dom.loading._hideTimeout = setTimeout(function () {
       if (!dom.loading) return;
       if (dom.loading.style.display === 'none') return; // 摄像头已正常启动
       hideLoadingSpinner();
-    }, 5000);
+    }, 15000);
 
     bindUI();
   }
@@ -379,7 +371,7 @@
     if (_hidingLoading) return;
     _hidingLoading = true;
     if (!dom.loading || dom.loading.style.display === 'none') return;
-    dom.loading.innerHTML = '<div class="gp-spinner" style="opacity:0.3"></div><div style="color:#8892b0">摄像头不可用，粒子以自动旋转模式展示<br><span style="font-size:12px">（点击「镜头画面」开关可查看摄像头状态）</span></div>';
+    dom.loading.innerHTML = '<div class="gp-spinner" style="opacity:0.3"></div><div style="color:#8892b0">摄像头初始化中请稍候…<br><span style="font-size:12px">如长时间无响应请刷新页面</span></div>';
     dom.loading.style.opacity = '0.7';
     setTimeout(function () {
       if (!dom.loading) return;
@@ -439,10 +431,10 @@
     }
   }
 
-  /* ============ 手势识别（MediaPipe Hands） ============ */
+  /* ============ 手势识别（MediaPipe Hands + Camera Utility） ============ */
   function setupHands() {
     var WM = window;
-    if (!(WM.Hands && WM.Camera)) { return; }
+    if (!WM.Hands || !WM.Camera) { return; }
     if (hands) return;
 
     dom.preview = document.createElement('canvas');
@@ -453,86 +445,90 @@
 
     var videoElement = document.createElement('video');
     videoElement.id = 'gp-video-input';
-    videoElement.style.cssText = 'position:absolute;top:0;left:0;visibility:hidden;width:320px;height:240px;transform:scaleX(-1);pointer-events:none;';
+    videoElement.style.cssText = 'position:absolute;top:0;left:0;visibility:hidden;width:320px;height:240px;pointer-events:none;';
     dom.video = videoElement;
     dom.wrap.appendChild(videoElement);
 
+    // 预览画布 context 初始化后设置镜像（与原作者一致）
+    var pctx = dom.preview.getContext('2d');
+    pctx.translate(dom.preview.width, 0);
+    pctx.scale(-1, 1);
+    var Conec = WM.HAND_CONNECTIONS;
+
     hands = new WM.Hands({ locateFile: function (file) { return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + file; } });
-    // 使用 lite 模型（modelComplexity:0）降低 CPU 开销
-    hands.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+    // 使用 modelComplexity: 1（与原项目一致）以获得更准确的跟踪
+    hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
     hands.onResults(function onResults(results) {
       STATE.lastResultAt = Date.now();
-      // 预览画布：直接绘制视频帧（用 video 元素代替 results.image 避免黑屏）
-      try {
-        if (dom.video && dom.video.readyState >= 2 && dom.preview) {
-          var pctx = dom.preview.getContext('2d');
-          pctx.save();
-          pctx.clearRect(0, 0, dom.preview.width, dom.preview.height);
-          pctx.translate(dom.preview.width, 0);
-          pctx.scale(-1, 1);
-          pctx.drawImage(dom.video, 0, 0, dom.preview.width, dom.preview.height);
-          pctx.restore();
-        }
-      } catch (e) { /* 视频帧尚未就绪，跳过 */ }
+      // 取消 loading（收到第一帧结果即表示摄像头/模型已就绪）
+      if (dom.loading && dom.loading.style.display !== 'none') {
+        dom.loading.style.display = 'none';
+      }
+      // 画视频帧（用 results.image，与原项目一致）
+      pctx.drawImage(results.image, 0, 0, dom.preview.width, dom.preview.height);
+
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        // 手势已检测到
         if (!STATE.handDetected) {
           STATE.handDetected = true;
-          if (dom.loading) dom.loading.style.display = 'none';
           var debugRow = document.getElementById('gp-debug-row');
           if (debugRow) debugRow.style.display = 'flex';
           var dot = document.getElementById('gp-dot');
           if (dot) { dot.style.background = '#22c55e'; dot.style.boxShadow = '0 0 8px #22c55e'; }
         }
         var lm = results.multiHandLandmarks[0];
-        // 在预览画布上画骨架（重绘保留最新骨架）
-        try {
-          if (dom.preview && dom.video && dom.video.readyState >= 2) {
-            var pctx2 = dom.preview.getContext('2d');
-            pctx2.save();
-            pctx2.translate(dom.preview.width, 0);
-            pctx2.scale(-1, 1);
-            if (WM.drawConnectors) WM.drawConnectors(pctx2, lm, WM.HAND_CONNECTIONS, { color: '#40c9ff', lineWidth: 1 });
-            pctx2.restore();
-          }
-        } catch (e) { /* 骨架绘制跳过 */ }
+        // 画骨架
+        if (WM.drawConnectors) WM.drawConnectors(pctx, lm, Conec, { color: '#40c9ff', lineWidth: 1 });
 
-        // ---- 握拳/张开检测（指尖到手腕距离） ----
-        // 握拳 → 指尖离手腕近 → openness 小 → 粒子收拢
-        // 张开 → 指尖离手腕远 → openness 大 → 粒子散开
+        // ---- 握拳/张开检测（指尖到手腕距离，与原项目一致） ----
         var wrist = lm[0];
         var tips = [4, 8, 12, 16, 20].map(function (i) { return lm[i]; });
         var dists = tips.map(function (t) { return Math.hypot(t.x - wrist.x, t.y - wrist.y); });
         var avg = dists.reduce(function (a, b) { return a + b; }, 0) / 5;
-        var raw = Math.max(0, Math.min(1, (avg - 0.15) * 3.0));
-        STATE.handOpenness += (raw - STATE.handOpenness) * 0.12;
+        var raw = Math.max(0, Math.min(1, (avg - 0.2) * 3.3));
+        STATE.handOpenness += (raw - STATE.handOpenness) * 0.1;
 
         // 手掌中心位置 → 控制旋转
         var mid = lm[9];
-        STATE.handPosition.x += ((wrist.x + mid.x) / 2 - STATE.handPosition.x) * 0.15;
-        STATE.handPosition.y += ((wrist.y + mid.y) / 2 - STATE.handPosition.y) * 0.15;
+        STATE.handPosition.x += ((wrist.x + mid.x) / 2 - STATE.handPosition.x) * 0.1;
+        STATE.handPosition.y += ((wrist.y + mid.y) / 2 - STATE.handPosition.y) * 0.1;
       } else {
         STATE.handDetected = false;
         var dot2 = document.getElementById('gp-dot');
         if (dot2) { dot2.style.background = '#eab308'; dot2.style.boxShadow = '0 0 8px #eab308'; }
-        // 不改变 openness——粒子状态保持当前值，不会自动收敛/散开
       }
-      // 更新调试指示器
       updateDebugValue();
-    });
-
-    cameraUtils = new WM.Camera(videoElement, {
-      onFrame: function () { if (hands) hands.send({ image: videoElement }); },
-      width: 320, height: 240
     });
   }
 
   function startCamera() {
     if (!hands) setupHands();
-    if (cameraUtils) cameraUtils.start();
+    if (!hands || !window.Camera) {
+      if (dom.loading && dom.loading.style.display !== 'none') hideLoadingSpinner();
+      return;
+    }
+    if (cameraUtils) return; // 已经启动
+
+    // 使用 MediaPipe 的 Camera utility（与原项目一致）
+    // 它自动处理 getUserMedia + 帧发送，以模型能处理的最大帧率驱动
+    cameraUtils = new window.Camera(dom.video, {
+      onFrame: async function () {
+        try { await hands.send({ image: dom.video }); } catch (e) { /* 静默 */ }
+      },
+      width: 320,
+      height: 240
+    });
+    cameraUtils.start();
   }
+
   function stopCamera() {
-    if (cameraUtils) cameraUtils.stop();
+    if (cameraUtils) {
+      try { cameraUtils.stop(); } catch (e) { /* 静默 */ }
+      cameraUtils = null;
+    }
+    if (dom.video && dom.video.srcObject) {
+      dom.video.srcObject.getTracks().forEach(function (t) { t.stop(); });
+      dom.video.srcObject = null;
+    }
   }
 
   /* ============ 动画 ============ */
@@ -544,9 +540,9 @@
     requestAnimationFrame(animate);
   }
   function _animateTick() {
-    // 安全兜底：动画跑了 240 帧（~4 秒）后不管摄像头状态都隐藏 loading
+    // 安全兜底：动画跑了 900 帧（~15 秒）后不管摄像头状态都隐藏 loading
     _animFrameCount++;
-    if (_animFrameCount === 240) {
+    if (_animFrameCount === 900) {
       if (dom.loading && dom.loading.style.display !== 'none') {
         hideLoadingSpinner();
       }
@@ -568,23 +564,22 @@
       particles.rotation.x += (0 - particles.rotation.x) * 0.05;
     }
 
-    // 只有手势检测到时才改变 openness（握拳/张开驱动），否则保持当前值
-    // 这样粒子初始为四散状态，手不做动作就不会变化
+    // CPU 端逐粒子位置插值（与原项目一致）
     var openness = STATE.handOpenness;
-    var lerp = 0.1;
+    var lerpFactor = 0.1;
     for (var i = 0; i < CONFIG.particleCount; i++) {
       var i3 = i * 3;
       var tx = STATE.targetPositions[i3], ty = STATE.targetPositions[i3+1], tz = STATE.targetPositions[i3+2];
       var rx = STATE.randomOffsets[i3] + Math.sin(STATE.time * 0.5 + i) * 2.0;
       var ry = STATE.randomOffsets[i3+1] + Math.cos(STATE.time * 0.3 + i) * 2.0;
       var rz = STATE.randomOffsets[i3+2];
-      var mix = openness * openness;
-      var dx = tx * (1 - mix) + rx * mix;
-      var dy = ty * (1 - mix) + ry * mix;
-      var dz = tz * (1 - mix) + rz * mix;
-      pos[i3] += (dx - pos[i3]) * lerp;
-      pos[i3+1] += (dy - pos[i3+1]) * lerp;
-      pos[i3+2] += (dz - pos[i3+2]) * lerp;
+      var mixRatio = openness * openness;
+      var destX = tx * (1 - mixRatio) + rx * mixRatio;
+      var destY = ty * (1 - mixRatio) + ry * mixRatio;
+      var destZ = tz * (1 - mixRatio) + rz * mixRatio;
+      pos[i3]   += (destX - pos[i3]) * lerpFactor;
+      pos[i3+1] += (destY - pos[i3+1]) * lerpFactor;
+      pos[i3+2] += (destZ - pos[i3+2]) * lerpFactor;
     }
     particles.geometry.attributes.position.needsUpdate = true;
     renderer.render(scene, camera);
@@ -597,16 +592,16 @@
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
-    var np = Math.max(window.devicePixelRatio || 1, 1.5);
-    renderer.setPixelRatio(np);
-    shaderMaterial.uniforms.pixelRatio.value = np;
+    renderer.setPixelRatio(1);
+    shaderMaterial.uniforms.pixelRatio.value = 1;
   }
 
   /* ============ 生命周期：由 arcade tab 切换驱动 ============ */
   function requestVendorScriptsThen(cb) {
     var need = [];
-    if (!window.Hands) need.push('https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js');
     if (!window.Camera) need.push('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js');
+    if (!window.Hands) need.push('https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js');
+    if (!window.drawConnectors) need.push('https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js');
     if (!need.length) { cb(); return; }
     var loaded = 0;
     need.forEach(function (src) {
@@ -620,14 +615,6 @@
   function activate() {
     if (running) return;
     running = true;
-    // 兜底：8 秒后强制隐藏 loading（不管摄像头状态）
-    setTimeout(function () {
-      if (dom.loading && dom.loading.style.display !== 'none') {
-        dom.loading.style.transition = 'opacity 0.5s';
-        dom.loading.style.opacity = '0';
-        setTimeout(function () { if (dom.loading) dom.loading.style.display = 'none'; }, 500);
-      }
-    }, 8000);
     // 若 THREE 尚未就绪，先等它就绪（主题给的 three.min.js 是 defer 加载）
     ensureThreeReady(function () {
       // 面板此时已可见，同步一次尺寸
