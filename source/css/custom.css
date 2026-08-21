@@ -630,6 +630,224 @@ canvas.particle-text-canvas {
   cursor: pointer;
 }
 
+/* ===== 展示页简历区 ===== */
+.resume-wrap {
+  max-width: 780px;
+  margin: 2.5em auto 3.5em;
+  padding: 2.5em 2.8em;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(26, 26, 46, 0.08);
+  font-family: "Noto Serif SC", "Songti SC", Georgia, "Times New Roman", serif;
+  line-height: 1.8;
+  color: #2c2c3a;
+}
+[data-theme='dark'] .resume-wrap {
+  background: rgba(18, 18, 24, 0.82);
+  color: #ddd;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+.resume-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 2em;
+}
+.resume-photo {
+  flex-shrink: 0;
+  width: 140px;
+  height: 186px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(26, 26, 46, 0.18);
+}
+.resume-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.resume-header-info {
+  flex: 1;
+  padding-top: 0.2em;
+}
+.resume-name {
+  font-size: 1.9em;
+  font-weight: 700;
+  margin: 0 0 0.15em;
+  letter-spacing: 0.03em;
+  color: #2c2c3a;
+  line-height: 1.3;
+}
+.resume-name-en {
+  font-weight: 400;
+  font-size: 0.72em;
+  color: #888;
+  letter-spacing: 0.02em;
+}
+[data-theme='dark'] .resume-name {
+  color: #eee;
+}
+.resume-title {
+  font-size: 1.05em;
+  color: #777;
+  margin: 0.3em 0 0.2em;
+}
+[data-theme='dark'] .resume-title {
+  color: #aaa;
+}
+.resume-location {
+  font-size: 0.95em;
+  color: #999;
+  margin: 0.2em 0 0.6em;
+}
+.resume-links {
+  font-size: 0.95em;
+}
+.resume-links a {
+  color: #7c5b9e;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.resume-links a:hover {
+  color: #5c3d7e;
+  text-decoration: underline;
+}
+.resume-links .sep {
+  color: #ccc;
+  margin: 0 0.4em;
+}
+[data-theme='dark'] .resume-links .sep {
+  color: #555;
+}
+
+.resume-hr {
+  border: none;
+  border-top: 1px solid #e2dce8;
+  margin: 1.6em 0 1.4em;
+}
+[data-theme='dark'] .resume-hr {
+  border-top-color: #333;
+}
+
+.resume-sec {
+  margin-bottom: 1.6em;
+}
+.resume-sec-title {
+  font-size: 1.15em;
+  font-weight: 600;
+  color: #5c4a7d;
+  margin: 0 0 0.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 2px solid #e2dce8;
+  letter-spacing: 0.02em;
+}
+[data-theme='dark'] .resume-sec-title {
+  color: #b8a0d8;
+  border-bottom-color: #333;
+}
+.resume-sec-body {
+  padding-left: 0.3em;
+}
+.resume-sec-body ul {
+  margin: 0.3em 0 0.5em;
+  padding-left: 1.3em;
+}
+.resume-sec-body li {
+  margin-bottom: 0.2em;
+  line-height: 1.7;
+  font-size: 0.98em;
+}
+
+.resume-school {
+  font-size: 1.05em;
+  margin: 0 0 0.15em;
+}
+.resume-loc {
+  font-size: 0.85em;
+  color: #999;
+  margin-left: 0.5em;
+}
+.resume-major {
+  color: #777;
+  font-size: 0.95em;
+  margin: 0.1em 0 0.3em;
+}
+[data-theme='dark'] .resume-major {
+  color: #aaa;
+}
+
+.resume-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.97em;
+}
+.resume-table tr {
+  border-bottom: 1px dashed #eee;
+}
+[data-theme='dark'] .resume-table tr {
+  border-bottom-color: #2a2a35;
+}
+.resume-table td {
+  padding: 0.5em 0.6em;
+  vertical-align: top;
+}
+.resume-tag {
+  width: 7em;
+  font-weight: 600;
+  color: #5c4a7d;
+  white-space: nowrap;
+}
+[data-theme='dark'] .resume-tag {
+  color: #b8a0d8;
+}
+
+.resume-project {
+  margin-bottom: 0.8em;
+}
+.resume-project-title {
+  font-size: 1.02em;
+  font-weight: 600;
+  margin: 0 0 0.1em;
+  color: #2c2c3a;
+}
+[data-theme='dark'] .resume-project-title {
+  color: #ddd;
+}
+.resume-project-date {
+  font-weight: 400;
+  font-size: 0.85em;
+  color: #999;
+  margin-left: 0.6em;
+}
+.resume-project-stack {
+  font-size: 0.9em;
+  color: #888;
+  margin: 0 0 0.2em;
+}
+[data-theme='dark'] .resume-project-stack {
+  color: #999;
+}
+.resume-project ul {
+  margin-top: 0.15em;
+}
+.resume-project li {
+  font-size: 0.95em;
+}
+
+.resume-contact-line {
+  font-size: 0.95em;
+  margin: 0.2em 0;
+  line-height: 1.6;
+}
+.resume-contact-line a {
+  color: #7c5b9e;
+  text-decoration: none;
+}
+.resume-contact-line a:hover {
+  text-decoration: underline;
+}
+
 /* ===== 黑洞 hero 卡片（/showcase/)===== */
 .blackhole-hero {
   position: relative;
