@@ -76,10 +76,10 @@ function scheduleWidget() {
     runWidget();
   }
   if ('requestIdleCallback' in window) {
-    // 兜底：即使一直没空闲（如持续动画），3s 内也必须启动
-    window.requestIdleCallback(start, { timeout: 3000 });
+    // 兜底：即使一直没空闲（如持续动画），800ms 内必须启动
+    window.requestIdleCallback(start, { timeout: 800 });
   } else {
-    setTimeout(start, 800);
+    setTimeout(start, 400);
   }
 }
 

@@ -17,7 +17,7 @@
           var attrs = 'data-name="' + escapeHtml(name) + '" data-sub="' + escapeHtml(sub) + '" data-note="' + escapeHtml(note) + '"';
           if (img) {
             return '<div class="media-card" ' + attrs + '>' +
-              '<img src="' + escapeHtml(img) + '" alt="' + escapeHtml(name) + '" loading="lazy">' +
+              '<img src="' + escapeHtml(img) + '" alt="' + escapeHtml(name) + '" loading="lazy" decoding="async">' +
               '<span class="media-name">' + escapeHtml(name) + '</span>' +
               '<span class="media-sub">' + escapeHtml(sub) + '</span>' +
               '</div>';
