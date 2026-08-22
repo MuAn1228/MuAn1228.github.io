@@ -77,13 +77,13 @@
       var rightWall = Bodies.rectangle(W + WALL / 2, H / 2, WALL, H * 2, { isStatic: true });
       Composite.add(engine.world, [ground, leftWall, rightWall]);
 
-      // 高尔顿板钉子（标准布局：间距足够让图标通过，不会卡住）
+      // 高尔顿板钉子（间距加大，减少柱子数量，让所有小球都能落下）
       var PEG_R = 7;
       pegs = [];
       for (var row = 0; row < 4; row++) {
         var py = 80 + row * 80;
-        var startX = (row % 2 === 0) ? 55 : 105;
-        for (var px = startX; px < W - 40; px += 100) {
+        var startX = (row % 2 === 0) ? 55 : 115;
+        for (var px = startX; px < W - 40; px += 120) {
           pegs.push(Bodies.circle(px, py, PEG_R, { isStatic: true }));
         }
       }
