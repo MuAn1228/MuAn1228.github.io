@@ -142,6 +142,7 @@
       var c = cycle[guard % cycle.length];
       var img = new Image();
       img.loading = 'lazy';       // 视口外的胶片块延后加载，避免几千个请求同时冲垮网络
+      img.fetchPriority = 'low';  // 装饰性背景，降低优先级避免阻塞主内容
       img.className = 'travel-reel-plate';
       img.src = c.meta.src;
       img.decoding = 'async';   // 异步解码，先出结构再填充像素，加快首屏
