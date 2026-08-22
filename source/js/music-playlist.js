@@ -306,7 +306,7 @@
 ];
 
   function resolve(s) {
-    var meting = 'https://api.i-meto.com/meting/api?server=netease&type=song&id=' + s.id;
+    var meting = 'https://api.injahow.cn/meting/?server=netease&type=song&id=' + s.id;
     var fallback = 'https://music.163.com/song/media/outer/url?id=' + s.id + '.mp3';
     return fetch(meting)
       .then(function (r) { return r.json(); })
