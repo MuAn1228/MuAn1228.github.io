@@ -13,6 +13,7 @@
   var current = -1;
   var audio = new Audio();
   var toastTimer = null;
+  var localIds = null;
   var PLAYLIST_ID = 2793973232;
   var COVER = 'https://p1.music.126.net/xPbF9DU762nUv1drpF5d9A==/109951172557075457.jpg';
 
@@ -51,7 +52,12 @@
     if (current === i && !audio.paused) { audio.pause(); return; }
     current = i;
     el('mf-now-text').textContent = songs[i].name + ' - ' + songs[i].artist;
-    audio.src = 'https://music.163.com/song/media/outer/url?id=' + songs[i].id + '.mp3';
+    // 有本地文件则用本地完整版，否则走网易云官方直链
+    if (localIds && localIds.indexOf(songs[i].id) !== -1) {
+      audio.src = '/music/' + songs[i].id + '.mp3';
+    } else {
+      audio.src = 'https://music.163.com/song/media/outer/url?id=' + songs[i].id + '.mp3';
+    }
     audio.play();
   }
 
@@ -146,4 +152,9 @@
     .then(function (r) { return r.json(); })
     .then(populateList)
     .catch(function () {});
+  // 加载本地歌曲 ID 列表
+  fetch('/data/local-playlist-ids.json')
+    .then(function (r) { return r.json(); })
+    .then(function (ids) { localIds = ids; })
+    .catch(function () { localIds = []; });
 })();

@@ -1023,6 +1023,38 @@ html:has(#showcase) #showcase .showcase-avatar {
   transform: translateY(-6px);
   box-shadow: 0 10px 24px rgba(107, 91, 149, 0.2);
 }
+/* ===== 音乐模块页面播放器 ===== */
+#music-module-player {
+  margin-bottom: 24px;
+}
+#music-module-player .aplayer {
+  border-radius: 12px;
+  overflow: hidden;
+}
+[data-theme='dark'] #music-module-player .aplayer {
+  background: rgba(18, 18, 24, 0.85);
+}
+[data-theme='dark'] #music-module-player .aplayer-title,
+[data-theme='dark'] #music-module-player .aplayer-author {
+  color: #eee;
+}
+[data-theme='dark'] #music-module-player .aplayer-info {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme='dark'] #music-module-player .aplayer-list {
+  background: rgba(18, 18, 24, 0.85);
+}
+[data-theme='dark'] #music-module-player .aplayer-list ol li {
+  border-color: rgba(255, 255, 255, 0.06);
+  color: #ccc;
+}
+[data-theme='dark'] #music-module-player .aplayer-list ol li:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+[data-theme='dark'] #music-module-player .aplayer-list ol li.aplayer-list-light {
+  background: rgba(161, 140, 209, 0.2);
+}
+
 .music-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));

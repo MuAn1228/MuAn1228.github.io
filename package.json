@@ -29,6 +29,7 @@
     "hexo-theme-butterfly": "^5.7.0",
     "hexo-theme-landscape": "^1.0.0",
     "meting": "^2.0.2",
+    "node-id3": "^0.2.9",
     "three": "^0.121.1",
     "vanta": "^0.5.24"
   }
