@@ -971,6 +971,9 @@ html:has(#showcase) .blackhole-hero {
   margin-bottom: 0;
   margin-top: 0;
   background: #000;
+  box-shadow: none !important;
+  border: none;
+  outline: none;
 }
 /* 底部渐变过渡：从黑色过渡到下方内容卡片背景（自适应明/暗模式） */
 html:has(#showcase) .blackhole-hero::after {
