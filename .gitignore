@@ -9,3 +9,7 @@ _multiconfig.yml
 # 本地资源（不提交到仓库）
 原始图片/
 备份/
+# 音乐压缩临时文件与原始备份
+source/music_backup/
+compress-music.js
+test-compress.js
