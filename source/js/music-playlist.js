@@ -1,22 +1,22 @@
 // ===== 静态音乐播放列表（网易云，49 首）=====
-// 运行时通过 Meting API 解析可播放 URL（VIP 歌给 30s 试听），失败兜底网易云外链
+// 有本地文件的歌曲优先用完整版（VIP 歌曲不再 30s 试听），其余走 Meting API 兜底
 (function () {
   if (!window.APlayer) return;
   var songs = [
   {
-    "id": 2085859568,
+    "id": 2085859568, "local": true,
     "name": "LET ME LUV U",
     "artist": "mac ova seas",
     "cover": "https://p2.music.126.net/nmOWPii-tnHeLzMjhbqaxA==/109951168945233919.jpg"
   },
   {
-    "id": 1496089152,
+    "id": 1496089152, "local": true,
     "name": "I Really Want to Stay at Your House",
     "artist": "Rosa Walton",
     "cover": "/img/music/IReallyWantToStayAtYourHouse.jpg"
   },
   {
-    "id": 534540498,
+    "id": 534540498, "local": true,
     "name": "藏",
     "artist": "徐梦圆",
     "cover": "https://p2.music.126.net/9cySfhHshoKksSkAxwVVqw==/109951163175751210.jpg"
@@ -28,7 +28,7 @@
     "cover": "https://p2.music.126.net/wZAKvN3mbj_QmVEMd786iQ==/109951167481004451.jpg"
   },
   {
-    "id": 1299889486,
+    "id": 1299889486, "local": true,
     "name": "戒不掉（原声版）",
     "artist": "欧阳耀莹",
     "cover": "https://p1.music.126.net/h8fo0jMwdGOfAc54xvYJAg==/109951163446911351.jpg"
@@ -46,7 +46,7 @@
     "cover": "/img/music/su.jpg"
   },
   {
-    "id": 32835004,
+    "id": 32835004, "local": true,
     "name": "Unbelievable",
     "artist": "Owl City",
     "cover": "https://p1.music.126.net/7GuSnLBJ2n_9kiqgwStkyg==/7959364674173316.jpg"
@@ -58,7 +58,7 @@
     "cover": "https://p2.music.126.net/94Zjhb6ibXN9jpIjRQDbUw==/7762552092459017.jpg"
   },
   {
-    "id": 28859948,
+    "id": 28859948, "local": true,
     "name": "Turnin'",
     "artist": "Young Rising Sons",
     "cover": "https://p1.music.126.net/_3YCwTf4yAB-pMP7j70sUg==/5896680860106448.jpg"
@@ -100,7 +100,7 @@
     "cover": "https://p1.music.126.net/mxMez2A64_vH6aisW7R4XQ==/109951168299426988.jpg"
   },
   {
-    "id": 1831482748,
+    "id": 1831482748, "local": true,
     "name": "春娇与志明(抖音完整版)",
     "artist": "珊爷",
     "cover": "https://p2.music.126.net/pScUaISJzJwF5Ysp0A9PKg==/109951165825646959.jpg"
@@ -148,7 +148,7 @@
     "cover": "https://p1.music.126.net/JyPsd_g00M-4mqXLLtHncw==/5984641790343690.jpg"
   },
   {
-    "id": 438204707,
+    "id": 438204707, "local": true,
     "name": "天若有情",
     "artist": "黄丽玲",
     "cover": "https://p2.music.126.net/hzs4pVOxFKS5J64nY-rugA==/109951165958851914.jpg"
@@ -160,7 +160,7 @@
     "cover": "https://p2.music.126.net/3z0Sj3ihPvqGg5BaLfY2wA==/109951166611809914.jpg"
   },
   {
-    "id": 2101397575,
+    "id": 2101397575, "local": true,
     "name": "I Want You To Know (Hella x Pegato Remix)",
     "artist": "Pegato",
     "cover": "https://p1.music.126.net/R5jE_jqR3b2rShuC46pa3Q==/109951169067559689.jpg"
@@ -172,7 +172,7 @@
     "cover": "https://p2.music.126.net/CBx2K_jEN3SNWwYztagPPw==/109951164485969446.jpg"
   },
   {
-    "id": 1497588709,
+    "id": 1497588709, "local": true,
     "name": "给你呀（又名：for ya）",
     "artist": "蒋小呢",
     "cover": "https://p1.music.126.net/GI1Ex39x73zBT-1r7_o-sQ==/109951165494781109.jpg"
@@ -238,7 +238,7 @@
     "cover": "https://p1.music.126.net/yPISuBkO2mV69X5TSBGj-w==/109951170130642780.jpg"
   },
   {
-    "id": 29777545,
+    "id": 29777545, "local": true,
     "name": "Angel",
     "artist": "尹美莱",
     "cover": "https://p2.music.126.net/93xo1BwBz05-KsuPtooZ-w==/109951169712015231.jpg"
@@ -250,7 +250,7 @@
     "cover": "https://p1.music.126.net/4NAvaej-30Spkl5stbgwkQ==/109951171011161391.jpg"
   },
   {
-    "id": 372359,
+    "id": 372359, "local": true,
     "name": "咏春",
     "artist": "七朵组合",
     "cover": "https://p1.music.126.net/GE9hj6I9A-fL64_tFuGZAA==/109951172859327838.jpg"
@@ -286,13 +286,13 @@
     "cover": "https://p1.music.126.net/6-1VshVZQ3m8N4NWZbmWbw==/1405175875965107.jpg"
   },
   {
-    "id": 499274178,
+    "id": 499274178, "local": true,
     "name": "Friends",
     "artist": "Justin Bieber / BloodPop",
     "cover": "https://p1.music.126.net/eWHzfn-JXqi9orQybN1EUw==/109951168770712532.jpg"
   },
   {
-    "id": 464721029,
+    "id": 464721029, "local": true,
     "name": "No Matter (Basic Tape vs. Frances)",
     "artist": "Basic Tape",
     "cover": "https://p1.music.126.net/VqDGz0bgQkQgSsFYG35row==/17798894230849117.jpg"
@@ -306,6 +306,14 @@
 ];
 
   function resolve(s) {
+    // 有本地文件的直接返回完整版，不走 API
+    if (s.local) {
+      return Promise.resolve({
+        name: s.name, artist: s.artist,
+        url: '/music/' + s.id + '.mp3',
+        cover: s.cover, lrc: ''
+      });
+    }
     var meting = 'https://api.injahow.cn/meting/?server=netease&type=song&id=' + s.id;
     var fallback = 'https://music.163.com/song/media/outer/url?id=' + s.id + '.mp3';
     return fetch(meting)
