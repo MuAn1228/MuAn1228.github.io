@@ -117,7 +117,6 @@ inject:
   head:
     - '<link rel="stylesheet" href="/css/custom.css">'
     - '<link rel="stylesheet" href="/lib/APlayer.min.css">'
-    - '<link rel="stylesheet" href="/lib/leaflet/leaflet.css">'
     - '<link rel="preload" href="/lib/live2d/waifu.css" as="style" onload="this.rel=stylesheet">'
   bottom:
     - '<script src="/js/device-guard.js"></script>'
@@ -138,26 +137,8 @@ inject:
     - '<script src="/js/marquee.js"></script>'
     - '<script src="/js/github-heatmap.js"></script>'
     - '<script src="/js/github-stats.js"></script>'
-    - '<script src="/lib/leaflet/leaflet.js"></script>'
-    - '<script src="/js/travel-map.js"></script>'
     - '<script src="/js/music-toggle.js"></script>'
     - '<script src="/js/name-particles.js"></script>'
-    - '<script src="/lib/matter.min.js"></script>'
-    - '<script src="/js/skills-bucket.js"></script>'
-    - '<script src="/js/music-grid.js"></script>'
-    - '<script src="/js/music-playlist-grid.js"></script>'
-    - '<script src="/js/media-grid.js"></script>'
-    - '<script src="/js/driftwall.js"></script>'
-    - '<script src="/js/letterglitch.js"></script>'
-    - '<script src="/js/game-ballpit.js"></script>'
-    - '<script src="/js/reward-lightbox.js"></script>'
-    - '<script src="/js/arcade.js"></script>'
-    - '<script src="/js/flappy-bird.js"></script>'
-    - '<script src="/js/gesture-particles.js"></script>'
-    - '<script src="/js/pixel-snow.js" defer></script>'
-    - '<script src="/js/travel-reel.js" defer></script>'
-    - '<script src="/js/books-ascii-title.js" defer></script>'
-    - '<script src="/js/blackhole.js" defer></script>'
     
 
 # ---------- 评论系统（Giscus） ----------

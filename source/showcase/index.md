@@ -214,3 +214,8 @@ title: 展示
   }
 })();
 </script>
+
+<script src="/js/letterglitch.js"></script>
+<script src="/js/blackhole.js" defer></script>
+<script src="/lib/matter.min.js"></script>
+<script src="/js/skills-bucket.js"></script>

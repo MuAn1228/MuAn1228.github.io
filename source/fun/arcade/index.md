@@ -19,3 +19,7 @@ title: 小游戏
     <p class="particle-stage-tip">此效果需开启摄像头识别手势：握拳收拢粒子、张手散开粒子、移动手掌控制旋转。<br>仅支持 PC 网页。</p>
   </div>
 </div>
+
+<script src="/js/arcade.js"></script>
+<script src="/js/flappy-bird.js"></script>
+<script src="/js/gesture-particles.js"></script>
