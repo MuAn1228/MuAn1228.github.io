@@ -54,7 +54,7 @@
     el('mf-now-text').textContent = songs[i].name + ' - ' + songs[i].artist;
     // 有本地文件则用本地完整版，否则走网易云官方直链
     if (localIds && localIds.indexOf(songs[i].id) !== -1) {
-      audio.src = '/music/' + songs[i].id + '.mp3';
+      audio.src = 'https://cdn.jsdelivr.net/gh/MuAn1228/music-assets@master/' + songs[i].id + '.mp3';
     } else {
       audio.src = 'https://music.163.com/song/media/outer/url?id=' + songs[i].id + '.mp3';
     }

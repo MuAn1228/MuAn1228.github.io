@@ -310,7 +310,7 @@
     if (s.local) {
       return Promise.resolve({
         name: s.name, artist: s.artist,
-        url: '/music/' + s.id + '.mp3',
+        url: 'https://cdn.jsdelivr.net/gh/MuAn1228/music-assets@master/' + s.id + '.mp3',
         cover: s.cover, lrc: ''
       });
     }
