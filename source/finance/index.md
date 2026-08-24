@@ -295,6 +295,31 @@ title: 行情
       <div class="w-resize"></div>
     </section>
 
+    <!-- 09 自选基金 -->
+    <section class="widget" id="w-funds" role="region" aria-label="自选基金"
+      style="position:absolute; left:888px; top:8px; right:8px; height:736px;">
+      <div class="w-head">
+        <span class="w-num">09</span>
+        <span class="w-title">自选基金 · 净值监看</span>
+        <span class="w-asof" id="fund-asof">加载中…</span>
+        <span class="w-order">
+          <button class="w-btn" data-act="up" title="上移">▲</button>
+          <button class="w-btn" data-act="down" title="下移">▼</button>
+        </span>
+        <button class="w-btn" data-act="lock" title="锁定位置">🔓</button>
+        <button class="w-btn" data-act="min" title="最小化">—</button>
+        <button class="w-btn" data-act="zoom" title="放大">⤢</button>
+        <button class="w-btn" data-act="close" title="移除">✕</button>
+        <div class="w-drag"></div>
+      </div>
+      <div class="w-body">
+        <div class="stat-strip" id="fund-strip"></div>
+        <div id="fund-list" style="flex:1;overflow:auto;"></div>
+        <div class="chart-note">数据：天天基金 + 腾讯行情 · 净值为最近交易日公布值（QDII 为 T-1/T-2） · 点击查看基金详情</div>
+      </div>
+      <div class="w-resize"></div>
+    </section>
+
   </main>
 
   <!-- 脚标：数据源状态 + 功能按钮 -->

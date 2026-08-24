@@ -577,8 +577,56 @@
   }
 
   // ============================================================
-  //  热 力 图 (Squarified Treemap 简化版)
+  //  热 力 图 (标准 Squarified Treemap, Bruls et al.)
   // ============================================================
+  function worstRatio(row, rowSum, side, scale) {
+    var max = -Infinity, min = Infinity;
+    for (var i = 0; i < row.length; i++) {
+      var a = row[i].value * scale;
+      if (a > max) max = a;
+      if (a < min) min = a;
+    }
+    var s = rowSum * scale;
+    if (s <= 0) return Infinity;
+    return Math.max((side * side * max) / (s * s), (s * s) / (side * side * min));
+  }
+
+  // items: [{value, data}] → [{data, x, y, w, h}]，填充矩形 (x,y,w,h)
+  function squarifyLayout(items, x, y, w, h) {
+    var out = [];
+    var remaining = items.slice().sort(function (a, b) { return b.value - a.value; });
+    var rx = x, ry = y, rw = w, rh = h;
+    var total = 0;
+    remaining.forEach(function (it) { total += it.value; });
+    while (remaining.length > 0 && rw > 2 && rh > 2 && total > 0) {
+      var vertical = rw >= rh;
+      var side = vertical ? rh : rw;
+      var scale = (rw * rh) / total;
+      var row = [], rowSum = 0, prevWorst = Infinity;
+      while (remaining.length > 0) {
+        var next = remaining[0];
+        var cand = rowSum + next.value;
+        var wst = worstRatio(row.concat([next]), cand, side, scale);
+        if (row.length > 0 && wst > prevWorst) break;
+        row.push(next);
+        rowSum = cand;
+        prevWorst = wst;
+        remaining.shift();
+      }
+      var strip = (rowSum * scale) / side;
+      var offset = 0;
+      row.forEach(function (it) {
+        var len = (it.value * scale) / strip;
+        if (vertical) out.push({ data: it.data, x: rx, y: ry + offset, w: strip, h: len });
+        else out.push({ data: it.data, x: rx + offset, y: ry, w: len, h: strip });
+        offset += len;
+      });
+      if (vertical) { rx += strip; rw -= strip; } else { ry += strip; rh -= strip; }
+      total -= rowSum;
+    }
+    return out;
+  }
+
   function renderHeatmap() {
     var wrap = byId('hm-wrap');
     if (!wrap) return;
@@ -599,115 +647,72 @@
       return;
     }
 
-    var groups = {};
-    var sectorOrder = ['tech', 'energy', 'finance'];
-    sectorOrder.forEach(function (k) { groups[k] = []; });
-    filtered.forEach(function (s) {
-      if (!groups[s.sector]) groups[s.sector] = [];
-      groups[s.sector].push(s);
-    });
-
-    var totalMkt = 0;
-    var sectorSizes = {};
-    Object.keys(groups).forEach(function (k) {
-      if (groups[k].length === 0) return;
-      var sum = 0;
-      groups[k].forEach(function (s) { sum += s.mktCap; });
-      sectorSizes[k] = sum;
-      totalMkt += sum;
-    });
-
     var wrapW = wrap.clientWidth || 440;
     var wrapH = wrap.clientHeight || 380;
     if (wrapW < 100) wrapW = 440;
     if (wrapH < 100) wrapH = 380;
-    var pad = 1;
-    var titleH = 14;
+
+    var sectorNames = { tech: 'AI·科技', energy: '能源', finance: '金融' };
+    var sectorOrder = ['tech', 'energy', 'finance'];
+    var groups = [];
+    sectorOrder.forEach(function (k) {
+      var stocks = filtered.filter(function (s) { return s.sector === k; });
+      if (stocks.length === 0) return;
+      var cap = 0;
+      stocks.forEach(function (s) { cap += showArea ? s.mktCap : 1; });
+      groups.push({ key: k, stocks: stocks, value: cap });
+    });
+
+    var pad = 2, titleH = 15;
+    var gRects = squarifyLayout(
+      groups.map(function (g) { return { value: g.value, data: g }; }),
+      pad, pad, wrapW - pad * 2, wrapH - pad * 2
+    );
 
     var html = '';
-    var curX = pad, curY = pad;
-    var sectorNames = { tech: 'AI·科技', energy: '能源', finance: '金融' };
-
-    Object.keys(groups).forEach(function (k) {
-      var stocks = groups[k];
-      if (stocks.length === 0) return;
-      var areaFrac = sectorSizes[k] / totalMkt;
-      var availW = wrapW - 2 * pad;
-      var sectorW = Math.max(80, Math.round(availW * Math.sqrt(areaFrac)));
-      var sectorH = Math.max(60, Math.round(areaFrac * wrapH));
-      if (curX + sectorW > wrapW - pad) { sectorW = wrapW - pad - curX; }
-      if (sectorH > wrapH - pad - curY) sectorH = wrapH - pad - curY;
-
+    gRects.forEach(function (gr) {
+      var g = gr.data;
       var sumPct = 0;
-      stocks.forEach(function (s) { sumPct += s.chgPct; });
-      var avgPct = sumPct / stocks.length;
+      g.stocks.forEach(function (s) { sumPct += s.chgPct; });
+      var avgPct = g.stocks.length ? sumPct / g.stocks.length : 0;
+      var gx = gr.x.toFixed(1), gy = gr.y.toFixed(1);
+      var gw = Math.max(0, gr.w - 1), gh = Math.max(0, gr.h - 1);
 
-      var showCount = 8;
+      html += '<div class="hm-group" style="left:' + gx + 'px;top:' + gy + 'px;width:' + gw.toFixed(1) + 'px;height:' + gh.toFixed(1) + 'px;">';
+      html += '<div class="hm-gtitle" title="' + (sectorNames[g.key] || g.key) + ' · ' + g.stocks.length + ' 只 · 均 ' + (avgPct >= 0 ? '+' : '') + avgPct.toFixed(2) + '%">' +
+        (sectorNames[g.key] || g.key) + ' · ' + g.stocks.length + ' 只 · 均 ' + (avgPct >= 0 ? '+' : '') + avgPct.toFixed(2) + '%</div>';
 
-      html += '<div class="hm-group" style="left:' + curX + 'px;top:' + curY + 'px;width:' + sectorW + 'px;height:' + sectorH + 'px;">';
-      html += '<div class="hm-gtitle" title="' + (sectorNames[k] || k) + ' · ' + stocks.length + ' 只 · 均 ' + (avgPct >= 0 ? '+' : '') + avgPct.toFixed(2) + '%">' +
-        (sectorNames[k] || k) + ' · ' + stocks.length + ' 只 · 均 ' + (avgPct >= 0 ? '+' : '') + avgPct.toFixed(2) + '%' +
-        '</div>';
-
-      var totalCap = 0;
-      stocks.forEach(function (s) { totalCap += s.mktCap; });
-
-      var tileX = 1, tileY = titleH + 1;
-      var maxTileH = sectorH - titleH - 2;
-
-      var sorted = stocks.slice().sort(function (a, b) { return b.mktCap - a.mktCap; });
-      var shown = sorted.slice(0, showCount);
-      var rest = sorted.slice(showCount);
-
-      shown.forEach(function (s) {
-        var frac = s.mktCap / totalCap;
-        var tileW = Math.max(40, Math.round(sectorW * Math.sqrt(frac) * 2));
-        var tileH = Math.max(30, Math.round(frac * maxTileH * 3));
-        if (tileX + tileW > sectorW - 1) { tileX = 1; tileY += tileH + 1; tileH = Math.max(20, Math.round(frac * maxTileH * 2)); }
-        if (tileY + tileH > sectorH - 1) tileH = Math.max(16, sectorH - 1 - tileY);
-        if (tileH < 14) tileH = 14;
-
-        var bg = getTileColor(s.chgPct);
-        var textColor = getTextColor(s.chgPct);
-
-        html += '<div class="hm-tile" tabindex="0" role="button" data-sym="' + s.ticker + '" aria-label="' + s.ticker + ' ' + s.name + ' 最新 ' + s.price + ' ' + fmtPct(s.chgPct) + '"' +
-          ' title="' + s.ticker + ' ' + s.name + ' · 最新 ' + fmtPrice(s.price) + ' ' + fmtPct(s.chgPct) + ' · 点击查看来源"' +
-          ' style="left:' + tileX + 'px;top:' + tileY + 'px;width:' + tileW + 'px;height:' + tileH + 'px;background:' + bg + ';color:' + textColor + ';">' +
-          '<span class="ht">' + s.ticker + '</span>' +
-          '<span class="hp">' + fmtPct(s.chgPct) + '</span>' +
-          (tileH > 30 ? '<span class="hl">' + fmtPrice(s.price) + '</span>' : '') +
-          (tileH > 40 ? '<span class="hn">' + s.name + '</span>' : '') +
-          '</div>';
-
-        tileX += tileW + 1;
-        if (tileX >= sectorW - 1) { tileX = 1; tileY += tileH + 1; }
-      });
-
-      if (rest.length > 0) {
-        var sumRest = 0;
-        rest.forEach(function (s) { sumRest += s.chgPct; });
-        var avgRest = sumRest / rest.length;
-        if (tileX > 1) { tileX = 1; tileY += 25; }
-        var aggH = Math.max(20, sectorH - 1 - tileY);
-        if (aggH > 14) {
-          html += '<div class="hm-tile agg" tabindex="0" role="button" aria-label="其他 ' + rest.length + ' 只，点击切换列表视图"' +
-            ' style="left:' + tileX + 'px;top:' + tileY + 'px;width:' + (sectorW - 2) + 'px;height:' + aggH + 'px;">' +
-            '<span class="ht">其他 ' + rest.length + ' 只</span>' +
-            '<span class="hp">' + (avgRest >= 0 ? '+' : '') + avgRest.toFixed(2) + '%</span>' +
-            '</div>';
-        }
+      var ih = gh - titleH;
+      if (ih > 4 && gw > 4) {
+        var tiles = squarifyLayout(
+          g.stocks.map(function (s) { return { value: showArea ? s.mktCap : 1, data: s }; }),
+          1, titleH + 1, gw - 1, ih - 1
+        );
+        tiles.forEach(function (t) {
+          var s = t.data;
+          var tw = t.w - 1, th = t.h - 1;
+          if (tw < 5 || th < 5) return;
+          var bg = getTileColor(s.chgPct);
+          var textColor = getTextColor(s.chgPct);
+          var inner = '<span class="ht">' + s.ticker + '</span>';
+          if (th > 26) inner += '<span class="hp">' + fmtPct(s.chgPct) + '</span>';
+          if (th > 40) inner += '<span class="hl">' + fmtPrice(s.price) + '</span>';
+          if (th > 54 && tw > 64) inner += '<span class="hn">' + s.name + '</span>';
+          html += '<div class="hm-tile" tabindex="0" role="button" data-sym="' + s.ticker + '"' +
+            ' aria-label="' + s.ticker + ' ' + s.name + ' 最新 ' + s.price + ' ' + fmtPct(s.chgPct) + '"' +
+            ' title="' + s.ticker + ' ' + s.name + ' · 最新 ' + fmtPrice(s.price) + ' ' + fmtPct(s.chgPct) + ' · 点击查看来源"' +
+            ' style="left:' + t.x.toFixed(1) + 'px;top:' + t.y.toFixed(1) + 'px;width:' + tw.toFixed(1) + 'px;height:' + th.toFixed(1) + 'px;background:' + bg + ';color:' + textColor + ';">' +
+            inner + '</div>';
+        });
       }
-
       html += '</div>';
-      curX += sectorW + pad;
-      if (curX >= wrapW - 80) { curX = pad; curY += sectorH + pad; }
     });
 
     wrap.innerHTML = html;
 
     var areaLabel = byId('area-label');
     if (areaLabel) {
-      areaLabel.textContent = showArea ? '面积：总市值（美元） · 悬停查看报价 · 点击查看来源' : '颜色：日涨跌幅（红涨绿跌，强度=幅度） · 点击查看来源';
+      areaLabel.textContent = showArea ? '面积：总市值（美元） · 悬停查看报价 · 点击查看来源' : '面积：等权 · 颜色：日涨跌幅 · 点击查看来源';
     }
   }
 
@@ -1214,6 +1219,173 @@
   }
 
   // ============================================================
+  //  自 选 基 金 (天天基金 + 腾讯行情, script 标签加载天然免 CORS)
+  // ============================================================
+  var FUNDS = [
+    { code: '017811', name: '东方人工智能主题混合C', short: '东方AI主题C', qdii: false },
+    { code: '016370', name: '信澳业绩驱动混合A', short: '信澳业绩驱动A', qdii: false },
+    { code: '019172', name: '摩根纳斯达克100指数(QDII)A', short: '摩根纳指100A', qdii: true },
+    { code: '017641', name: '摩根标普500指数(QDII)A', short: '摩根标普500A', qdii: true },
+  ];
+  var lastFundFetch = null;
+
+  function loadScriptTag(url, charset, timeoutMs) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      var timer = setTimeout(function () {
+        s.remove();
+        reject(new Error('timeout'));
+      }, timeoutMs || 10000);
+      s.onload = function () { clearTimeout(timer); s.remove(); resolve(); };
+      s.onerror = function () { clearTimeout(timer); s.remove(); reject(new Error('load error')); };
+      if (charset) s.charset = charset;
+      s.src = url;
+      document.head.appendChild(s);
+    });
+  }
+
+  // 历史净值 + 阶段收益 (天天基金 pingzhongdata，串行加载避免全局变量互相覆盖)
+  async function fetchFundHistories() {
+    for (var i = 0; i < FUNDS.length; i++) {
+      var f = FUNDS[i];
+      try {
+        await loadScriptTag('https://fund.eastmoney.com/pingzhongdata/' + f.code + '.js?v=' + Date.now(), 'utf-8', 10000);
+        var w = window;
+        var trend = w.Data_netWorthTrend || [];
+        f.trend = trend.slice(-90).map(function (p) { return { t: p.x, nav: p.y }; });
+        if (w.fS_name) f.nameOfficial = w.fS_name;
+        f.syl = { m1: w.syl_1y, m3: w.syl_3y, m6: w.syl_6y, y1: w.syl_1n };
+        ['Data_netWorthTrend', 'Data_ACWorthTrend', 'Data_grandTotal', 'Data_rateInSimilarType',
+         'Data_rateInSimilarPersent', 'Data_fluctuationScale', 'Data_holderStructure', 'Data_assetAllocation',
+         'Data_performanceEvaluation', 'Data_currentFundManager', 'Data_buySedemption', 'Data_fundSharesPositions',
+         'fS_name', 'fS_code', 'syl_1y', 'syl_3y', 'syl_6y', 'syl_1n', 'fund_sourceRate', 'fund_Rate',
+         'fund_minsg', 'stockCodes', 'ishb', 'zqCodes', 'stockCodesNew', 'zqCodesNew', 'Data_currentFundManagerInfo'].forEach(function (k) {
+          try { delete w[k]; } catch (e) { w[k] = undefined; }
+        });
+      } catch (e) {
+        console.warn('[fund] 历史净值 ' + f.code + ': ' + e.message);
+      }
+    }
+    renderFunds();
+  }
+
+  // 最新净值 + 日涨跌 (腾讯行情批量，一次请求)
+  async function fetchFundQuotes() {
+    try {
+      var codes = FUNDS.map(function (f) { return 'jj' + f.code; }).join(',');
+      await loadScriptTag('https://qt.gtimg.cn/q=' + codes + '&r=' + Date.now(), 'GBK', 8000);
+      FUNDS.forEach(function (f) {
+        var raw = window['v_jj' + f.code];
+        if (!raw) return;
+        var p = raw.split('~');
+        // 字段: code~名称~估值~估算涨跌~~最新净值~累计净值~日涨跌%~净值日期~
+        var est = parseFloat(p[2]);
+        f.est = est > 0 ? est : null;
+        var estPct = parseFloat(p[3]);
+        f.estPct = est > 0 && !isNaN(estPct) ? estPct : null;
+        f.nav = parseFloat(p[5]) || null;
+        f.accNav = parseFloat(p[6]) || null;
+        f.dayPct = parseFloat(p[7]);
+        f.navDate = p[8] || '';
+        try { delete window['v_jj' + f.code]; } catch (e) {}
+      });
+      lastFundFetch = new Date();
+    } catch (e) {
+      console.warn('[fund] 行情: ' + e.message);
+    }
+    renderFunds();
+  }
+
+  function renderFunds() {
+    var list = byId('fund-list');
+    if (!list) return;
+
+    // 汇总条
+    var strip = byId('fund-strip');
+    var valid = FUNDS.filter(function (f) { return typeof f.dayPct === 'number' && !isNaN(f.dayPct); });
+    if (strip) {
+      var html = '';
+      if (valid.length > 0) {
+        var avg = 0, best = valid[0], worst = valid[0];
+        valid.forEach(function (f) {
+          avg += f.dayPct;
+          if (f.dayPct > best.dayPct) best = f;
+          if (f.dayPct < worst.dayPct) worst = f;
+        });
+        avg /= valid.length;
+        var stats = [
+          { label: '日涨跌均值 (' + valid.length + '只)', value: fmtPct(avg), cls: avg >= 0 ? 'up' : 'down' },
+          { label: '最佳', value: best.short + ' ' + fmtPct(best.dayPct), cls: best.dayPct >= 0 ? 'up' : 'down' },
+          { label: '最差', value: worst.short + ' ' + fmtPct(worst.dayPct), cls: worst.dayPct >= 0 ? 'up' : 'down' },
+          { label: '更新', value: lastFundFetch ? fmtTime(lastFundFetch) : '--', cls: '' },
+        ];
+        stats.forEach(function (d) {
+          html += '<div class="stat"><div class="sl">' + d.label + '</div><div class="sv ' + d.cls + '">' + d.value + '</div></div>';
+        });
+      } else {
+        html = '<div class="stat"><div class="sl">状态</div><div class="sv">加载中…</div></div>';
+      }
+      strip.innerHTML = html;
+    }
+
+    // 基金卡片
+    var html2 = '';
+    FUNDS.forEach(function (f) {
+      var pctCls = (f.dayPct || 0) >= 0 ? 'up' : 'down';
+      var tags = '';
+      if (f.syl) {
+        [['近1月', f.syl.m1], ['近3月', f.syl.m3], ['近6月', f.syl.m6], ['近1年', f.syl.y1]].forEach(function (pair) {
+          var v = parseFloat(pair[1]);
+          if (isNaN(v)) return;
+          tags += '<span class="' + (v >= 0 ? 'up' : 'down') + '">' + pair[0] + ' ' + (v >= 0 ? '+' : '') + v.toFixed(2) + '%</span>';
+        });
+      }
+      html2 += '<div class="fd-item" data-code="' + f.code + '" tabindex="0" role="button" title="' + f.name + ' · 点击查看天天基金详情">' +
+        '<div class="fd-top"><span class="fd-name">' + f.short + '</span><span class="fd-code">' + f.code + (f.qdii ? ' · QDII' : '') + '</span>' +
+        '<span class="fd-pct ' + pctCls + '">' + (typeof f.dayPct === 'number' && !isNaN(f.dayPct) ? fmtPct(f.dayPct) : '--') + '</span></div>' +
+        '<div class="fd-mid"><div class="fd-nums">' +
+        '<div class="fd-nav">' + (f.nav ? f.nav.toFixed(4) : '--') + '</div>' +
+        '<div class="fd-date">净值 ' + (f.navDate || '--') + '</div></div>' +
+        '<canvas class="fd-spark" id="spark-' + f.code + '"></canvas></div>' +
+        (tags ? '<div class="fd-tags">' + tags + '</div>' : '') +
+        '</div>';
+    });
+    list.innerHTML = html2;
+    FUNDS.forEach(drawFundSpark);
+
+    var asof = byId('fund-asof');
+    if (asof) {
+      asof.textContent = lastFundFetch ? '净值见各行 · ' + fmtTime(lastFundFetch) + ' 更新' : '加载中…';
+    }
+  }
+
+  function drawFundSpark(f) {
+    var cv = byId('spark-' + f.code);
+    if (!cv || !f.trend || f.trend.length < 5) return;
+    var ctx = cv.getContext('2d');
+    if (!ctx) return;
+    var W = cv.clientWidth || 110, H = cv.clientHeight || 34;
+    cv.width = W * 2;
+    cv.height = H * 2;
+    var navs = f.trend.map(function (p) { return p.nav; });
+    var min = Math.min.apply(null, navs);
+    var max = Math.max.apply(null, navs);
+    var range = max - min || 1;
+    var up = navs[navs.length - 1] >= navs[0];
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.beginPath();
+    ctx.strokeStyle = up ? '#FF4D4F' : '#00C176';
+    ctx.lineWidth = 2;
+    for (var i = 0; i < navs.length; i++) {
+      var x = (i / (navs.length - 1)) * (cv.width - 4) + 2;
+      var y = cv.height - 4 - ((navs[i] - min) / range) * (cv.height - 8);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  // ============================================================
   //  全 球 时 钟
   // ============================================================
   var clockInterval = null;
@@ -1393,7 +1565,8 @@
     qsa('.widget').forEach(function (w) {
       defaultLayout[w.id] = {
         left: w.style.left, top: w.style.top,
-        width: w.style.width, height: w.style.height
+        width: w.style.width, height: w.style.height,
+        right: w.style.right
       };
     });
   }
@@ -1404,6 +1577,7 @@
       s[w.id] = {
         left: w.style.left, top: w.style.top,
         width: w.style.width, height: w.style.height,
+        right: w.style.right,
         hidden: w.style.display === 'none',
         locked: w.classList.contains('locked'),
         min: w.classList.contains('min')
@@ -1423,6 +1597,7 @@
       if (c.top) w.style.top = c.top;
       if (c.width) w.style.width = c.width;
       if (c.height) w.style.height = c.height;
+      w.style.right = c.right || '';
       w.style.display = c.hidden ? 'none' : '';
       w.classList.toggle('locked', !!c.locked);
       w.classList.toggle('min', !!c.min);
@@ -1472,11 +1647,13 @@
     var j = i + dir;
     if (i < 0 || j < 0 || j >= widgets.length) return;
     var other = widgets[j];
-    var g = { left: w.style.left, top: w.style.top, width: w.style.width, height: w.style.height };
+    var g = { left: w.style.left, top: w.style.top, width: w.style.width, height: w.style.height, right: w.style.right };
     w.style.left = other.style.left; w.style.top = other.style.top;
     w.style.width = other.style.width; w.style.height = other.style.height;
+    w.style.right = other.style.right;
     other.style.left = g.left; other.style.top = g.top;
     other.style.width = g.width; other.style.height = g.height;
+    other.style.right = g.right;
     saveLayout();
     reflowGrid();
     redrawCharts();
@@ -1595,34 +1772,38 @@
     }, 120);
   }
 
-  // 预设布局
+  // 预设布局 (width = -1 表示右对齐自适应: 右列组件)
   var PRESETS = {
     global: {
-      show: ['w-heatmap', 'w-breadth', 'w-news', 'w-sector', 'w-aapl', 'w-metal', 'w-clock', 'w-indices'],
+      show: ['w-heatmap', 'w-breadth', 'w-news', 'w-sector', 'w-aapl', 'w-metal', 'w-clock', 'w-indices', 'w-funds'],
       geo: {
         'w-heatmap': [8, 8, 568, 544], 'w-breadth': [584, 8, 280, 176], 'w-news': [584, 192, 280, 360],
         'w-sector': [8, 560, 568, 200], 'w-aapl': [584, 560, 280, 240],
-        'w-metal': [8, 768, 568, 340], 'w-clock': [584, 808, 280, 340], 'w-indices': [8, 1116, 856, 360]
+        'w-metal': [8, 768, 568, 340], 'w-clock': [584, 808, 280, 340], 'w-indices': [8, 1116, 856, 360],
+        'w-funds': [888, 8, -1, 736]
       }
     },
     stock: {
-      show: ['w-heatmap', 'w-breadth', 'w-news', 'w-sector', 'w-aapl'],
+      show: ['w-heatmap', 'w-breadth', 'w-news', 'w-sector', 'w-aapl', 'w-funds'],
       geo: {
         'w-heatmap': [8, 8, 568, 544], 'w-breadth': [584, 8, 280, 176], 'w-news': [584, 192, 280, 360],
-        'w-sector': [8, 560, 568, 200], 'w-aapl': [584, 560, 280, 240]
+        'w-sector': [8, 560, 568, 200], 'w-aapl': [584, 560, 280, 240],
+        'w-funds': [888, 8, -1, 736]
       }
     },
     metal: {
-      show: ['w-heatmap', 'w-breadth', 'w-metal', 'w-clock'],
+      show: ['w-heatmap', 'w-breadth', 'w-metal', 'w-clock', 'w-funds'],
       geo: {
         'w-heatmap': [8, 8, 568, 368], 'w-breadth': [584, 8, 280, 176],
-        'w-metal': [8, 384, 568, 360], 'w-clock': [584, 192, 280, 552]
+        'w-metal': [8, 384, 568, 360], 'w-clock': [584, 192, 280, 552],
+        'w-funds': [888, 8, -1, 552]
       }
     },
     news: {
-      show: ['w-heatmap', 'w-breadth', 'w-news'],
+      show: ['w-heatmap', 'w-breadth', 'w-news', 'w-funds'],
       geo: {
-        'w-heatmap': [8, 8, 568, 544], 'w-news': [584, 8, 280, 544], 'w-breadth': [584, 560, 280, 200]
+        'w-heatmap': [8, 8, 568, 544], 'w-news': [584, 8, 280, 544], 'w-breadth': [584, 560, 280, 200],
+        'w-funds': [888, 8, -1, 560]
       }
     }
   };
@@ -1639,7 +1820,13 @@
         var g = p.geo[w.id];
         w.style.left = g[0] + 'px';
         w.style.top = g[1] + 'px';
-        w.style.width = g[2] + 'px';
+        if (g[2] === -1) {
+          w.style.width = '';
+          w.style.right = '8px';
+        } else {
+          w.style.width = g[2] + 'px';
+          w.style.right = '';
+        }
         w.style.height = g[3] + 'px';
       }
       syncWidgetButtons(w);
@@ -1656,6 +1843,7 @@
       if (d) {
         w.style.left = d.left; w.style.top = d.top;
         w.style.width = d.width; w.style.height = d.height;
+        w.style.right = d.right || '';
       }
       w.style.display = '';
       w.classList.remove('locked', 'min', 'zoomed');
@@ -1708,6 +1896,8 @@
     fetchQuotes(manual);
     fetchChartData();
     fetchNews(manual);
+    fetchFundQuotes();
+    if (manual) fetchFundHistories();
   }
 
   function toggleHelp(force) {
@@ -1785,6 +1975,12 @@
       if (nw) {
         var link = nw.getAttribute('data-link');
         if (link) window.open(link, '_blank');
+        return;
+      }
+      // 基金条目点击 → 天天基金详情页
+      var fd = e.target.closest('.fd-item');
+      if (fd) {
+        window.open('https://fund.eastmoney.com/' + fd.getAttribute('data-code') + '.html', '_blank');
         return;
       }
     });
@@ -2018,6 +2214,8 @@
     refreshTimer = setInterval(function () { fetchQuotes(false); }, REFRESH_INTERVAL);
     chartTimer = setInterval(function () { if (!livePaused) fetchChartData(); }, CHART_INTERVAL);
     newsTimer = setInterval(function () { if (!livePaused) fetchNews(false); }, NEWS_INTERVAL);
+    // 基金净值 5 分钟刷新一次 (净值盘中不变化，低频即可)
+    setInterval(function () { if (!livePaused) fetchFundQuotes(); }, 300000);
   }
 
   // ============================================================
@@ -2033,6 +2231,7 @@
     // 初始渲染 (Demo 数据，实时数据到达后覆盖)
     renderAll();
     renderClock();
+    renderFunds();
     bindEvents();
     updateAddMenu();
     reflowGrid();
@@ -2040,6 +2239,7 @@
     // 启动实时数据
     updateStatus('连接中', '正在连接实时数据源…');
     refreshAll(false);
+    fetchFundHistories(); // 历史净值仅加载一次 (量较大)
     startTimers();
     // 指数开闭市状态每分钟按本地时钟重算
     setInterval(renderGlobalIndices, 60000);
