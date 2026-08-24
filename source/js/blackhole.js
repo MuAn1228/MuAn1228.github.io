@@ -16,7 +16,7 @@
   var config = {
     blackHoleRadius: 1.0,
     diskInner: 3.0,
-    diskOuter: 8.0
+    diskOuter: 10.0
   };
 
   import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js').then(function (THREE) {
@@ -27,8 +27,8 @@
 
     // 手动轨道控制状态：左键旋转、右键平移、滚轮缩放
     var target = new THREE.Vector3(0, 0.5, 0);
-    // 初始相机放得更远，进入页面时黑洞看起来更小（可滚轮放大）
-    var sph = new THREE.Spherical().setFromVector3(new THREE.Vector3(0, 5, 55).sub(target));
+    // 正对赤道面，距离50使黑洞适中
+    var sph = new THREE.Spherical().setFromVector3(new THREE.Vector3(0, 0.5, 50).sub(target));
     // 初始相机位置
     var camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
     camera.position.copy(target).add(new THREE.Vector3().setFromSpherical(sph));
@@ -36,7 +36,7 @@
 
     var renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.domElement.className = 'blackhole-bg';
     container.appendChild(renderer.domElement);
 
@@ -76,7 +76,7 @@
     renderer.domElement.addEventListener('wheel', function (e) {
       e.preventDefault();
       sph.radius *= (1 + (e.deltaY > 0 ? 1 : -1) * 0.08);
-      sph.radius = Math.max(5, Math.min(60, sph.radius));
+      sph.radius = Math.max(1.5, Math.min(60, sph.radius));
     }, { passive: false });
 
     var blackHoleMaterial = new THREE.ShaderMaterial({
@@ -153,7 +153,7 @@
         '      else if (colorSeed < 0.7) tint = vec3(1.0,0.95,0.8);',
         '      else if (colorSeed < 0.9) tint = vec3(1.0,0.7,0.4);',
         '      else tint = vec3(1.0,0.3,0.2);',
-        '      float intensity = (i == 1.0) ? 3.5 : 1.8;',
+        '      float intensity = (i == 1.0) ? 3.0 : 1.5;',
         '      col += tint * starShape * pulse * intensity;',
         '    }',
         '  }',
@@ -170,7 +170,7 @@
         '  float intensity = (0.4 + 0.6 * gas) * (0.3 + 0.7 * ringPattern);',
         '  float outerFade = smoothstep(uDiskOuter, uDiskOuter - 3.0, distToCenter);',
         '  float innerFade = smoothstep(uDiskInner - 0.2, uDiskInner + 0.8, distToCenter);',
-        '  vec3 colInner = vec3(1.0,0.98,0.95); vec3 colMid = vec3(1.0,0.7,0.3); vec3 colOuter = vec3(0.9,0.2,0.1);',
+        '  vec3 colInner = vec3(1.0,0.95,0.9); vec3 colMid = vec3(1.0,0.7,0.3); vec3 colOuter = vec3(0.9,0.2,0.1);',
         '  float t = (distToCenter - uDiskInner) / (uDiskOuter - uDiskInner);',
         '  vec3 baseColor = mix(colInner, colMid, smoothstep(0.0,0.3,t));',
         '  baseColor = mix(baseColor, colOuter, smoothstep(0.3,1.0,t));',
@@ -182,7 +182,7 @@
         '  if (doppler > 0.0) shiftColor += vec3(0.1,0.1,0.2) * doppler;',
         '  else shiftColor *= vec3(1.0,0.92,0.85);',
         '  float alpha = innerFade * outerFade * intensity;',
-        '  return vec4(shiftColor * beam * 2.4, alpha);',
+        '  return vec4(shiftColor * beam * 2.0, alpha);',
         '}',
         'void main() {',
         '  vec2 uv = vUv * 2.0 - 1.0;',
@@ -229,16 +229,16 @@
         '    vec3 starColor = getStarField(currentDir);',
         '    finalColor += starColor * (1.0 - accAlpha);',
         '  }',
-        '  vec3 glowColor = mix(vec3(1.0,0.6,0.3), vec3(0.5,0.85,1.0), 1.0/(glow+1.0));',
-        '  finalColor += glowColor * glow * 0.04;',
-        '  finalColor *= 1.05;',
+        '  vec3 glowColor = mix(vec3(1.0,0.5,0.2), vec3(0.5,0.8,1.0), 1.0/(glow+1.0));',
+        '  finalColor += glowColor * glow * 0.025;',
+        '  finalColor *= 0.8;',
         '  // 保持深空纯黑（还原 BH+disk 原始观感）',
         '  float a = 2.51; float b = 0.03; float c = 2.43; float d = 0.59; float e = 0.14;',
         '  finalColor = clamp((finalColor * (a * finalColor + b)) / (finalColor * (c * finalColor + d) + e), 0.0, 1.0);',
         '  finalColor = pow(finalColor, vec3(1.0 / 2.2));',
-        '  // 轻微暗角即可，不再过度压暗',
+        '  // 原版晕影',
         '  float distFromCenter = length(uv);',
-        '  finalColor *= smoothstep(1.9, 0.7, distFromCenter) * 0.82 + 0.18;',
+        '  finalColor *= smoothstep(2.2, 0.6, distFromCenter);',
         '  gl_FragColor = vec4(finalColor, 1.0);',
         '}'
       ].join('\n')

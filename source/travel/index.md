@@ -12,4 +12,4 @@ title: 旅行
 
 <script src="/lib/leaflet/leaflet.js"></script>
 <script src="/js/travel-map.js"></script>
-<script src="/js/travel-reel.js" defer></script>
+<script src="/js/travel-reel.js"></script>
