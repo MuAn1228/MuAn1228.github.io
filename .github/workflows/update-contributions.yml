@@ -1,6 +1,8 @@
 name: Update Contributions & Deploy
 
 on:
+  push:
+    branches: [main]     # 推送 main 自动部署
   schedule:
     - cron: '17 0 * * *'  # 每天 UTC 00:17（北京时间 08:17）
   workflow_dispatch:       # 支持手动触发
