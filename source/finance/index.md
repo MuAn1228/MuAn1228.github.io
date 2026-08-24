@@ -2,7 +2,7 @@
 title: 交易
 ---
 
-<link rel="stylesheet" href="/css/finance.css">
+<link rel="stylesheet" href="/css/finance.css?v=3">
 
 {% raw %}
 <div class="gmt-term" id="gmt-term">

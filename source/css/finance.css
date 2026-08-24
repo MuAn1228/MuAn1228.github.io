@@ -351,19 +351,45 @@ html:has(.gmt-term) #body-wrap { padding: 0 !important; margin: 0 !important; }
 html:has(.gmt-term) #content-inner > .page:first-child { padding: 0 !important; }
 /* 隐藏页脚版权等 */
 html:has(.gmt-term) #footer { display: none !important; }
-/* 隐藏导航栏 */
-html:has(.gmt-term) #nav { display: none !important; }
-/* 隐藏右侧设置/回到顶部按钮 */
-html:has(.gmt-term) #rightside { display: none !important; }
+/* 顶部标题区（导航栏 ~ 全球市场终端黄色条 之间）整体用图片背景 */
+html:has(.gmt-term) #page-header {
+  background:
+    linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)),
+    url(/img/finance/header-bg.png) center / cover no-repeat !important;
+  background-color: #000 !important;
+}
+/* 去掉原生暗色遮罩，让图片完整显示 */
+html:has(.gmt-term) #page-header:not(.not-top-img):before {
+  background: transparent !important;
+}
+/* 导航栏背景透明，图片由 #page-header 整块透出，视觉无缝 */
+html:has(.gmt-term) #nav {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+/* 大标题「交易」改黑色（提高特异性，双选择器兜底 dark 模式） */
+html:has(.gmt-term) #page-header #page-site-info #site-title,
+html:has(.gmt-term) #page-site-info #site-title,
+[data-theme='dark'] html:has(.gmt-term) #page-site-info #site-title {
+  color: #000 !important;
+  text-shadow: none !important;
+}
+html:has(.gmt-term) #nav #blog-info,
+html:has(.gmt-term) #nav a,
+html:has(.gmt-term) #nav span.site-page,
+html:has(.gmt-term) #nav #toggle-menu i {
+  color: #000 !important;
+}
+html:has(.gmt-term) #nav a:hover,
+html:has(.gmt-term) #nav span.site-page:hover,
+html:has(.gmt-term) #nav #toggle-menu:hover {
+  color: #333 !important;
+}
 /* 隐藏live2d等装饰 */
 html:has(.gmt-term) #live2d-widget { display: none !important; }
 /* 调整body顶部margin */
 html:has(.gmt-term) body { padding-top: 0 !important; }
-/* 隐藏音乐播放器(页脚) */
-html:has(.gmt-term) #footer-music, html:has(.gmt-term) .music-player, html:has(.gmt-term) [class*="aplayer"] { display: none !important; }
 /* 隐藏评论区 */
 html:has(.gmt-term) #post-comment, html:has(.gmt-term) .comments, html:has(.gmt-term) [id*="post-comment"], html:has(.gmt-term) [id*="comments"] { display: none !important; }
 /* 隐藏版权信息 */
 html:has(.gmt-term) #copyright, html:has(.gmt-term) .copyright { display: none !important; }
-/* 隐藏音乐播放器浮动按钮 */
-html:has(.gmt-term) [class*="music"], html:has(.gmt-term) [id*="music"], html:has(.gmt-term) .aplayer, html:has(.gmt-term) #aplayer, html:has(.gmt-term) [class*="aplayer-music"] { display: none !important; }
