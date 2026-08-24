@@ -70,6 +70,17 @@
 - 文案存档在本地 Obsidian：`D:\obsidian\Obsidian Vault\博客\关于本站.md`（含原始段落；用户后续改文字再同步回 `source/about-site/index.md`，网页端版本已润色+分节）。
 - 该页为标准页面布局，标题由 name-particles 粒子化；无独立 canvas 横幅。
 
+## 行情终端模块（/finance/，美股仪表盘）
+- 文件：`source/finance/index.md`（HTML 结构）+ `source/js/finance-tracker.js`（数据引擎+布局管理器+渲染，单文件 IIFE）+ `source/css/finance.css`。全屏暗色终端风格，URL `/finance/`。
+- **数据源（2026-08-24 定案，别再走弯路）**：
+  - Yahoo **v7 quote 已死**（官方锁 crumb，返回 Unauthorized）。用 **v8 spark 批量接口**（`/v8/finance/spark?symbols=…&range=2d&interval=1d`）一次拉全部 60 标的；K线用 v8 chart。spark 无市值/盘态 → 市值用内置快照，盘态由 IANA 时区本地算。
+  - CORS 走**代理池**（corsproxy.io → allorigins → codetabs，自动熔断记忆）。**注意：用 curl 探测代理必须带 `-H "Origin: …"`，否则 corsproxy 返回 403 会误判不可用。**
+  - 新闻：rss2json 公共 API 解析 Yahoo Finance RSS。Alpha Vantage / Stooq 均已弃用（额度 25 次/天；Stooq 服务端故障）。
+  - **基金数据免代理**：天天基金 `pingzhongdata/<code>.js`（历史净值+syl_1y/3y/6y/1n，串行加载防全局变量覆盖）+ 腾讯 `qt.gtimg.cn/q=jjXXXX`（批量最新净值，GBK，字段 `code~name~估值~估涨~~净值~累计~日涨跌%~日期`）。script 标签加载天然无 CORS。`fundgz.1234567.com.cn` 已死勿用。
+- 布局：localStorage `gmt-layout-v2`；预设 4 套在 JS `PRESETS`；右列组件（如 09 基金）用 `right:8px` 锚定 + 预设 geo width=-1 表示。
+- 用户自选基金 4 只在 JS `FUNDS` 常量（017811/016370/019172/017641），用户本人是基金交易者。
+- 验证：项目有 jsdom，用 jsdom 冒烟测试（stub canvas/fetch 补 Origin 头）可端到端验证，见 `.workbuddy/skills/hexo-jsdom-smoke-test/`。Chrome 无头截图在本机环境失败，勿浪费时间。
+
 ## 后续工作方式
 1. 改代码 → 本地 `hexo s` 预览验证 → `git commit` → `git push origin source:main` → 提醒用户手动触发部署工作流。
 2. 尽量只改需要改的地方，不引入无关变更。
