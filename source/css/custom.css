@@ -448,6 +448,10 @@ body.music-collapsed .music-toggle {
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 8px 28px rgba(26, 26, 46, 0.18);
+  /* Leaflet 内部 tile/control z-index 高达数百，若不做隔离会盖住导航菜单浮层 */
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
 }
 
 /* 已访问省份：发光描边 + 强光晕呼吸动画 */

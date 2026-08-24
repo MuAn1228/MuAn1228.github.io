@@ -1,5 +1,9 @@
 // ===== 点击特效：NH₄⁺ + 粉色爱心爆炸 + 核心价值观光影文字 =====
 (function () {
+  // 小游戏页（Flappy Bird 等）运行时点击高频且游戏本身吃性能，
+  // 禁用点击动效避免拖慢帧率。
+  if (/\/fun\/arcade\/?($|\?|#)/.test(window.location.pathname)) return;
+
   var CORE = ['富强', '民主', '文明', '和谐', '自由', '平等', '公正', '法治', '爱国', '敬业', '诚信', '友善'];
 
   function heartSVG(size) {

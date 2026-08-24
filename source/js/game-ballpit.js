@@ -50,6 +50,24 @@
     }
   }
 
+  // 球体贴图降采样：球面显示的贴图区域很小，384px 足够带走全部细节，
+  // 显著降低解码与显存开销（源封面多为 600~2000px 大图）
+  function downscaleTexture(tex, maxSize) {
+    var img = tex && tex.image;
+    if (!img || !img.width || !img.height) return;
+    var m = Math.max(img.width, img.height);
+    if (m <= maxSize) return;
+    var s = maxSize / m;
+    var w = Math.max(1, Math.round(img.width * s));
+    var h = Math.max(1, Math.round(img.height * s));
+    var c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    c.getContext('2d').drawImage(img, 0, 0, w, h);
+    tex.image = c;
+    tex.needsUpdate = true;
+  }
+
   function initThree() {
     renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
     renderer.setClearColor(0x000000, 0);
@@ -282,6 +300,7 @@
     urls.forEach(function (u) {
       new THREE.TextureLoader().load(u, function (t) {
         setColorSpace(t);
+        downscaleTexture(t, 384); // 封面大图降采样为小球贴图，减显存/解码压力
         ready.push(t);
         pump();
       }, undefined, function () { /* 个别封面加载失败则忽略 */ });

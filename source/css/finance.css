@@ -366,6 +366,8 @@ html:has(.gmt-term) #page-header:not(.not-top-img):before {
 html:has(.gmt-term) #nav {
   background: transparent !important;
   box-shadow: none !important;
+  /* 确保导航栏与展开的子菜单浮层永远盖在 header 照片/粒子标题等贴图之上 */
+  z-index: 300 !important;
 }
 /* 大标题「交易」改黑色（提高特异性，双选择器兜底 dark 模式） */
 html:has(.gmt-term) #page-header #page-site-info #site-title,

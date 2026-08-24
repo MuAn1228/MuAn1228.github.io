@@ -56,6 +56,7 @@
     requestAnimationFrame(fall);
   }
 
-  // 每 300ms 生成一片，保持约 15~25 片同时存在
-  setInterval(createPetal, 300);
+  // 每 300ms 生成一片（移动端 600ms，密度减半降低功耗与卡顿）
+  var isTouchMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints || 0) > 0;
+  setInterval(createPetal, isTouchMobile ? 600 : 300);
 })();

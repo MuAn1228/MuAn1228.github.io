@@ -5,13 +5,12 @@
   'use strict';
 
   if (!/\/fun\/books\/?($|\?|#)/.test(window.location.pathname)) return;
-  if (!window.THREE) return;
 
   var CONTAINER_ID = 'book-ascii-title';
   var container = document.getElementById(CONTAINER_ID);
   if (!container) return;
 
-  // 移入页面标题横幅（#page-header）作为背景层
+  function boot() {
   var header = document.getElementById('page-header');
   if (header && header !== container.parentNode) {
     header.appendChild(container);
@@ -436,4 +435,16 @@
   }
 
   begin();
+  }
+
+  // three.min.js 在 inject.bottom 以 defer 加载，页面内联脚本可能在它之前执行，
+  // 因此轮询等待 THREE 就绪后再启动，保证「阅读」标题特效一定会出现。
+  if (window.THREE) {
+    boot();
+  } else {
+    var _threeWait = setInterval(function () {
+      if (window.THREE) { clearInterval(_threeWait); boot(); }
+    }, 60);
+    setTimeout(function () { clearInterval(_threeWait); }, 4000);
+  }
 })();

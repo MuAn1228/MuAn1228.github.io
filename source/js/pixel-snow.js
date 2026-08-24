@@ -2,8 +2,8 @@
 // 仅 /fun/movies/ 生效
 (function () {
   if (!/\/fun\/movies\/?($|\?|#)/.test(window.location.pathname)) return;
-  if (!window.THREE) return;
 
+  function boot() {
   var container = document.getElementById('pixel-snow');
   if (!container) return;
 
@@ -252,4 +252,16 @@
     renderer.render(scene, camera);
   }
   animate();
+  }
+
+  // three.min.js 在 inject.bottom 以 defer 加载，页面内联脚本可能在它之前执行，
+  // 因此轮询等待 THREE 就绪后再启动，保证落雪特效一定会出现。
+  if (window.THREE) {
+    boot();
+  } else {
+    var _threeWait = setInterval(function () {
+      if (window.THREE) { clearInterval(_threeWait); boot(); }
+    }, 60);
+    setTimeout(function () { clearInterval(_threeWait); }, 4000);
+  }
 })();
