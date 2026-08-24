@@ -16,6 +16,7 @@
 - 文件名只能使用 ASCII 字符（中文文件名会导致 Hexo 500 错误）。
 - 自定义 JS 放在 `source/js/`，自定义 CSS 集中在 `source/css/custom.css`。
 - 主题脚本注入点：`_config.butterfly.yml` 的 `inject.bottom`。
+- **页面内联 `<script src>` 特效脚本不要加 `defer`**（books-ascii-title / pixel-snow / travel-reel 的 defer 已于 2026-08-24 移除，提交 5f0a8bf）——defer 会让特效脚本晚于依赖脚本执行，造成加载时序问题。
 
 ## 关键自定义功能（canvas 特效）
 | 文件 | 作用 |
@@ -44,11 +45,11 @@
 - 最近一次修复：4bab6/1287988 两张照片方向（提交 10b753c，已推送远端 main）。
 
 ## 展示页黑洞 hero（/showcase/，重要坑）
-- 黑洞效果整体呈现叠在 **展示页顶部**（铺满 100vw），下方是原「极简居中」展示内容，中间用渐变过渡，适配明/暗模式（`var(--card-bg)`）。
+- 黑洞效果整体呈现叠在 **展示页顶部**（铺满 100vw），下方是原「极简居中」展示内容，中间用渐变过渡（2026-08-24 起渐变高度 60px、目标色 `rgba(0,0,0,0.35)`，提交 5f0a8bf），适配明/暗模式。
 - 黑洞 hero 容器在 `source/showcase/index.md` 里是 `#showcase` 内最顶部的 `<div id="blackhole-hero" class="blackhole-hero">`，canvas 由 `blackhole.js` 注入，用容器宽高自适应。
 - 展示页相关 CSS 统一放在 custom.css 的「展示页顶部黑洞横幅」块，**选择器必须写 `html:has(#showcase) …`，不能写 `html.page-showcase …`**——Hexo/Butterfly 生成的 `<html>` 上**没有** `page-showcase` 类，写 `html.page-showcase` 会让所有样式失效，导致顶部白条、内容铺不满宽度。
 - 顶部白条/窄条的另一个元凶：theme 默认 `.layout` 首个子节点 `#page` 是白色卡片（`padding:50px 40px; width:74%`），黑洞被包在里面就露出白条。需要在展示页把 `#content-inner #page` / `#article-container` 的 `padding/margin` 清零、`width:100%`、背景透明。
-- 初始相机已拉远（进入页面时黑洞较小、可滚轮放大）；`sph.phi` 上限放宽到 `0.95π` 才能看到南极（不然只能转到赤道）。
+- 黑洞视觉参数（2026-08-24 定稿，提交 5f0a8bf）：吸积盘 `diskInner:3.0 / diskOuter:10.0`；相机初始正对赤道面 `(0,0.5,50)` 距离适中；`sph.phi` 上限 `0.95π` 才能看到南极；滚轮缩放范围 `1.5~60`；像素比上限 2；辉光 `glow*0.025`、整体亮度 `*0.8`。
 - 展示页桌面端已**隐藏侧边栏**（`html:has(#showcase) #content-inner #aside-content { display:none }`，提交 f273a34）——黑洞整宽铺顶会盖住右侧卡片列（个人简介/热门文章/打赏等），用户最终选择隐藏该列保持极简，不单独显示右侧模块。
 
 ## 夜间模式适配（默认 dark，重要）
@@ -70,8 +71,8 @@
 - 文案存档在本地 Obsidian：`D:\obsidian\Obsidian Vault\博客\关于本站.md`（含原始段落；用户后续改文字再同步回 `source/about-site/index.md`，网页端版本已润色+分节）。
 - 该页为标准页面布局，标题由 name-particles 粒子化；无独立 canvas 横幅。
 
-## 行情终端模块（/finance/，美股仪表盘）
-- 文件：`source/finance/index.md`（HTML 结构）+ `source/js/finance-tracker.js`（数据引擎+布局管理器+渲染，单文件 IIFE）+ `source/css/finance.css`。全屏暗色终端风格，URL `/finance/`。
+## 行情终端模块（/finance/，美股+基金仪表盘，导航名「交易」）
+- 文件：`source/finance/index.md`（HTML 结构）+ `source/js/finance-tracker.js`（数据引擎+布局管理器+渲染，单文件 IIFE）+ `source/css/finance.css`。全屏暗色终端风格，URL `/finance/`，页面 title 与导航菜单均为「交易」（导航位于 展示 之后）。
 - **数据源（2026-08-24 定案，别再走弯路）**：
   - Yahoo **v7 quote 已死**（官方锁 crumb，返回 Unauthorized）。用 **v8 spark 批量接口**（`/v8/finance/spark?symbols=…&range=2d&interval=1d`）一次拉全部 60 标的；K线用 v8 chart。spark 无市值/盘态 → 市值用内置快照，盘态由 IANA 时区本地算。**坑：spark 的 `chartPreviousClose` 是 range 起点之前的收盘（range=2d 时是两天前），算日涨跌必须取 close 序列倒数第二个点。**
   - CORS 走**代理池**（corsproxy.io → allorigins → codetabs，自动熔断记忆）。**注意：用 curl 探测代理必须带 `-H "Origin: …"`，否则 corsproxy 返回 403 会误判不可用。**
@@ -82,5 +83,6 @@
 - 验证：项目有 jsdom，用 jsdom 冒烟测试（stub canvas/fetch 补 Origin 头）可端到端验证，见 `.workbuddy/skills/hexo-jsdom-smoke-test/`。Chrome 无头截图在本机环境失败，勿浪费时间。
 
 ## 后续工作方式
-1. 改代码 → 本地 `hexo s` 预览验证 → `git commit` → `git push origin source:main` → 提醒用户手动触发部署工作流。
+1. 改代码 → 本地 `hexo s` 预览验证 → `git commit` → `git push origin source:main` → **自动部署（约 1-2 分钟），无需手动触发**。
 2. 尽量只改需要改的地方，不引入无关变更。
+3. 提交前先 `git status` 检查是否有历史遗留的本地未提交改动——用户说"线上没生效"时，多半是改动没推送，先查 diff 再动手。
