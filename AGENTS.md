@@ -9,7 +9,7 @@
 
 ## 构建 / 预览 / 部署
 - 本地预览：`hexo clean && hexo s`（默认 http://localhost:4000）
-- 部署：`git push origin source:main`（本地分支 `source` → 远端 `main`），然后由用户在 GitHub 上手动触发工作流「Update Contributions & Deploy」。**不要使用 `hexo d`**。
+- 部署：`git push origin source:main`（本地分支 `source` → 远端 `main`）。**工作流已改为 push main 自动触发**（2026-08-24 起，提交 9677906），推送后约 1-2 分钟自动部署完成，无需手动触发。**不要使用 `hexo d`**。可用匿名 API 查状态：`https://api.github.com/repos/MuAn1228/MuAn1228.github.io/actions/runs?per_page=1`。
 - 提交前务必本地预览验证。
 
 ## 工程约定
