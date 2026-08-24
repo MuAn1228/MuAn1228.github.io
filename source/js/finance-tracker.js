@@ -1694,15 +1694,16 @@
   function updateAddMenu() {
     var menu = byId('add-menu');
     if (!menu) return;
-    var hidden = qsa('.widget').filter(function (w) { return w.style.display === 'none'; });
-    var html = '<div class="am-title">添加组件</div>';
+    var widgets = qsa('.widget');
+    var hidden = widgets.filter(function (w) { return w.style.display === 'none'; });
+    var html = '<div class="am-title">添加组件（点击恢复已移除的组件）</div>';
     if (hidden.length === 0) {
-      html += '<div class="am-empty">全部组件均已显示</div>';
+      html += '<div class="am-empty">全部 ' + widgets.length + ' 个组件均在显示中<br>点组件标题栏 ✕ 可移除</div>';
     } else {
       hidden.forEach(function (w) {
         var num = (qs('.w-num', w) || {}).textContent || '';
         var title = (qs('.w-title', w) || {}).textContent || w.id;
-        html += '<button class="am-item" data-widget="' + w.id + '">' + num + ' ' + title + '</button>';
+        html += '<button class="am-item" data-widget="' + w.id + '">+ ' + num + ' ' + title + '</button>';
       });
     }
     menu.innerHTML = html;
@@ -1778,7 +1779,9 @@
   }
 
   // 预设布局 (width = -1 表示右对齐自适应: 右列组件)
+  // 每套预设的布局结构要有肉眼可见的区别, 不只是显隐
   var PRESETS = {
+    // 全球: 全部 9 组件, 默认三行布局
     global: {
       show: ['w-heatmap', 'w-breadth', 'w-news', 'w-sector', 'w-aapl', 'w-metal', 'w-clock', 'w-indices', 'w-funds'],
       geo: {
@@ -1788,27 +1791,32 @@
         'w-funds': [888, 8, -1, 736]
       }
     },
+    // 股票: 热力矩阵加宽到整行, K线/板块放大, 隐藏金属/时钟/指数
     stock: {
       show: ['w-heatmap', 'w-breadth', 'w-news', 'w-sector', 'w-aapl', 'w-funds'],
       geo: {
-        'w-heatmap': [8, 8, 568, 544], 'w-breadth': [584, 8, 280, 176], 'w-news': [584, 192, 280, 360],
-        'w-sector': [8, 560, 568, 200], 'w-aapl': [584, 560, 280, 240],
-        'w-funds': [888, 8, -1, 736]
+        'w-heatmap': [8, 8, 856, 470],
+        'w-sector': [8, 486, 568, 190], 'w-aapl': [584, 486, 280, 190],
+        'w-breadth': [8, 684, 280, 176], 'w-news': [296, 684, 280, 360],
+        'w-funds': [888, 8, -1, 836]
       }
     },
+    // 贵金属: 金属组件置顶放大, 时钟伴随, 隐藏个股相关
     metal: {
       show: ['w-heatmap', 'w-breadth', 'w-metal', 'w-clock', 'w-funds'],
       geo: {
-        'w-heatmap': [8, 8, 568, 368], 'w-breadth': [584, 8, 280, 176],
-        'w-metal': [8, 384, 568, 360], 'w-clock': [584, 192, 280, 552],
+        'w-metal': [8, 8, 568, 470], 'w-clock': [584, 8, 280, 470],
+        'w-heatmap': [8, 486, 568, 300], 'w-breadth': [584, 486, 280, 300],
         'w-funds': [888, 8, -1, 552]
       }
     },
+    // 新闻: 新闻列表置顶加高放大, 热力图缩小为伴视
     news: {
       show: ['w-heatmap', 'w-breadth', 'w-news', 'w-funds'],
       geo: {
-        'w-heatmap': [8, 8, 568, 544], 'w-news': [584, 8, 280, 544], 'w-breadth': [584, 560, 280, 200],
-        'w-funds': [888, 8, -1, 560]
+        'w-news': [8, 8, 568, 760],
+        'w-heatmap': [584, 8, 280, 470], 'w-breadth': [584, 486, 280, 282],
+        'w-funds': [888, 8, -1, 760]
       }
     }
   };
@@ -2124,7 +2132,15 @@
       addBtn.addEventListener('click', function (e) {
         e.stopPropagation();
         updateAddMenu();
-        addMenu.style.display = addMenu.style.display === 'none' ? '' : 'none';
+        if (addMenu.style.display === 'none') {
+          // fixed 定位到按钮下方 (toolbar 有 overflow, 不能用 absolute)
+          var r = addBtn.getBoundingClientRect();
+          addMenu.style.left = r.left + 'px';
+          addMenu.style.top = (r.bottom + 4) + 'px';
+          addMenu.style.display = '';
+        } else {
+          addMenu.style.display = 'none';
+        }
       });
       addMenu.addEventListener('click', function (e) {
         var item = e.target.closest('.am-item');

@@ -280,10 +280,10 @@ body.editing .widget:not(.locked) .w-resize { display: block; position: absolute
 .kimi-btn:hover { color: var(--amber); border-color: var(--amber); }
 .ft-src { font-size: 9px; color: var(--fg-faint); margin-right: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50%; }
 
-/* ===== 添加组件下拉 ===== */
+/* ===== 添加组件下拉 (fixed 定位, 避免被 toolbar 的 overflow 裁剪) ===== */
 #toolbar { position: sticky; }
 .add-menu {
-  position: absolute; top: calc(100% + 2px); left: 120px; z-index: 300;
+  position: fixed; z-index: 500;
   background: #000; border: 1px solid var(--amber); min-width: 180px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.7);
 }

@@ -1,5 +1,5 @@
 ---
-title: 行情
+title: 交易
 ---
 
 <link rel="stylesheet" href="/css/finance.css">
