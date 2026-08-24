@@ -140,7 +140,7 @@
     'GSPTSE': '%5EGSPTSE', 'BVSP': '%5EBVSP',
     'SX5E': '%5ESTOXX50E', 'UKX': '%5EFTSE', 'DAX': '%5EGDAXI',
     'FCHI': '%5EFCHI', 'FTMIB': '%5EFTMIB',
-    'N225': '%5EN225', 'HSI': '%5EHSI',
+    'N225': '%5EN225', 'HSI': '%5EHSI', 'SSE': '000001.SS',
     'KOSPI': '%5EKS11', 'AXJO': '%5EAXJO', 'NSEI': '%5ENSEI',
     'XAU': 'GC%3DF', 'XAG': 'SI%3DF', 'XPT': 'PL%3DF', 'XPD': 'PA%3DF',
     'WTI': 'CL%3DF', 'DXY': 'DX-Y.NYB'
@@ -214,7 +214,7 @@
     STOCKS.forEach(function (s) { symbols.push(YAHOO_SYMBOLS[s.ticker] || s.ticker); });
     ['XLK', 'XLE', 'XLF'].forEach(function (s) { symbols.push(YAHOO_SYMBOLS[s]); });
     ['SPX','IXIC','DJI','GSPTSE','BVSP','SX5E','UKX','DAX','FCHI','FTMIB',
-     'N225','HSI','KOSPI','AXJO','NSEI','XAU','XAG','XPT','XPD','WTI','DXY'].forEach(function (k) {
+     'N225','HSI','SSE','KOSPI','AXJO','NSEI','XAU','XAG','XPT','XPD','WTI','DXY'].forEach(function (k) {
       if (YAHOO_SYMBOLS[k]) symbols.push(YAHOO_SYMBOLS[k]);
     });
     return symbols.join(',');
@@ -249,11 +249,16 @@
         var sym = pair[0], body = pair[1];
         var closes = body.close || (body.indicators && body.indicators.quote && body.indicators.quote[0] && body.indicators.quote[0].close);
         if (!closes || closes.length === 0) return;
-        var last = null;
+        // 取最后两个有效收盘点: last=最新收盘, prevInSeries=前一交易日收盘
+        // (chartPreviousClose 是 range 起点之前的收盘, range=2d 时是两天前, 不能用作日涨跌基准)
+        var last = null, prevInSeries = null;
         for (var j = closes.length - 1; j >= 0; j--) {
-          if (closes[j] !== null && closes[j] !== undefined) { last = closes[j]; break; }
+          if (closes[j] !== null && closes[j] !== undefined) {
+            if (last === null) last = closes[j];
+            else { prevInSeries = closes[j]; break; }
+          }
         }
-        var prev = body.chartPreviousClose || body.previousClose ||
+        var prev = prevInSeries || body.chartPreviousClose || body.previousClose ||
           (body.meta && (body.meta.chartPreviousClose || body.meta.previousClose));
         if (last === null || !prev) return;
         results.push({
@@ -334,7 +339,7 @@
       '标普/TSX综合': 'GSPTSE', '圣保罗IBOVESPA': 'BVSP',
       '欧洲斯托克50': 'SX5E', '富时100': 'UKX', '德国DAX': 'DAX',
       '法国CAC40': 'FCHI', '富时MIB': 'FTMIB',
-      '日经225': 'N225', '恒生指数': 'HSI', '韩国KOSPI': 'KOSPI',
+      '日经225': 'N225', '恒生指数': 'HSI', '上证综合': 'SSE', '韩国KOSPI': 'KOSPI',
       '澳洲ASX200': 'AXJO', '印度NIFTY50': 'NSEI'
     };
     Object.keys(GLOBAL_INDICES).forEach(function (region) {
