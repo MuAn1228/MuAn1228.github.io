@@ -17,6 +17,7 @@ menu:
     阅读: /fun/books/ || fas fa-book
     小游戏: /fun/arcade/ || fas fa-puzzle-piece
   展示: /showcase/ || fas fa-id-card
+  行情: /finance/ || fas fa-chart-line
   分类: /categories/ || fas fa-folder-open
   关于本站: /about-site/ || fas fa-info-circle
 
