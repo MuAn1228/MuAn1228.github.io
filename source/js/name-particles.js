@@ -106,7 +106,9 @@
     // 站点标题（首页为站点名，内容页为页面标题）
     var siteTitle = document.getElementById('site-title');
     if (siteTitle) {
-      makeParticleText(siteTitle, { color: '#ffffff', font: 52 });
+      // 交易页顶部是白色照片背景，粒子用黑色才可见；其余页保持白色（深色头部）
+      var isFinance = /\/finance\/?($|\?|#)/.test(window.location.pathname);
+      makeParticleText(siteTitle, { color: isFinance ? '#000000' : '#ffffff', font: 52 });
     }
   }
 
