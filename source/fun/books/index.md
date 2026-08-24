@@ -13,3 +13,4 @@ title: 书籍
 
 <script src="/js/driftwall.js"></script>
 <script src="/js/books-ascii-title.js"></script>
+<script src="/js/media-grid.js"></script>
