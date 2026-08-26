@@ -11,11 +11,11 @@ tags:
 
 上海是清明假期的时候去的。第一次坐高铁应该是比火车票贵了3倍，但是时间省了也差不多3倍。我不懂啊，同学叫我来我就来了。
 
-![上海](/img/posts/shanghai/001.webp)
+![上海](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/shanghai/001.webp)
 
-![上海](/img/posts/shanghai/002.webp)
+![上海](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/shanghai/002.webp)
 
-![上海](/img/posts/shanghai/003.webp)
+![上海](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/shanghai/003.webp)
 
 接到人了，先去全家吃个包子。
 
@@ -23,38 +23,38 @@ tags:
 
 下地铁去静安那块的Apple Store耍了耍。然后去贝利亚吃了顿饭。第一次吃西餐，贝利亚一位只花了70多块钱。
 
-![上海](/img/posts/shanghai/004.webp)
+![上海](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/shanghai/004.webp)
 
 美餐过后就去了外白渡桥，打卡机位。
 
 然后去外滩逛一逛。那天天气预报本来是阴天来着，但是太阳非常大。
 
-![上海](/img/posts/shanghai/005.webp)
+![上海](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/shanghai/005.webp)
 
 东方明珠附近有点城中村了，不过这些老洋房应该都得几千万。
 
-![上海](/img/posts/shanghai/006.webp)
+![上海](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/shanghai/006.webp)
 
 南京路拍照的地方挺多的。抖音上有个百万街拍博主俊杰哥哥，就常在这块拍照。
 
-![上海](/img/posts/shanghai/007.webp)
+![上海](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/shanghai/007.webp)
 
 外滩。
 
-![上海](/img/posts/shanghai/008.webp)
+![上海](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/shanghai/008.webp)
 
 都是跑车，在上海总工会附近。
 
-![上海](/img/posts/shanghai/009.webp)
+![上海](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/shanghai/009.webp)
 
 就这样在南京路附近边走边聊天，我还在美团上叫了两杯沪上阿姨，地址就让他送到南京路外滩十字路口附近，真是神了。
 
 一下午也没去上海其他的地方逛，主要是因为地铁一坐估计就得半小时起步，太浪费时间了。还是专心逛一下南京路还有外滩吧。
 
-![上海](/img/posts/shanghai/010.webp)
+![上海](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/shanghai/010.webp)
 
 夜晚亮灯的外滩。
 
-![上海](/img/posts/shanghai/011.webp)
+![上海](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/shanghai/011.webp)
 
 万国建筑群，还是很漂亮的，纸醉金迷。我哥说我把上海拍穷了。当时也不会曝光ISO这些，拍的比较普通，像是随手拍。而且用的是iPhone 15拍的，我也不熟这手机相机怎么用。之后就坐高铁回杭州了。40分钟就能到，真爽。下次再来可能就是参加一些活动，看一些展览，或者来实习了。
