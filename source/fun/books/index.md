@@ -11,6 +11,7 @@ title: 书籍
 <div id="book-driftwall">加载中…</div>
 <div id="book-grid" class="media-grid" style="display:none;"></div>
 
+<script src="/lib/three.min.js" defer></script>
 <script src="/js/driftwall.js"></script>
 <script src="/js/books-ascii-title.js"></script>
 <script src="/js/media-grid.js"></script>

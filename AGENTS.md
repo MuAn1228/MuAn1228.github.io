@@ -16,7 +16,8 @@
 - 文件名只能使用 ASCII 字符（中文文件名会导致 Hexo 500 错误）。
 - 自定义 JS 放在 `source/js/`，自定义 CSS 集中在 `source/css/custom.css`。
 - 主题脚本注入点：`_config.butterfly.yml` 的 `inject.bottom`。
-- **页面内联 `<script src>` 特效脚本不要加 `defer`**（books-ascii-title / pixel-snow / travel-reel 的 defer 已于 2026-08-24 移除，提交 5f0a8bf）——defer 会让特效脚本晚于依赖脚本执行，造成加载时序问题。
+- **页面级资源按需加载（2026-08-26）**：`inject.bottom` 只保留轻量脚本；重型脚本由 `source/js/page-assets.js` 统一管理——①首页独占特效（three.min.js / vanta.birds / hero-3d / marquee / github-heatmap）仅首页加载；②音乐引擎（APlayer.min.js + music-playlist.js）与 3D 标签云（tagcanvas.min.js + tagcloud.js）在浏览器空闲（requestIdleCallback）时再加载，不阻塞首屏。**改页面功能时不要把重型脚本塞回全局 inject。**
+- **页面内联 `<script src>` 特效脚本不要加 `defer`**（books-ascii-title / pixel-snow / travel-reel 的 defer 已于 2026-08-24 移除，提交 5f0a8bf）——defer 会让特效脚本晚于依赖脚本执行，造成加载时序问题。games/books/movies/arcade 等 3D 页面单独加的 `three.min.js` 带 `defer` 是例外（这些特效脚本自身有轮询等待 THREE 或 init 挂在 DOMContentLoaded，defer 先于它执行）。
 
 ## 关键自定义功能（canvas 特效）
 | 文件 | 作用 |
@@ -98,7 +99,7 @@
   - 网易云 CDN 直链带时效签名（`m801.music.126.net/20260826...`），只用作当前会话的 src，不能存 sessionStorage 跨页复用。
 - **切页续播/防卡死**：`pjax:send` 记录 `wasPlayingOnNav`，`pjax:complete` 时非用户主动暂停则 `ap.play()`；audio `error` 且当前为大播放器曲目时交给音乐页自己处理，迷你列表则自动跳下一首（`skipCount>2` 停止，防整单死循环）。
 - **切页性能**：`source/js/pjax-prefetch.js`（注入在 music-playlist.js 之前）对悬停/聚焦的站内链接做低优先级 `<link rel=prefetch>`，把 pjax 的 fetch 提前到空闲时段，避免瞬时并发挤占音频缓冲。
-- **当前状态（2026-08-26 推送后）**：49 首中 10 首走 CDN（稳定），40 首走网络源（Meting 限流时仅官方外链可用歌能播）。**彻底方案 = 把迷你歌单缺的 mp3 下载上传到 music-assets 仓库（需可写该仓库的 GitHub 凭据），未执行，等用户实测反馈后按需做。**
+- **当前状态（2026-08-26 用户实测后，已搁置）**：50 首中 10 首走 CDN（稳定），40 首走网络源（Meting 限流时仅官方外链可用歌能播）。**用户实测反馈：所有歌切页仍然断流**（并非个别歌断，而是普遍切页中断），用户决定「暂时先不做」，音乐播放器模块整体搁置。彻底方案（下载缺的 mp3 上传到 music-assets 仓库 + 同步白名单）未执行，重启排查时优先怀疑 pjax 续播逻辑（pjax:send/complete + sessionStorage 恢复）在真实浏览器中未按预期生效，而不是音源 failover。**下次重启先别动代码，先讨论排查方向。**
 - 验证：jsdom 冒烟测试可以端到端验证解析逻辑（stub APlayer/Audio + mock Meting 拒绝，见 .workbuddy/skills/hexo-jsdom-smoke-test/）；浏览器沙箱无音频输出，切页续播只能验证状态（isPlaying）即可。
 
 ## 电影观看外链安全模块（/watch/，方案 A，2026-08-24）
