@@ -1,7 +1,10 @@
 // ===== 静态音乐播放列表（网易云，49 首）=====
 // 有本地文件的歌曲优先用完整版（VIP 歌曲不再 30s 试听），其余走 Meting API 兜底
+// 本播放器是全站唯一的音频引擎：
+//  - 播放状态（当前曲目/进度/停止键状态）写入 sessionStorage，切页（整页刷新）后自动续播
+//  - 通过 window.__blogMusic 暴露接口，供音乐页紫色大播放器复用同一引擎
 (function () {
-  if (!window.APlayer) return;
+  if (!window.APlayer || window.__blogMusic) return;
   var songs = [
   {
     "id": 2085859568, "local": true,
@@ -259,7 +262,7 @@
     "id": 25706247,
     "name": "Kerosene",
     "artist": "Crystal Castles",
-    "cover": "https://p1.music.126.net/w3Jw5IZjvFWY7wIA-nLewg==/109951168271665093.jpg"
+    "cover": "https://p1.music.126.net/w3wJ5IZjvFWY7wIA-nLewg==/109951168271665093.jpg"
   },
   {
     "id": 1397330334,
@@ -305,6 +308,129 @@
   }
 ];
 
+  // 会话内共享的播放状态：{owner:'mini'|'big', index, src, name, artist, cover, time, playing}
+  // owner='big' 表示这首是大播放器（音乐页）交回的，index 指向大播放器歌单；其余为迷你列表自身
+  var STATE_KEY = 'blog-music-state';
+  var ap = null;
+  var focusMeta = null; // {owner, index, url}：最近一次由大播放器指定播放的曲目
+  var lastSaveTime = -1;
+
+  function readState() {
+    try { return JSON.parse(sessionStorage.getItem(STATE_KEY)); }
+    catch (e) { return null; }
+  }
+
+  function saveState() {
+    if (!ap) return;
+    var audios = ap.list.audios || [];
+    var item = audios[ap.list.index] || audios[0];
+    if (!item || !item.url) return;
+    var url = item.url;
+    var meta = (focusMeta && focusMeta.url === url) ? focusMeta : null;
+    var state = {
+      owner: meta ? meta.owner : 'mini',
+      index: meta ? meta.index : ap.list.index,
+      src: url,
+      name: item.name,
+      artist: item.artist,
+      cover: item.cover,
+      time: ap.audio.currentTime || 0,
+      playing: !ap.audio.paused
+    };
+    try { sessionStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function bindAp() {
+    ap.on('play', saveState);
+    ap.on('pause', saveState);
+    ap.audio.addEventListener('timeupdate', function () {
+      var t = ap.audio.currentTime;
+      // 节流：进度变化超过 1s 才写一次
+      if (t - lastSaveTime >= 1 || t - lastSaveTime < 0) {
+        lastSaveTime = t;
+        saveState();
+      }
+    });
+    // 一曲结束，等 APlayer 自动切到下一首后再保存
+    ap.audio.addEventListener('ended', function () {
+      setTimeout(saveState, 50);
+    });
+  }
+
+  // 切到指定曲目；track 结构 {name,artist,cover,url}
+  function switchTo(track, autoplay) {
+    var audios = ap.list.audios || [];
+    var idx = -1;
+    for (var i = 0; i < audios.length; i++) {
+      if (audios[i].url === track.url) { idx = i; break; }
+    }
+    if (idx === -1) {
+      ap.list.add([track]);
+      idx = ap.list.audios.length - 1;
+    }
+    ap.list.switch(idx, !!autoplay);
+    if (autoplay !== false) {
+      var p = ap.play();
+      if (p && p.catch) p.catch(function () {});
+    }
+  }
+
+  function restoreSaved(saved) {
+    switchTo({ name: saved.name, artist: saved.artist, cover: saved.cover, url: saved.src },
+      saved.playing !== false);
+    if (saved.owner === 'big') {
+      focusMeta = { owner: 'big', index: saved.index, url: saved.src };
+    }
+    // 恢复进度
+    var seeked = false;
+    function doSeek() {
+      if (seeked) return;
+      seeked = true;
+      try { ap.seek(saved.time || 0); } catch (e) {}
+    }
+    ap.audio.addEventListener('loadedmetadata', doSeek);
+    if (ap.audio.readyState >= 1) doSeek();
+    // 浏览器拦截自动播放时，给任意一次点击续播的机会
+    if (saved.playing !== false) {
+      var pending = true;
+      var p = ap.play();
+      if (p && p.catch) p.catch(function () {
+        document.addEventListener('click', function onAny() {
+          if (!pending) return;
+          pending = false;
+          var q = ap.play();
+          if (q && q.catch) q.catch(function () {});
+        }, { capture: true, once: true });
+      });
+    }
+  }
+
+  function init() {
+    Promise.all(songs.map(resolve)).then(function (list) {
+      var container = document.createElement('div');
+      document.body.appendChild(container);
+      ap = new APlayer({
+        container: container,
+        fixed: true,
+        mini: true,
+        autoplay: false,
+        preload: 'auto',
+        theme: '#a18cd1',
+        lrcType: 3,
+        mutex: true,
+        order: 'list',
+        listFolded: true,
+        listMaxHeight: '320px',
+        audio: list
+      });
+      window.__blogMusic.ap = ap;
+      bindAp();
+      var saved = readState();
+      if (saved && saved.src) restoreSaved(saved);
+      else saveState();
+    });
+  }
+
   function resolve(s) {
     // 有本地文件的直接返回完整版，不走 API
     if (s.local) {
@@ -328,26 +454,27 @@
       });
   }
 
-  function init() {
-    Promise.all(songs.map(resolve)).then(function (list) {
-      var container = document.createElement('div');
-      document.body.appendChild(container);
-      new APlayer({
-        container: container,
-        fixed: true,
-        mini: true,
-        autoplay: false,
-        preload: 'auto',
-        theme: '#a18cd1',
-        lrcType: 3,
-        mutex: true,
-        order: 'list',
-        listFolded: true,
-        listMaxHeight: '320px',
-        audio: list
-      });
-    });
-  }
+  // 暴露给音乐页大播放器的公共接口（全站唯一音频引擎）
+  window.__blogMusic = {
+    ap: null, // 播放器初始化后回填
+    focus: function (track, meta, autoplay) {
+      focusMeta = meta ? { owner: meta.owner, index: meta.index, url: track.url } : null;
+      switchTo(track, autoplay);
+      saveState();
+    },
+    toggle: function () { if (ap) ap.toggle(); },
+    pause: function () { if (ap) ap.pause(); },
+    play: function () { if (ap) { var p = ap.play(); if (p && p.catch) p.catch(function () {}); } },
+    isPlaying: function () { return !!(ap && !ap.audio.paused); },
+    currentUrl: function () {
+      if (!ap) return '';
+      var audios = ap.list.audios || [];
+      var item = audios[ap.list.index];
+      return item ? item.url : '';
+    },
+    seekTo: function (t) { if (ap) ap.seek(t || 0); },
+    audio: function () { return ap ? ap.audio : null; }
+  };
 
   init();
 })();

@@ -13,3 +13,6 @@ _multiconfig.yml
 source/music_backup/
 compress-music.js
 test-compress.js
+# Python 缓存
+__pycache__/
+*.pyc

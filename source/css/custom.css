@@ -42,6 +42,13 @@
   backdrop-filter: blur(16px);
   box-shadow: 0 8px 24px rgba(26, 26, 46, 0.18);
 }
+/* 播放器文字必须深色才能在浅色背景上看清 */
+.aplayer.aplayer-fixed .aplayer-info .aplayer-music .aplayer-title {
+  color: #222;
+}
+.aplayer.aplayer-fixed .aplayer-info .aplayer-music .aplayer-author {
+  color: #666;
+}
 
 /* 音乐歌单列表限高 + 可滚动（否则 52 首撑满全屏且滚不动） */
 .aplayer.aplayer-fixed .aplayer-list {
@@ -51,6 +58,9 @@
 .aplayer.aplayer-fixed .aplayer-list ol {
   max-height: 320px !important;
   overflow-y: auto !important;
+}
+.aplayer.aplayer-fixed .aplayer-list ol li .aplayer-list-title {
+  color: #222;
 }
 
 /* 首页 hero：标题和下滑按钮在粒子星云之上 */
@@ -2270,6 +2280,14 @@ html:has(#private-app) #page {
   padding: 2px 6px;
   border-radius: 5px;
 }
+.private-article-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin: 18px 0 10px;
+  background: #f2f2f6;
+}
 .private-msg {
   padding: 40px 0;
   color: #888;
@@ -2300,5 +2318,192 @@ html:has(#private-app) #page {
 [data-theme='dark'] .private-article-body code {
   background: #1d2029;
   color: #b8c4e8;
+}
+
+/* ===== 电影观看外链：卡片「在线观看」按钮 ===== */
+.media-watch {
+  margin: 2px 10px 10px;
+  padding: 6px 0;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #6b5b95, #8e6bb5);
+  color: #fff;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+.media-watch:hover {
+  opacity: 0.85;
+}
+[data-theme='dark'] .media-watch {
+  background: linear-gradient(135deg, #7a63a6, #9a7cc4);
+}
+
+/* ===== 书籍卡片「阅读 PDF」按钮（直链自家 jsDelivr CDN，新窗口打开） ===== */
+.media-pdf {
+  display: block;
+  margin: 2px 10px 10px;
+  padding: 6px 0;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2f7f6f, #43a68a);
+  color: #fff;
+  font-size: 0.85em;
+  text-align: center;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+.media-pdf:hover {
+  opacity: 0.85;
+  color: #fff;
+}
+[data-theme='dark'] .media-pdf {
+  background: linear-gradient(135deg, #3a8d7c, #52b49a);
+}
+
+/* ===== 离站确认页 /watch/ ===== */
+.watch-confirm {
+  max-width: 640px;
+  margin: 1.5em auto 2.5em;
+}
+.watch-loading {
+  text-align: center;
+  color: #999;
+}
+.wc-card {
+  padding: 30px 34px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #ececf1;
+  box-shadow: 0 10px 30px rgba(26, 26, 46, 0.08);
+}
+.wc-title {
+  margin: 0 0 10px;
+  font-size: 24px;
+}
+.wc-lead {
+  margin: 0 0 18px;
+  color: #555;
+  font-size: 15px;
+}
+.wc-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #f0f0f4;
+}
+.wc-label {
+  flex-shrink: 0;
+  width: 92px;
+  color: #888;
+  font-size: 13px;
+}
+.wc-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  word-break: break-all;
+}
+.wc-host {
+  color: #8e6bb5;
+  font-family: monospace;
+}
+.wc-disclaimer {
+  margin: 18px 0 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(142, 107, 181, 0.08);
+  color: #6a5b8a;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.wc-note {
+  margin: 0 0 20px;
+  color: #999;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.wc-reason {
+  margin: 0 0 18px;
+  color: #c05a6b;
+  font-size: 13px;
+}
+.wc-reason code {
+  background: #f2f2f6;
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+.wc-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.wc-btn {
+  padding: 10px 30px;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #555;
+  font-size: 15px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.wc-btn:hover {
+  border-color: #8e6bb5;
+  color: #8e6bb5;
+}
+.wc-btn.wc-primary {
+  border: none;
+  background: linear-gradient(135deg, #6b5b95, #8e6bb5);
+  color: #fff;
+}
+.wc-btn.wc-primary:hover {
+  opacity: 0.9;
+}
+.wc-blocked .wc-title {
+  color: #c05a6b;
+}
+[data-theme='dark'] .wc-card {
+  background: rgba(18, 18, 24, 0.78);
+  border-color: #2b2e3d;
+}
+[data-theme='dark'] .wc-lead {
+  color: #b9bfcf;
+}
+[data-theme='dark'] .wc-row {
+  border-top-color: #2b2e3d;
+}
+[data-theme='dark'] .wc-label {
+  color: #8d97ad;
+}
+[data-theme='dark'] .wc-value {
+  color: #eef0f6;
+}
+[data-theme='dark'] .wc-disclaimer {
+  background: rgba(142, 107, 181, 0.16);
+  color: #c9bde6;
+}
+[data-theme='dark'] .wc-note {
+  color: #7b8498;
+}
+[data-theme='dark'] .wc-reason code {
+  background: #1d2029;
+  color: #e8a0ac;
+}
+[data-theme='dark'] .wc-btn {
+  background: #1c1c26;
+  border-color: #2b2e3d;
+  color: #c6cbd9;
+}
+[data-theme='dark'] .wc-btn:hover {
+  border-color: #8e6bb5;
+  color: #a18cd1;
+}
+[data-theme='dark'] .wc-btn.wc-primary {
+  background: linear-gradient(135deg, #7a63a6, #9a7cc4);
+  color: #fff;
 }
 

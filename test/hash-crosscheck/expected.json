@@ -1,0 +1,16 @@
+{
+  "note": "由 test/hash-crosscheck/ref.py 生成（Python 侧权威）。修改 fixtures.json 后必须重新运行本脚本。",
+  "cases": {
+    "ascii_basic": "b350b7a7c72d91abbb5ce60b96f89c53c2fc23ee6809c870c05ea0ff13bd033d",
+    "unicode_text": "af9922527d854bfff8c54e27f5398d3669eab2cc534dc58c43e0217a5ab17f17",
+    "nested_object": "d7a51201a33b737cc2efcbe1b06d8902e4fb0b2dd7acefa8f34cf46ce928b251",
+    "array_order": "5d852e4ebc94d50028d4817e72c9c78f660f0f7f19ec4e2604461720ebde0560",
+    "null_bool_number": "916bc35ded4d22d9da863e88e51fc9cecbfe5546329bdb0a7d081beacc623c25",
+    "key_order_a": "da0ea6242f27deee051ee84084d2dc5d575bc5bde817654576767d47249b085d",
+    "key_order_b": "da0ea6242f27deee051ee84084d2dc5d575bc5bde817654576767d47249b085d",
+    "field_omission": "d59870ef47941c6516a075125af9b1c8e3d3745aa116a7f0adc9d54ce063ce72",
+    "missing_security_field": "d6bd105658015d2bf20f7271b6c3699057f0082ae1352db86554d2f15fa41964",
+    "mode_automated": "338cd3d8d332125fc3bc83d171ccb7c97ad102199a72d2a7120fa34698b5f607",
+    "mode_manual": "079ece37f86ae3eb1c50bd85ecfe7a0608a9480db590458d793abf6baf2d92cf"
+  }
+}

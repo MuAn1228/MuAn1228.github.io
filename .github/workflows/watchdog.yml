@@ -1,0 +1,67 @@
+name: Watchdog Health Check
+
+on:
+  schedule:
+    - cron: '23 */6 * * *'   # 每 6 小时（UTC），与客户端 TTL=12h 保持余量
+  workflow_dispatch:          # 支持手动触发
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# 与部署工作流共用同一并发组，避免同时向 GitHub Pages 环境部署冲突
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run watchdog (check sites → write health.json)
+        # 任何站点异常都会被写为 disabled（Fail Closed）。脚本永远 exit 0，确保 disabled 状态也会被提交。
+        # 用 python3（GitHub Actions 镜像保证提供），不依赖本地 Python/代理/浏览器。
+        run: python3 watchdog_check.py
+
+      - name: Commit health.json if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add source/data/health.json
+          if git diff --cached --quiet; then
+            echo "health.json unchanged, skip commit"
+          else
+            git commit -m "chore(watchdog): update health.json"
+            # 使用 GITHUB_TOKEN 推送不会重新触发工作流，避免循环
+            git push
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Build
+        run: npx hexo generate
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,98 +1,130 @@
 [
   {
+    "id": "babai",
     "name": "八佰",
     "sub": "2020",
-    "img": "/img/movies/movie01.jpg",
-    "note": "八佰这个电影是我为数不多在电影院看的电影，这个电影本身也是少数不是那种抗日神剧的抗战电影。而且拍摄的手法、场景效果都比较还原真正的巷战。故事也很感人，对人物心理的刻画也十分细致。而且他是讲的国民党正面战场的军队，这个电影本身能放出来也是不容易的。"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie01.webp",
+    "note": "八佰这个电影是我为数不多在电影院看的电影，这个电影本身也是少数不是那种抗日神剧的抗战电影。而且拍摄的手法、场景效果都比较还原真正的巷战。故事也很感人，对人物心理的刻画也十分细致。而且他是讲的国民党正面战场的军队，这个电影本身能放出来也是不容易的。",
+    "watch": { "site": "ncat", "path": "/detail/11787.html" }
   },
   {
+    "id": "bawangbiejie",
     "name": "霸王别姬",
     "sub": "1993",
-    "img": "/img/movies/movie02.jpg",
-    "note": "霸王别姬，豆瓣电影排行榜top2。陈凯歌用一生证明霸王别姬这电影不是他拍的，可以说是中国电影巅峰之作了。而且是描写清末到文革那段时间的。同样涉及了性少数者，时代创伤等严肃议题。程蝶衣、段小楼、菊仙小姐这些主要人物，以及小豆子，戏班子师傅，程蝶衣母亲这些配角的塑造都十分深刻。“他们都是怎么成的角儿啊？得挨多少打呀。”"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie02.webp",
+    "note": "霸王别姬，豆瓣电影排行榜top2。陈凯歌用一生证明霸王别姬这电影不是他拍的，可以说是中国电影巅峰之作了。而且是描写清末到文革那段时间的。同样涉及了性少数者，时代创伤等严肃议题。程蝶衣、段小楼、菊仙小姐这些主要人物，以及小豆子，戏班子师傅，程蝶衣母亲这些配角的塑造都十分深刻。“他们都是怎么成的角儿啊？得挨多少打呀。”",
+    "watch": { "site": "ncat", "path": "/detail/10180.html" }
   },
   {
+    "id": "xiaoshenke",
     "name": "肖申克的救赎",
     "sub": "1994",
-    "img": "/img/movies/movie03.jpg",
-    "note": "肖申克的救赎，豆瓣top1。高中的时候班儿里也放过，但是没放完，Hope is a good thing, maybe a bad thing谁不想急头白脸在监狱楼顶晒着阳光喝啤酒呢。没事儿回牢房再挖个地道。"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie03.webp",
+    "note": "肖申克的救赎，豆瓣top1。高中的时候班儿里也放过，但是没放完，Hope is a good thing, maybe a bad thing谁不想急头白脸在监狱楼顶晒着阳光喝啤酒呢。没事儿回牢房再挖个地道。",
+    "watch": { "site": "ncat", "path": "/detail/9470.html" }
   },
   {
+    "id": "haishanggangqinshi",
     "name": "海上钢琴师",
     "sub": "1998",
-    "img": "/img/movies/movie04.jpg",
-    "note": "海上钢琴师也是高中时候看的，班里也放过，而且也没放完。我们班基本就没有完整地放过一次电影，倒是隔壁班的都看了好几次了。"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie04.webp",
+    "note": "海上钢琴师也是高中时候看的，班里也放过，而且也没放完。我们班基本就没有完整地放过一次电影，倒是隔壁班的都看了好几次了。",
+    "watch": { "site": "ncat", "path": "/detail/16481.html" }
   },
   {
+    "id": "bianfuxia",
     "name": "蝙蝠侠：黑暗骑士",
     "sub": "2008",
-    "img": "/img/movies/movie05.jpg",
-    "note": "蝙蝠侠黑暗骑士，诺兰导演，也是塑造了经典的小丑形象，精神病患者，报复社会的大反派，高智商犯罪。"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie05.webp",
+    "note": "蝙蝠侠黑暗骑士，诺兰导演，也是塑造了经典的小丑形象，精神病患者，报复社会的大反派，高智商犯罪。",
+    "watch": { "site": "ncat", "path": "/detail/2219.html" }
   },
   {
+    "id": "lvpishu",
     "name": "绿皮书",
     "sub": "2018",
-    "img": "/img/movies/movie06.jpg",
-    "note": "绿皮书，主要围绕的是种族歧视这一议题，但是看着让人很舒服。适合家里人坐一块儿看。"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie06.webp",
+    "note": "绿皮书，主要围绕的是种族歧视这一议题，但是看着让人很舒服。适合家里人坐一块儿看。",
+    "watch": { "site": "ncat", "path": "/detail/10065.html" }
   },
   {
+    "id": "xingfulaikaomen",
     "name": "当幸福来敲门",
     "sub": "2006",
-    "img": "/img/movies/movie07.jpg",
-    "note": "当幸福来敲门，这个也是高中时候放过，李静老师放的，我初中英语老师也叫李静。这个好像是放完了。"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie07.webp",
+    "note": "当幸福来敲门，这个也是高中时候放过，李静老师放的，我初中英语老师也叫李静。这个好像是放完了。",
+    "watch": { "site": "ncat", "path": "/detail/15298.html" }
   },
   {
+    "id": "xingjichuanyue",
     "name": "星际穿越",
     "sub": "2014 · 诺兰",
-    "img": "/img/movies/movie08.jpg",
-    "note": "星际穿越，诺兰导演，但是我好像忘完了。"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie08.webp",
+    "note": "星际穿越，诺兰导演，但是我好像忘完了。",
+    "watch": { "site": "ncat", "path": "/detail/3958.html" }
   },
   {
+    "id": "aganzhengzhuan",
     "name": "阿甘正传",
     "sub": "1994",
-    "img": "/img/movies/movie09.jpg",
-    "note": "阿甘正传这个好像在高中班里放过片段。电影本身我是之前看完过的。"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie09.webp",
+    "note": "阿甘正传这个好像在高中班里放过片段。电影本身我是之前看完过的。",
+    "watch": { "site": "ncat", "path": "/detail/10152.html" }
   },
   {
+    "id": "yaoshen",
     "name": "我不是药神",
     "sub": "2018",
-    "img": "/img/movies/movie10.jpg",
-    "note": "我不是药神，这在中国电影里也是巅峰之作吧。倒不是说他这个电影的拍摄在技术上有什么特别强的，但是罕见病这个议题，这个电影能放出来这个难度，包括它推动后面的医药改革。都对中国社会影响深远。"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie10.webp",
+    "note": "我不是药神，这在中国电影里也是巅峰之作吧。倒不是说他这个电影的拍摄在技术上有什么特别强的，但是罕见病这个议题，这个电影能放出来这个难度，包括它推动后面的医药改革。都对中国社会影响深远。",
+    "watch": { "site": "ncat", "path": "/detail/599.html" }
   },
   {
+    "id": "gongfu",
     "name": "功夫",
     "sub": "2004",
-    "img": "/img/movies/movie11.jpg",
-    "note": "功夫，周星驰导演。星爷我也不用多说了。星爷的电影总是能贡献一些社会流行语。还有谁！！！"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie11.webp",
+    "note": "功夫，周星驰导演。星爷我也不用多说了。星爷的电影总是能贡献一些社会流行语。还有谁！！！",
+    "watch": { "site": "ncat", "path": "/detail/960.html" }
   },
   {
+    "id": "chongqingsenlin",
     "name": "重庆森林",
     "sub": "1994",
-    "img": "/img/movies/movie12.jpg",
-    "note": "重庆森林，王家卫导演。里面还有大帅哥梁朝伟。当然，主要角色就是梁朝伟和金城武，但是这电影剧情看得我有点迷糊。"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie12.webp",
+    "note": "重庆森林，王家卫导演。里面还有大帅哥梁朝伟。当然，主要角色就是梁朝伟和金城武，但是这电影剧情看得我有点迷糊。",
+    "watch": { "site": "ncat", "path": "/detail/50216.html" }
   },
   {
+    "id": "liulangdiqiu",
     "name": "流浪地球",
     "sub": "2019",
-    "img": "/img/movies/movie13.jpg",
-    "note": "流浪地球，中国影史上现象级的科幻电影，但是跟诺兰相比，还是差点意思。"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie13.webp",
+    "note": "流浪地球，中国影史上现象级的科幻电影，但是跟诺兰相比，还是差点意思。",
+    "watch": { "site": "ncat", "path": "/detail/939.html" }
   },
   {
+    "id": "liulangdiqiu2",
     "name": "流浪地球2",
     "sub": "2023",
-    "img": "/img/movies/movie14.jpg",
-    "note": "流浪地球2,相比1好了很多，但还是差点意思。为什么要让我们的吴京献祭。吴京是爷们儿。"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie14.webp",
+    "note": "流浪地球2,相比1好了很多，但还是差点意思。为什么要让我们的吴京献祭。吴京是爷们儿。",
+    "watch": { "site": "ncat", "path": "/detail/30470.html" }
   },
   {
+    "id": "xiaochou",
     "name": "小丑",
     "sub": "2019",
-    "img": "/img/movies/movie15.jpg",
-    "note": "小丑，R级片。写的精神病患者。不管它是不是R级片，反正吊打国内那些垃圾电影就完了。"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie15.webp",
+    "note": "小丑，R级片。写的精神病患者。不管它是不是R级片，反正吊打国内那些垃圾电影就完了。",
+    "watch": { "site": "ncat", "path": "/detail/48078.html" }
   },
   {
+    "id": "jiupinzhimaguan",
     "name": "九品芝麻官",
     "sub": "1994",
-    "img": "/img/movies/movie16.jpg",
-    "note": "九品芝麻官，依旧星爷。无需多言。也是适合全家坐一块当乐子看。"
+    "img": "https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/movies/movie16.webp",
+    "note": "九品芝麻官，依旧星爷。无需多言。也是适合全家坐一块当乐子看。",
+    "watch": { "site": "ncat", "path": "/detail/18850.html" }
   }
 ]

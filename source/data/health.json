@@ -1,0 +1,309 @@
+{
+  "schemaVersion": 2,
+  "configVersion": 14,
+  "generatedAt": "2026-08-26T07:14:45Z",
+  "ttlHours": 12,
+  "environment": {
+    "kind": "github_actions",
+    "os": "linux",
+    "python": "3.12.3",
+    "bits": "64",
+    "dnsSource": "system_resolver + cloudflare_doh",
+    "ci": {
+      "GITHUB_RUN_ID": "32941801329",
+      "GITHUB_RUN_ATTEMPT": "1",
+      "GITHUB_SHA": "1aa9f11b82fa928b9f806118f5890d088aeecf19",
+      "GITHUB_REF": "refs/heads/main",
+      "GITHUB_WORKFLOW": "Watchdog Health Check",
+      "RUNNER_OS": "Linux",
+      "RUNNER_ARCH": "X64"
+    },
+    "egressIp": "13.83.235.221"
+  },
+  "note": "health.json 是 watchdog 在某次检查时的观察结果（Watchdog observation）；HEALTHY 仅表示该站点当时满足本站预定义的允许策略，不代表第三方网站绝对安全；用户实际访问（User navigation）由离站确认页自行判断。configVersion/siteConfigHash/approvedHost 用于与当前 sites.json 配置绑定，任何不一致客户端一律 DENY。",
+  "sites": {
+    "ncat": {
+      "status": "healthy",
+      "healthState": "MANUAL_VERIFIED",
+      "automatedContentCheck": "BLOCKED_BY_WAF",
+      "verificationMode": "manual_user_environment",
+      "reason": "machine basic gates PASS（DNS/TLS）；内容检查被明确 WAF/anti-bot 阻断，内容确认由人工限时 maintenancePermit 承接（MANUAL_VERIFIED，非内容自动 PASS）",
+      "lastCheck": "2026-08-26T07:14:48Z",
+      "observedAt": "2026-08-26T07:14:45Z",
+      "checks": {
+        "dns": {
+          "state": "PASS",
+          "ok": true,
+          "detail": "www.ncat21.com: 固定公网 IP: 27.124.12.226",
+          "hosts": {
+            "www.ncat21.com": {
+              "state": "PASS",
+              "ok": true,
+              "detail": "固定公网 IP: 27.124.12.226",
+              "system": "系统解析: 27.124.12.226",
+              "doh": "DoH 解析: 27.124.12.226",
+              "resolvers": {
+                "system": {
+                  "addresses": [
+                    "27.124.12.226"
+                  ]
+                },
+                "cloudflare": {
+                  "addresses": [
+                    "27.124.12.226"
+                  ]
+                }
+              },
+              "intersection": [
+                "27.124.12.226"
+              ],
+              "allPublic": true,
+              "multiEdge": false,
+              "reason": [
+                "all_answers_public",
+                "resolvers_agree"
+              ],
+              "ips": [
+                "27.124.12.226"
+              ]
+            }
+          },
+          "pinnedIp": "27.124.12.226"
+        },
+        "tls": {
+          "state": "PASS",
+          "ok": true,
+          "detail": "TLS ok; 固定公网 IP=27.124.12.226, SNI=www.ncat21.com（notAfter=Oct 29 18:13:07 2026 GMT）",
+          "cert": {
+            "subject": {
+              "commonName": "ncat21.com"
+            },
+            "issuer": {
+              "countryName": "US",
+              "organizationName": "Let's Encrypt",
+              "commonName": "YE1"
+            },
+            "notBefore": "Jul 31 18:13:08 2026 GMT",
+            "notAfter": "Oct 29 18:13:07 2026 GMT",
+            "serialNumber": "068D3311B582F85621616E4F5BF70EA7DD85",
+            "SANs": [
+              [
+                "DNS",
+                "*.ncat21.com"
+              ],
+              [
+                "DNS",
+                "*.ncat22.com"
+              ],
+              [
+                "DNS",
+                "*.ncat23.com"
+              ],
+              [
+                "DNS",
+                "*.ncat24.com"
+              ],
+              [
+                "DNS",
+                "*.ncat25.com"
+              ],
+              [
+                "DNS",
+                "*.ncat26.com"
+              ],
+              [
+                "DNS",
+                "*.ncat27.com"
+              ],
+              [
+                "DNS",
+                "*.ncat28.com"
+              ],
+              [
+                "DNS",
+                "*.ncat29.com"
+              ],
+              [
+                "DNS",
+                "*.ncat30.com"
+              ],
+              [
+                "DNS",
+                "*.ncat31.com"
+              ],
+              [
+                "DNS",
+                "*.ncat32.com"
+              ],
+              [
+                "DNS",
+                "*.ncat33.com"
+              ],
+              [
+                "DNS",
+                "*.ncat34.com"
+              ],
+              [
+                "DNS",
+                "*.ncat35.com"
+              ],
+              [
+                "DNS",
+                "*.ncat36.com"
+              ],
+              [
+                "DNS",
+                "*.ncat37.com"
+              ],
+              [
+                "DNS",
+                "*.ncat38.com"
+              ],
+              [
+                "DNS",
+                "*.ncat39.com"
+              ],
+              [
+                "DNS",
+                "*.ncat40.com"
+              ],
+              [
+                "DNS",
+                "ncat21.com"
+              ],
+              [
+                "DNS",
+                "ncat22.com"
+              ],
+              [
+                "DNS",
+                "ncat23.com"
+              ],
+              [
+                "DNS",
+                "ncat24.com"
+              ],
+              [
+                "DNS",
+                "ncat25.com"
+              ],
+              [
+                "DNS",
+                "ncat26.com"
+              ],
+              [
+                "DNS",
+                "ncat27.com"
+              ],
+              [
+                "DNS",
+                "ncat28.com"
+              ],
+              [
+                "DNS",
+                "ncat29.com"
+              ],
+              [
+                "DNS",
+                "ncat30.com"
+              ],
+              [
+                "DNS",
+                "ncat31.com"
+              ],
+              [
+                "DNS",
+                "ncat32.com"
+              ],
+              [
+                "DNS",
+                "ncat33.com"
+              ],
+              [
+                "DNS",
+                "ncat34.com"
+              ],
+              [
+                "DNS",
+                "ncat35.com"
+              ],
+              [
+                "DNS",
+                "ncat36.com"
+              ],
+              [
+                "DNS",
+                "ncat37.com"
+              ],
+              [
+                "DNS",
+                "ncat38.com"
+              ],
+              [
+                "DNS",
+                "ncat39.com"
+              ],
+              [
+                "DNS",
+                "ncat40.com"
+              ]
+            ]
+          }
+        },
+        "http": {
+          "state": "BLOCKED_BY_WAF",
+          "ok": false,
+          "status": 850,
+          "detail": "WAF/anti-bot 阻断自动化出口（status=850，无法确认内容）"
+        },
+        "redirectChain": {
+          "state": "BLOCKED_BY_WAF",
+          "ok": false,
+          "hops": [
+            "https://www.ncat21.com/"
+          ],
+          "hopsDetail": [
+            {
+              "url": "https://www.ncat21.com/",
+              "status": 850,
+              "location": null,
+              "host": "www.ncat21.com",
+              "ip": "27.124.12.226",
+              "state": "BLOCKED_BY_WAF",
+              "detail": "WAF/anti-bot 阻断（status=850）"
+            }
+          ],
+          "finalHostname": "www.ncat21.com",
+          "detail": "WAF/anti-bot 阻断自动化出口（status=850，无法确认内容）"
+        },
+        "navigationScan": {
+          "state": "UNKNOWN",
+          "ok": false,
+          "detail": "未获取正文，跳过（UNKNOWN）",
+          "metaRefresh": [],
+          "jsForcedRedirect": [],
+          "externalHosts": {}
+        },
+        "fingerprint": {
+          "state": "UNKNOWN",
+          "ok": false,
+          "detail": "未获取正文，跳过（UNKNOWN）"
+        },
+        "riskScan": {
+          "state": "UNKNOWN",
+          "ok": false,
+          "detail": "未获取正文，跳过（UNKNOWN）",
+          "risks": []
+        },
+        "threatIntel": {
+          "state": "NOT_CONFIGURED",
+          "status": "not_configured",
+          "detail": "v1 未接入（人工审核 + 上述检查为准）"
+        }
+      },
+      "configVersion": 14,
+      "siteConfigHash": "30655bcf768d8d96374420e5e6472cc4cf8f79920ff82a33ed851b20718cd5d1",
+      "approvedHost": "www.ncat21.com"
+    }
+  }
+}

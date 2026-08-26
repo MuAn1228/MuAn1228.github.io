@@ -20,6 +20,7 @@ menu:
   交易: /finance/ || fas fa-chart-line
   分类: /categories/ || fas fa-folder-open
   关于本站: /about-site/ || fas fa-info-circle
+  私密: /private/ || fas fa-lock
 
 # ---------- 头像（旋转动画） ----------
 avatar:
@@ -139,6 +140,7 @@ inject:
     - '<script src="/js/github-heatmap.js"></script>'
     - '<script src="/js/github-stats.js"></script>'
     - '<script src="/js/music-toggle.js"></script>'
+    - '<script src="/js/reward-lightbox.js"></script>'
     - '<script src="/js/name-particles.js"></script>'
     
 
@@ -181,7 +183,8 @@ theme_color:
   meta_theme_color_light: "ffffff"
   meta_theme_color_dark: "#0d0d0d"
 
-# ---------- Umami 分析（自建 Railway 实例，文章 UV + 站点统计） ----------
+# ---------- Umami 分析（自建 Railway 实例；token 已失效(2026-08-26 返回 401) ----------
+# 访客数/浏览数已改用不蒜子 busuanzi（webinfo 显示），Umami 仅保留访问上报
 umami_analytics:
   enable: true
   serverURL: https://umami-production-7c80.up.railway.app
@@ -189,7 +192,7 @@ umami_analytics:
   website_id: 33be0901-0df7-4b3c-819c-3a3438904af8
   option: {}
   UV_PV:
-    page_uv: true
-    site_uv: true
-    site_pv: true
-    token: C5Wk7YibUkUWOaNIGu/NjK00WRwtmAODRnU+epCB+rRImRA4tTOVVqcVHyEq3/PmxqEg6Z6l+/TwhEQidj2U4FYhrxXYlW272/P0CvtonrVIbQKFM6i8z6zNGqrgTBBgRsMkAPzIfqVm3DFdG2UpUGoBoyHgD08GeqnLkxbKEMijaJ07pb5XBU7NKih7EDQmlO3iGsw3VRdpsRApG+wB/Gn3R8GZ/aq8h65W2PFzYCCnqzq9aXrSkzyYztkx1Zk7sMUTDYQbt5N/3yb0m+FoE/HgVen1ui8/BSWrAxuKZzwFpvGkHhiNSQRpXRBZchA3wUXfISCke5iU+YkYgzFFT6JV+ujpk0TH4cmntA==
+    page_uv: false
+    site_uv: false
+    site_pv: false
+    token: ''

@@ -1,0 +1,1 @@
+此目录存放候选域名技术核验报告（watchdog/candidate-reports/<host>.json），由 candidate_review.py verify 子命令生成。仅记录证据，不参与用户跳转链。

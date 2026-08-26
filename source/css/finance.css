@@ -355,7 +355,7 @@ html:has(.gmt-term) #footer { display: none !important; }
 html:has(.gmt-term) #page-header {
   background:
     linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)),
-    url(/img/finance/header-bg.png) center / cover no-repeat !important;
+    url(/img/finance/header-bg.webp) center / cover no-repeat !important;
   background-color: #000 !important;
 }
 /* 去掉原生暗色遮罩，让图片完整显示 */
@@ -395,3 +395,65 @@ html:has(.gmt-term) body { padding-top: 0 !important; }
 html:has(.gmt-term) #post-comment, html:has(.gmt-term) .comments, html:has(.gmt-term) [id*="post-comment"], html:has(.gmt-term) [id*="comments"] { display: none !important; }
 /* 隐藏版权信息 */
 html:has(.gmt-term) #copyright, html:has(.gmt-term) .copyright { display: none !important; }
+
+/* ============================================================
+   移动端适配 (≤ 1024px 平板 / ≤ 768px 手机)
+   桌面端组件用绝对定位(像素), 手机上改为流式全宽堆叠
+   ============================================================ */
+@media (max-width: 1024px) {
+  /* 关闭全屏页横向溢出 */
+  html:has(.gmt-term) { overflow-x: hidden !important; }
+  html:has(.gmt-term) body { overflow-x: hidden !important; }
+  /* 命令栏紧凑化 */
+  html:has(.gmt-term) #cmdbar { gap: 8px; padding: 0 8px; }
+  .cmd-ver { display: none; }
+  .w-asof { display: none; }
+}
+@media (max-width: 768px) {
+  /* sticky 栏改为普通流式, 避免滚动时盖住内容 */
+  #cmdbar, #tape-wrap, #toolbar { position: static !important; height: auto; }
+  html:has(.gmt-term) #cmdbar { height: 40px; gap: 6px; padding: 0 8px; }
+  .cmd-logo { font-size: 12px; }
+  .cmd-mid .cmd-btn { padding: 1px 6px; }
+  .cmd-right { gap: 8px; }
+  .conn-status { display: none; }
+  .cmd-clock { min-width: 0; font-size: 12px; }
+  #toolbar { padding: 0 6px; gap: 4px; }
+  .tb-label, .edit-hint { display: none; }
+
+  /* 跑马灯文字缩小, 避免撑宽 */
+  #tape { font-size: 9px; }
+  .tape-item { padding: 0 8px; font-size: 9px; min-width: 0; }
+  .tape-item .tl { min-width: 7ch; }
+  .tape-item .tc, .tape-item .tp { min-width: 6ch; }
+
+  /* 画布改为流式堆叠 (覆盖 JS 内联绝对定位) */
+  #grid { position: static !important; padding: 6px; height: auto !important; min-height: 0 !important; }
+  .widget {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 0 8px !important;
+    max-width: 100%;
+    min-width: 0;
+  }
+  /* 图/表类组件必须有显式高度: 若干组件用 absolute/flex+overflow 布局,
+     auto 高度会塌陷(如新闻列表 absolute、宽度/时钟/指数 flex:1), 导致内容被裁/错位 */
+  #w-heatmap { height: 400px !important; }
+  #w-breadth { height: 240px !important; }
+  #w-news    { height: 460px !important; }
+  #w-sector  { height: 300px !important; }
+  #w-aapl    { height: 320px !important; }
+  #w-metal   { height: 280px !important; }
+  #w-clock   { height: 380px !important; }
+  #w-indices { height: 440px !important; }
+  /* 自选基金是卡片列表(正常文档流), 自适应即可 */
+  #w-funds   { height: auto !important; min-width: 0; }
+
+  /* 表头/单元格更紧凑 */
+  .bd-grid { grid-template-columns: repeat(3, 1fr); }
+  .hm-list th, .hm-list td, .clock-table td, .idx-table td { white-space: normal; }
+}

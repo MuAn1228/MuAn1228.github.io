@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-25T12:23:49Z",
+  "note": "watchdog 对各站点连续失败 / 疑似域名变更的观测记录（仅供人工调查参考，绝不自动访问任何候选域名）。",
+  "sites": {
+    "ncat": {
+      "status": "disabled",
+      "consecutiveFailures": 4,
+      "suspectedDomainChange": false,
+      "wasHealthyEver": false,
+      "lastSeen": "2026-08-25T12:23:49Z"
+    }
+  }
+}

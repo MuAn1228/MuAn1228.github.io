@@ -6,4 +6,3 @@ title: 游戏
 
 <script src="/js/game-ballpit.js"></script>
 <script src="/js/media-grid.js"></script>
-<script src="/js/reward-lightbox.js"></script>

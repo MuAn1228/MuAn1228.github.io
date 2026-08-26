@@ -80,7 +80,45 @@
   - **基金数据免代理**：天天基金 `pingzhongdata/<code>.js`（历史净值+syl_1y/3y/6y/1n，串行加载防全局变量覆盖）+ 腾讯 `qt.gtimg.cn/q=jjXXXX`（批量最新净值，GBK，字段 `code~name~估值~估涨~~净值~累计~日涨跌%~日期`）。script 标签加载天然无 CORS。`fundgz.1234567.com.cn` 已死勿用。
 - 布局：localStorage `gmt-layout-v2`；预设 4 套在 JS `PRESETS`；右列组件（如 09 基金）用 `right:8px` 锚定 + 预设 geo width=-1 表示。
 - 用户自选基金 4 只在 JS `FUNDS` 常量（017811/016370/019172/017641），用户本人是基金交易者。
+- **移动端适配（2026-08-24，提交 6b674ea）**：全部在 `finance.css` 的媒体查询里处理，JS 不用改。
+  - `@media (max-width:1024px)`：页面关横向溢出（html/body `overflow-x:hidden`）、命令栏紧凑、隐藏 `.w-asof`/`.cmd-ver`。
+  - `@media (max-width:768px)`：组件全宽纵向堆叠——`#grid` 改 static、`.widget` 用 `position:static;width:100%;left/top/right:auto!important` 覆盖 JS 内联绝对定位；**图/表类组件必须设显式高度**（heatmap 400 / breadth 240 / news 460 / sector 300 / aapl 320 / metal 280 / clock 380 / indices 440 / funds auto），否则会塌陷（news 的 `#news-list` 是 `absolute;inset:27px 0 0`、breadth/clock/indices 用 flex:1 或百分比高度，`height:auto` 时内容被裁、与相邻组件重叠）；sticky 命令栏/跑马灯/工具栏改 static 防止滚动时盖住内容。
+  - **坑**：本环境浏览器无法真正模拟移动视口（CDP/device metrics override 无效，读到的还是桌面宽度），移动端布局只能靠 CSS 推理 + 用户在手机实测反馈。
+- **顶部背景图（2026-08-24，提交 1b7f1e9）**：`source/img/finance/header-bg.webp`（由原 header-bg.png 264KB 经 sharp 转出 ~25KB），原 png 已删，CSS 引用 `/img/finance/header-bg.webp`。改 finance.css / index.md 后记得把 `<link ...finance.css?` 版本号 `?v=N` +1，否则浏览器缓存旧样式。
 - 验证：项目有 jsdom，用 jsdom 冒烟测试（stub canvas/fetch 补 Origin 头）可端到端验证，见 `.workbuddy/skills/hexo-jsdom-smoke-test/`。Chrome 无头截图在本机环境失败，勿浪费时间。
+
+## 电影观看外链安全模块（/watch/，方案 A，2026-08-24）
+- **功能**：电影卡「在线观看」→ 离站确认页 `/watch/?movie=<id>` → 用户主动「继续访问」→ 第三方（目标为「网飞猫」）。**安全第一：宁可链接不可用，也不把用户带到未核验的第三方网站。**
+- 文件：
+  - `source/data/movies.json`：每部电影加 `id` + `watch:{site,path}` 映射（`path` 是**人工审核过的站内路径**，不是完整 URL）。
+  - `source/data/sites.json`：**人工审核白名单**（唯一可信域名来源）。当前 ncat 为 `status:healthy`、`verificationMode:manual_user_environment`、`baseUrl=https://www.ncat21.com`（2026-08-25 人工核验 + 正式启用，configVersion=14）。
+  - `source/data/health.json`：**watchdog 自动生成**的安全决策数据（客户端 Fail-Closed 依赖）。
+  - `source/js/watch.js`：UMD 安全校验模块，导出 `evaluateWatch`（纯函数）并驱动确认页。任何检查失败 → `{ok:false}`，绝不跳转。
+  - `source/watch/index.md`：离站确认页（HTML 骨架，逻辑在 watch.js）。
+  - `source/js/media-grid.js`：电影卡渲染「在线观看」按钮，点击只把 movie id 带到确认页。
+  - `watchdog_check.py` + `.github/workflows/watchdog.yml`：GitHub Actions 每 6h 跑一次（cron `23 */6 * * *`），对 sites.json 里 healthy 的站点做 DNS/TLS/HTTP/redirect/fingerprint/riskScan 检查，写 health.json。
+- **核心安全规则（改动前必读，勿放宽）**：
+  - 状态**只有两态**：`HEALTHY` / `DISABLED`。异常/UNKNOWN/超时/配置错/数据损坏/域名变化/redirect 异常/风险信号 → 一律 `DISABLED`。
+  - **destination 只能由 movie_id → site_id → approved path 构建**。禁止开放重定向（不出现 `/go?url=` `/watch?url=`），用户永远不能提供 URL。
+  - `health.json` **Fail Closed**：不存在/解析错/schema 不符/版本不支持/过期/status 非 healthy/映射缺失/target 不符白名单 → DENY。**不做任何 fallback**（旧 health.json、旧域名、搜索结果、猜测 URL）。
+  - **redirect 链逐跳验证**：每跳只允许 approved host + 人工批准的 `allowedRedirectHosts`，仅 https、无 userinfo。
+  - **新域名不自动发现/自动恢复**：人工核验 → 手动填 sites.json → 建基线 → 置 healthy → watchdog 下次检查通过 → health.json 变 healthy。
+  - Threat Intelligence 未接入 → `not_configured`（不是「更安全」的证据）；`MALICIOUS/SUSPICIOUS/TIMEOUT/UNAVAILABLE/RATE_LIMITED` → DISABLED。
+  - fingerprint/risk marker 只是**风险信号**，不是「网站安全」的证明。
+- **人工恢复 ncat 的流程（2026-08-25 已完成）**：拿到真实域名 → 人工核验 → 填 `sites.json` 的 `baseUrl/hosts/allowedRedirectHosts/baseline` → `begin` 迁移（pending_verification）→ 正式 watchdog → `approve`（healthy）→ `renew` 签发限时 permit → 客户端恢复「继续访问」。
+- **verificationMode（2026-08-25 新增，verificationMode 已纳入 SECURITY_FIELDS / siteConfigHash）**：
+  - 枚举仅允许 `automated`（默认）/ `manual_user_environment`。缺失/非法 → 站点无效、health disabled（Fail Closed）。
+  - **manual 模式语义**：机器负责所有可自动证明的安全门（DNS/TLS/配置绑定），**不关闭任何机器门**；仅「内容确认」由人工在真实用户环境完成，并以限时 maintenancePermit 承接。
+  - **`BLOCKED_BY_WAF` 是独立证据态**，严格定义为 **DNS PASS + TLS PASS + 明确 WAF/anti-bot 阻断证据**（HTTP 850 / 明确 anti-bot challenge / 明确 WAF 响应头）。普通 403/404/500/timeout/connection reset **不得**归类为 BLOCKED_BY_WAF，保持原 UNKNOWN/FAIL 语义。禁止任何站点特判。
+  - health 顶层 `status` 保留二态 `healthy/disabled`，另加诊断三态 `healthState`（`AUTOMATED_HEALTHY`/`MANUAL_VERIFIED`/`DISABLED`）与 `automatedContentCheck`（`PASS`/`BLOCKED_BY_WAF`/`FAIL`/`UNKNOWN`）。合法组合：`healthy+AUTOMATED_HEALTHY`、`healthy+MANUAL_VERIFIED`、`disabled+DISABLED`；非法组合客户端 DENY。
+  - **`healthy` 仅表示机器基础安全门与当前 verificationMode 所要求的安全条件成立，【不】意味着内容级自动检查 PASS**（`healthy+MANUAL_VERIFIED+BLOCKED_BY_WAF` 即内容被 WAF 阻断、由人工许可承接）。
+  - manual 模式 ALLOW 需 **有效 maintenancePermit**：12–24h，含 `issuedAt/expiresAt/approvedHost/configVersion/siteConfigHash/verificationMethod/verificationNotes` + 全部 7 项 attestation；任何关键字段缺失 → DENY；不允许永久 permit、不允许自动续签；permit 绑定 approvedHost/configVersion/siteConfigHash/verificationMode，换域名或配置变化后旧 permit 自动失效。
+  - FAIL / 通用 UNKNOWN **永远不能人工翻案**（manual renew 门禁要求 health 已为 MANUAL_VERIFIED + BLOCKED_BY_WAF）；candidate 永远不能进入跳转链；禁止 fallback 旧域名/候选域名。
+  - 时钟异常防护：客户端拒绝 `now < permit.issuedAt` 与 `now < health.generatedAt`（防回拨时钟复用过期许可），结合短 TTL 双重收窄窗口。
+  - 人工签发 permit 走 `tools/domain-migrate.py renew --site ncat --issued-by 姓名 --verification-method … --verification-notes … --attestation <7 项>`（TTL 默认 24h，manual 强制 [12h,24h]）。
+- **当前状态（2026-08-25 正式启用）**：ncat = `healthy`（approvedHost=`www.ncat21.com`，唯一 approved host，configVersion=14）；health.json = `healthy + MANUAL_VERIFIED + BLOCKED_BY_WAF`（DNS/TLS PASS，内容被 WAF 阻断、由人工许可承接）；`maintenancePermit` 已签发（TTL 12h，人工 renew，禁止 24h/自动续签/永久 permit）。**状态只能人工变更：permit 到期须人工 `tools/domain-migrate.py renew`；禁止自动续签、自动改状态、自动 candidate→approved。**
+- **watchdog 与部署**：watchdog 用 `GITHUB_TOKEN` push health.json 到 main **不会**触发 `update-contributions.yml`（GitHub 防递归规则），所以 watchdog 自己带部署步骤（Setup Pages + deploy-pages）。两者共用 `concurrency.group: pages` 防冲突。
+- 测试：`node test/watch-security.js`（177 个用例）+ `node test/fault-drill.js`（55）+ `node test/hash-crosscheck.js`（63）+ `python test/candidate-security.py`（52）+ `python test/dns-security.py`（55）+ `python test/domain-migrate-security.py`（77），全部 exit 0 才通过。
 
 ## 后续工作方式
 1. 改代码 → 本地 `hexo s` 预览验证 → `git commit` → `git push origin source:main` → **自动部署（约 1-2 分钟），无需手动触发**。

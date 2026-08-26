@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-25T00:00:00Z",
+  "note": "候选域名注册表（candidate registry）。仅用于记录与人工审核，绝不参与用户跳转链。status 只能是 CANDIDATE / READY_FOR_CHECK / TECHNICALLY_ELIGIBLE / REJECTED / DROPPED。任何候选都绝不写入 sites.json / health.json / watch.js / movies.json，绝不加入 allowedRedirectHosts。新域名不能自动升级为 approved；最终批准只能由人工审核后修改 sites.json。",
+  "candidates": []
+}
