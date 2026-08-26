@@ -14,11 +14,11 @@ bottom:
     html: |
       <div style="display:flex;justify-content:center;gap:18px;padding:12px 10px;align-items:flex-start;">
         <div style="text-align:center;">
-          <img src="/img/reward-wechat.png" alt="微信收款码" style="height:140px;width:auto;border-radius:8px;">
+          <img src="/img/reward-wechat.webp" alt="微信收款码" style="height:140px;width:auto;border-radius:8px;">
           <div style="font-size:12px;color:#999;margin-top:6px;">微信</div>
         </div>
         <div style="text-align:center;">
-          <img src="/img/reward-alipay.jpg" alt="支付宝收款码" style="height:140px;width:auto;border-radius:8px;">
+          <img src="/img/reward-alipay.webp" alt="支付宝收款码" style="height:140px;width:auto;border-radius:8px;">
           <div style="font-size:12px;color:#999;margin-top:6px;">支付宝</div>
         </div>
       </div>

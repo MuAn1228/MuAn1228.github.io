@@ -125,24 +125,14 @@ inject:
     - '<script src="/js/sakura.js"></script>'
     - '<script src="/js/click-effect.js"></script>'
     - '<script src="/js/live2d.js"></script>'
-    - '<script src="/lib/APlayer.min.js"></script>'
     - '<script src="/js/pjax-prefetch.js"></script>'
-    - '<script src="/js/music-playlist.js"></script>'
-    - '<script src="/lib/three.min.js" defer></script>'
-    - '<script src="/lib/vanta.birds.min.js" defer></script>'
-    - '<script src="/js/vanta.js" defer></script>'
-    - '<script src="/js/hero-3d.js" defer></script>'
-    - '<script src="/js/rubik.js" defer></script>'
     - '<script src="/js/visitor-count.js"></script>'
-    - '<script src="/lib/tagcanvas.min.js"></script>'
-    - '<script src="/js/tagcloud.js"></script>'
     - '<script src="/js/typing.js"></script>'
-    - '<script src="/js/marquee.js"></script>'
-    - '<script src="/js/github-heatmap.js"></script>'
     - '<script src="/js/github-stats.js"></script>'
     - '<script src="/js/music-toggle.js"></script>'
     - '<script src="/js/reward-lightbox.js"></script>'
     - '<script src="/js/name-particles.js"></script>'
+    - '<script src="/js/page-assets.js"></script>'
     
 
 # ---------- 评论系统（Giscus） ----------
@@ -160,9 +150,9 @@ reward:
   enable: false
   text: 打赏
   QR_code:
-    - img: /img/reward-wechat.png
+    - img: /img/reward-wechat.webp
       text: 微信
-    - img: /img/reward-alipay.jpg
+    - img: /img/reward-alipay.webp
       text: 支付宝
 
 # ---------- 主题色（紫色系，替换默认蓝） ----------
@@ -183,6 +173,14 @@ theme_color:
   scrollbar_color: "#8e6bb5"
   meta_theme_color_light: "ffffff"
   meta_theme_color_dark: "#0d0d0d"
+
+# ---------- 文章图片懒加载（native，build 时给 post 内 <img> 加 loading="lazy"） ----------
+# 解决长文章多图首屏一次性拉取卡顿：文本先渲染，图片随滚动加载
+lazyload:
+  enable: true
+  native: true
+  field: post
+  placeholder:
 
 # ---------- Umami 分析（自建 Railway 实例；token 已失效(2026-08-26 返回 401) ----------
 # 访客数/浏览数已改用不蒜子 busuanzi（webinfo 显示），Umami 仅保留访问上报

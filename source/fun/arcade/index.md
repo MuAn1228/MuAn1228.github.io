@@ -20,6 +20,8 @@ title: 小游戏
   </div>
 </div>
 
+<script src="/lib/three.min.js" defer></script>
+<script src="/js/rubik.js" defer></script>
 <script src="/js/arcade.js"></script>
 <script src="/js/flappy-bird.js"></script>
 <script src="/js/gesture-particles.js"></script>
