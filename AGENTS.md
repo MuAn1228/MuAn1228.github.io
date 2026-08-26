@@ -87,6 +87,20 @@
 - **顶部背景图（2026-08-24，提交 1b7f1e9）**：`source/img/finance/header-bg.webp`（由原 header-bg.png 264KB 经 sharp 转出 ~25KB），原 png 已删，CSS 引用 `/img/finance/header-bg.webp`。改 finance.css / index.md 后记得把 `<link ...finance.css?` 版本号 `?v=N` +1，否则浏览器缓存旧样式。
 - 验证：项目有 jsdom，用 jsdom 冒烟测试（stub canvas/fetch 补 Origin 头）可端到端验证，见 `.workbuddy/skills/hexo-jsdom-smoke-test/`。Chrome 无头截图在本机环境失败，勿浪费时间。
 
+## 音乐播放器模块（全站常驻，重要）
+- **架构**：`source/js/music-playlist.js` 是全站唯一音频引擎（迷你播放器，硬编码 49 首歌单，fixed mini APlayer），通过 `window.__blogMusic` 暴露接口；音乐页 `/fun/music/` 的大播放器 `music-playlist-grid.js`（读 `/data/music-playlist.json` 394 首）复用同一引擎。两者共用：切页声音不断、状态镜像。
+- **本地化机制**：本地 mp3 存 GitHub 仓库 `MuAn1228/music-assets`（默认分支 `master`），经 jsDelivr 分发（`https://cdn.jsdelivr.net/gh/MuAn1228/music-assets@master/<songId>.mp3`）。**仓库真实白名单以 `source/data/local-playlist-ids.json`（155 个 id）为唯一权威**，判定代码里一律读它，不要凭歌名/直觉硬编码。
+- **音源优先级（2026-08-26 提交 5862597 定案）**：① CDN 白名单（最稳）→ ② Meting API `api.injahow.cn/meting/?server=netease&type=song&id=xxx` → ③ 网易云官方外链 `https://music.163.com/song/media/outer/url?id=xxx.mp3` 兜底（仅约 40% 免费可外链的歌曲可用，版权受限返回 HTML）。
+- **必读坑（别再踩）**：
+  - **假本地坑**：曾把 4 首歌标了 `local:true` 但仓库无文件（1496089152/1831482748/2101397575/1497588709），播放时 jsDelivr 404 静默失败。已改为按 local-playlist-ids.json 白名单判定并去掉错误标记。
+  - `api.i-meto.com` 已复活（元数据可用），但**音频 URL 必须带 `Referer: https://api.i-meto.com/` 才能 206**，浏览器播放自带本站 referer → 必然 404，勿用。
+  - `api.injahow.cn` 存在全局限流（返回 `{"message":"请求次数已达上限"}`），别再为此折腾代码，限流是常态，failover 已兜住。
+  - 网易云 CDN 直链带时效签名（`m801.music.126.net/20260826...`），只用作当前会话的 src，不能存 sessionStorage 跨页复用。
+- **切页续播/防卡死**：`pjax:send` 记录 `wasPlayingOnNav`，`pjax:complete` 时非用户主动暂停则 `ap.play()`；audio `error` 且当前为大播放器曲目时交给音乐页自己处理，迷你列表则自动跳下一首（`skipCount>2` 停止，防整单死循环）。
+- **切页性能**：`source/js/pjax-prefetch.js`（注入在 music-playlist.js 之前）对悬停/聚焦的站内链接做低优先级 `<link rel=prefetch>`，把 pjax 的 fetch 提前到空闲时段，避免瞬时并发挤占音频缓冲。
+- **当前状态（2026-08-26 推送后）**：49 首中 10 首走 CDN（稳定），40 首走网络源（Meting 限流时仅官方外链可用歌能播）。**彻底方案 = 把迷你歌单缺的 mp3 下载上传到 music-assets 仓库（需可写该仓库的 GitHub 凭据），未执行，等用户实测反馈后按需做。**
+- 验证：jsdom 冒烟测试可以端到端验证解析逻辑（stub APlayer/Audio + mock Meting 拒绝，见 .workbuddy/skills/hexo-jsdom-smoke-test/）；浏览器沙箱无音频输出，切页续播只能验证状态（isPlaying）即可。
+
 ## 电影观看外链安全模块（/watch/，方案 A，2026-08-24）
 - **功能**：电影卡「在线观看」→ 离站确认页 `/watch/?movie=<id>` → 用户主动「继续访问」→ 第三方（目标为「网飞猫」）。**安全第一：宁可链接不可用，也不把用户带到未核验的第三方网站。**
 - 文件：
