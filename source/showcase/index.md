@@ -107,7 +107,6 @@ title: 展示
     <h2 class="resume-sec-title">📚 个人文章 Blog Posts</h2>
     <div class="resume-sec-body">
       <ul class="resume-posts">
-        <li>《我的前半生》— 个人成长回忆录 (小学/初中/高中经历)</li>
         <li>《我的恋爱史与爱情观》— 情感经历与思考</li>
         <li>《C语言入门五关卡》— C语言入门教程</li>
         <li>Go 后端系列：接口、泛型、并发性</li>

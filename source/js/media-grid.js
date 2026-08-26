@@ -6,6 +6,20 @@
     });
   }
 
+  // 观看按钮：仅当数据项带有经人工审核的 watch 映射（movies.json）时渲染。
+  // 点击只携带 movie id 到确认页，destination 由确认页从 movie_id→site_id→approved path 构建，
+  // 绝不在此处拼接或接受用户提供的 URL（防开放重定向）。
+  function watchBtnHtml(item) {
+    if (!item.watch || !item.id) return '';
+    return '<button type="button" class="media-watch" data-id="' + escapeHtml(item.id) + '">在线观看</button>';
+  }
+
+  // 阅读 PDF 按钮：书籍卡片专用，直链自家 jsDelivr CDN（books.json 的 pdf 字段），新窗口打开
+  function bookPdfHtml(item) {
+    if (!item.pdf) return '';
+    return '<a class="media-pdf" href="' + escapeHtml(item.pdf) + '" target="_blank" rel="noopener noreferrer" title="打开 PDF 在线阅读/下载">阅读 PDF</a>';
+  }
+
   function render(mountId, dataUrl) {
     var mount = document.getElementById(mountId);
     if (!mount) return;
@@ -15,17 +29,23 @@
         mount.innerHTML = items.map(function (item) {
           var name = item.name, sub = item.sub, img = item.img, note = item.note || '';
           var attrs = 'data-name="' + escapeHtml(name) + '" data-sub="' + escapeHtml(sub) + '" data-note="' + escapeHtml(note) + '"';
+          var btn = watchBtnHtml(item);
+          var pdfBtn = bookPdfHtml(item);
           if (img) {
             return '<div class="media-card" ' + attrs + '>' +
               '<img src="' + escapeHtml(img) + '" alt="' + escapeHtml(name) + '" loading="lazy" decoding="async">' +
               '<span class="media-name">' + escapeHtml(name) + '</span>' +
               '<span class="media-sub">' + escapeHtml(sub) + '</span>' +
+              pdfBtn +
+              btn +
               '</div>';
           }
           return '<div class="media-card media-noimg" ' + attrs + '>' +
             '<div class="media-placeholder"><i class="fas fa-image"></i></div>' +
             '<span class="media-name">' + escapeHtml(name) + '</span>' +
             '<span class="media-sub">' + escapeHtml(sub) + '</span>' +
+            pdfBtn +
+            btn +
             '</div>';
         }).join('');
         bindGridTip(mount);
@@ -33,6 +53,19 @@
       .catch(function () {
         mount.innerHTML = '<p style="color:#999;text-align:center;">加载失败</p>';
       });
+  }
+
+  // 事件委托：点击「在线观看」→ 仅跳转确认页（携带 movie id），不做任何直接外跳。
+  function bindWatch(mount) {
+    mount.addEventListener('click', function (e) {
+      var target = e.target;
+      while (target && target !== mount && !(target.classList && target.classList.contains('media-watch'))) {
+        target = target.parentNode;
+      }
+      if (!target || target === mount || !target.classList.contains('media-watch')) return;
+      var id = target.getAttribute('data-id');
+      if (id) window.location.assign('/watch/?movie=' + encodeURIComponent(id));
+    });
   }
 
   function createGridTip() {
@@ -132,6 +165,8 @@
     render('game-grid', '/data/games.json');
     render('book-grid', '/data/books.json');
     initBookToggle();
+    var movieGrid = document.getElementById('movie-grid');
+    if (movieGrid) bindWatch(movieGrid);
   }
 
   if (document.readyState === 'loading') {

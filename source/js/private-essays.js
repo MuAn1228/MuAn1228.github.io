@@ -82,7 +82,14 @@
   }
 
   // —— 简易 markdown 渲染（覆盖博客文章用到的子集）——
+  // 图片只允许解密后内联的 data:image 标签；其余 <img> 一律不渲染，防止任何外链
   function renderMd(md) {
+    var imgs = [];
+    md = md.replace(/<img\s+src="(data:image\/[^"]+)"(?:\s+[^>]*)?>/g, function (all, src) {
+      var idx = imgs.length;
+      imgs.push('<img src="' + src + '" loading="lazy" alt="">');
+      return '\uE000' + idx + '\uE001';
+    });
     var escaped = md
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     var html = escaped
@@ -93,11 +100,12 @@
       .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
       .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
       .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener nofollow">$1</a>')
-      .replace(/`([^`\n]+)`/g, '<code>$1</code>');
+      .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+      .replace(/\uE000(\d+)\uE001/g, function (_, i) { return imgs[+i] || ''; });
     return html.split(/\n{2,}/).map(function (blk) {
       var t = blk.trim();
       if (!t) return '';
-      if (/^<(h[123]|hr|blockquote|ul|ol|pre)/.test(t)) return t;
+      if (/^<(h[123]|hr|blockquote|ul|ol|pre|img)\b/.test(t)) return t;
       return '<p>' + t.replace(/\n/g, '<br>') + '</p>';
     }).join('\n');
   }

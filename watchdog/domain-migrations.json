@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-25T15:33:41Z",
+  "note": "域名迁移审计记录（Domain Migration Manifest）。只作为人工审计与追溯，绝不进入 source/、public/，watch.js 不读取，不参与任何跳转安全决策。每次迁移的 begin/approve/revert 由 tools/domain-migrate.py 写入；含旧配置快照，用于 revert 时精确恢复。",
+  "migrations": [
+    {
+      "site": "ncat",
+      "fromSnapshot": {
+        "id": "ncat",
+        "displayName": "网飞猫",
+        "status": "disabled",
+        "reason": "真实域名待人工核验。当前 baseUrl/hosts 为 RFC 2606 保留占位域名（ncat.example 永不解析），watchdog 无法通过 DNS 检查，系统保持禁用（Fail Closed）。人工核验新域名后手动填入并置 status=healthy，且需签发有效期内的 maintenancePermit 方可放行跳转。",
+        "baseUrl": "https://ncat.example",
+        "hosts": [
+          "ncat.example"
+        ],
+        "allowedRedirectHosts": [
+          "ncat.example"
+        ],
+        "reviewedBy": "MuAn",
+        "reviewedAt": "2026-08-24",
+        "baseline": {
+          "titleMarker": "网飞猫"
+        },
+        "threatIntel": {
+          "enabled": false
+        },
+        "maintenancePermit": null
+      },
+      "fromHost": "ncat.example",
+      "toHost": "www.ncat21.com",
+      "fromConfigVersion": 7,
+      "toConfigVersion": null,
+      "status": "reverted",
+      "startedAt": "2026-08-25T09:52:43Z",
+      "approvedAt": null,
+      "approvedBy": null,
+      "verificationResult": null,
+      "revertedAt": "2026-08-25T10:13:15Z",
+      "revertedConfigVersion": 9,
+      "revertReason": "正式 watchdog DNS 双源无交集（CDN 多边缘 IP：system=118.107.9.179 / doh=118.107.9.220）判 UNKNOWN → DISABLED，保持 Fail Closed，迁移撤销，ncat 回 disabled"
+    },
+    {
+      "site": "ncat",
+      "fromSnapshot": {
+        "id": "ncat",
+        "displayName": "网飞猫",
+        "status": "disabled",
+        "reason": "正式 watchdog DNS 双源无交集（CDN 多边缘 IP：system=118.107.9.179 / doh=118.107.9.220）判 UNKNOWN → DISABLED，保持 Fail Closed，迁移撤销，ncat 回 disabled",
+        "baseUrl": "https://ncat.example",
+        "hosts": [
+          "ncat.example"
+        ],
+        "allowedRedirectHosts": [
+          "ncat.example"
+        ],
+        "reviewedBy": "MuAn",
+        "reviewedAt": "2026-08-24",
+        "baseline": {
+          "titleMarker": "网飞猫"
+        },
+        "threatIntel": {
+          "enabled": false
+        },
+        "maintenancePermit": null
+      },
+      "fromHost": "ncat.example",
+      "toHost": "www.ncat21.com",
+      "fromConfigVersion": 9,
+      "toConfigVersion": null,
+      "status": "reverted",
+      "startedAt": "2026-08-25T11:11:57Z",
+      "approvedAt": null,
+      "approvedBy": null,
+      "verificationResult": null,
+      "revertedAt": "2026-08-25T12:23:41Z",
+      "revertedConfigVersion": 11,
+      "revertReason": "正式 watchdog（GitHub Actions run#5）HTTP UNKNOWN(850) → DISABLED，Fail Closed，迁移撤销，ncat 回 disabled"
+    },
+    {
+      "site": "ncat",
+      "fromSnapshot": {
+        "id": "ncat",
+        "displayName": "网飞猫",
+        "status": "disabled",
+        "reason": "正式 watchdog（GitHub Actions run#5）HTTP UNKNOWN(850) → DISABLED，Fail Closed，迁移撤销，ncat 回 disabled。verificationMode=manual_user_environment 已配置：当前仍为 disabled，www.ncat21.com 暂不批准；仅当人工完成真实用户环境核验并签发有效 maintenancePermit 后才可能放行。",
+        "verificationMode": "manual_user_environment",
+        "baseUrl": "https://ncat.example",
+        "hosts": [
+          "ncat.example"
+        ],
+        "allowedRedirectHosts": [
+          "ncat.example"
+        ],
+        "reviewedBy": "MuAn",
+        "reviewedAt": "2026-08-24",
+        "baseline": {
+          "titleMarker": "网飞猫"
+        },
+        "threatIntel": {
+          "enabled": false
+        },
+        "maintenancePermit": null
+      },
+      "fromHost": "ncat.example",
+      "toHost": "www.ncat21.com",
+      "fromConfigVersion": 12,
+      "toConfigVersion": 14,
+      "status": "approved",
+      "startedAt": "2026-08-25T15:15:25Z",
+      "approvedAt": "2026-08-25T15:33:41Z",
+      "approvedBy": "MuAn",
+      "verificationResult": {
+        "healthGeneratedAt": "2026-08-25T15:21:47Z",
+        "healthObservedAt": "2026-08-25T15:21:47Z",
+        "healthStatus": "healthy",
+        "configVersion": 13,
+        "siteConfigHash": "8e44f68a30d005c47f4e255383bd766437125f57b3c54e30631239af881b5b86",
+        "approvedHost": "www.ncat21.com",
+        "checksAllPass": true
+      },
+      "revertedAt": null
+    }
+  ]
+}

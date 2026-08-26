@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 2,
+  "configVersion": 14,
+  "updatedAt": "2026-08-25T00:00:00Z",
+  "note": "第三方站点唯一域名配置入口（single source of truth）。schemaVersion=2：含 configVersion（全局配置版本，任何影响安全决策的站点修改必须 +1）与站点状态（disabled / pending_verification / healthy，仅人工修改，禁止自动转换）。verificationMode 枚举 automated / manual_user_environment：manual 模式内容核验由人工在真实用户环境确认并以限时 maintenancePermit 承接，机器基础安全门（DNS/TLS）始终保留。maintenancePermit 为人工签发的限时维护许可，是允许电影外链跳转的必要安全条件之一。本文件不参与候选域名注册（见 watchdog/candidates.json）。",
+  "sites": [
+    {
+      "id": "ncat",
+      "displayName": "网飞猫",
+      "status": "healthy",
+      "reason": "人工真实用户环境核验通过（7 项 attestation 全部 true）：www.ncat21.com 首页与 /detail/9470.html 在手机移动网络+普通浏览器核验正常，正式 watchdog 确认 MANUAL_VERIFIED",
+      "verificationMode": "manual_user_environment",
+      "baseUrl": "https://www.ncat21.com",
+      "hosts": [
+        "www.ncat21.com"
+      ],
+      "allowedRedirectHosts": [
+        "www.ncat21.com"
+      ],
+      "reviewedBy": "MuAn",
+      "reviewedAt": "2026-08-24",
+      "baseline": {
+        "titleMarker": "网飞猫"
+      },
+      "threatIntel": {
+        "enabled": false
+      },
+      "maintenancePermit": {
+        "approvedHost": "www.ncat21.com",
+        "configVersion": 14,
+        "siteConfigHash": "30655bcf768d8d96374420e5e6472cc4cf8f79920ff82a33ed851b20718cd5d1",
+        "verificationMode": "manual_user_environment",
+        "issuedAt": "2026-08-26T05:30:53Z",
+        "expiresAt": "2026-08-26T17:30:53Z",
+        "issuedBy": "MuAn",
+        "reason": "permit 到期人工续签：手机移动网络+普通浏览器核验（无 DevTools/CDP），首页与 /detail/9470.html 正常，7 项 attestation 通过，approvedHost 与 configVersion=14 绑定",
+        "verificationMethod": "real_browser_mobile_network",
+        "verificationNotes": "人工在手机移动网络+普通浏览器核验首页与 /detail/9470.html，7 项 attestation 全部通过",
+        "attestations": {
+          "content_verified": true,
+          "no_phishing_mimic": true,
+          "no_forced_download": true,
+          "no_open_redirect": true,
+          "no_unapproved_navigation": true,
+          "https_throughout": true,
+          "matches_baseline": true
+        }
+      }
+    }
+  ]
+}

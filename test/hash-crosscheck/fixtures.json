@@ -1,0 +1,158 @@
+{
+  "note": "siteConfigHash 跨语言一致性测试夹具。覆盖：ASCII / Unicode / nested object / array（含重复项与 null 元素）/ null / bool / number / key order（两例内容相同顺序不同，哈希必须相等）/ field omission（非安全字段 displayName/reviewedBy/threatIntel/maintenancePermit 必须排除；缺失安全字段也必须稳定）/ verificationMode（自动化 vs 人工环境模式参与哈希，mode_automated 与 mode_manual 内容相同仅模式不同，哈希必须不同）。安全字段固定为 id/status/baseUrl/hosts/allowedRedirectHosts/baseline/verificationMode，见 watchdog_check.py SECURITY_FIELDS 与 watch.js SECURITY_FIELDS。",
+  "cases": [
+    {
+      "name": "ascii_basic",
+      "site": {
+        "id": "ncat",
+        "status": "disabled",
+        "baseUrl": "https://ncat.example",
+        "hosts": ["ncat.example"],
+        "allowedRedirectHosts": ["ncat.example"],
+        "baseline": { "titleMarker": "ncat-marker", "theme": "dark" },
+        "verificationMode": "automated"
+      }
+    },
+    {
+      "name": "unicode_text",
+      "site": {
+        "id": "ncat",
+        "displayName": "网飞猫",
+        "status": "healthy",
+        "reason": "真实域名待人工核验，含中文说明。",
+        "baseUrl": "https://ncat.example",
+        "hosts": ["ncat.example"],
+        "allowedRedirectHosts": ["ncat.example"],
+        "baseline": { "titleMarker": "网飞猫", "desc": "在线电影导航站" },
+        "verificationMode": "manual_user_environment"
+      }
+    },
+    {
+      "name": "nested_object",
+      "site": {
+        "id": "ncat",
+        "status": "healthy",
+        "baseUrl": "https://ncat.example",
+        "hosts": ["www.ncat.example", "ncat.example"],
+        "allowedRedirectHosts": ["ncat.example", "cdn.ncat.example"],
+        "baseline": {
+          "markers": {
+            "title": "网飞猫",
+            "nested": { "a": 1, "b": [true, false, null] }
+          },
+          "list": ["x", "y"]
+        },
+        "verificationMode": "automated"
+      }
+    },
+    {
+      "name": "array_order",
+      "site": {
+        "id": "ncat",
+        "status": "healthy",
+        "baseUrl": "https://ncat.example",
+        "hosts": ["a.example", "b.example", "a.example"],
+        "allowedRedirectHosts": ["b.example", "a.example", "b.example"],
+        "baseline": { "tags": ["z", "m", "z", null] },
+        "verificationMode": "manual_user_environment"
+      }
+    },
+    {
+      "name": "null_bool_number",
+      "site": {
+        "id": "ncat",
+        "status": "disabled",
+        "baseUrl": "https://ncat.example",
+        "hosts": ["ncat.example"],
+        "allowedRedirectHosts": [],
+        "baseline": {
+          "enabled": false,
+          "retries": 0,
+          "empty": null,
+          "big": 123456789012345,
+          "neg": -7
+        },
+        "verificationMode": "automated"
+      }
+    },
+    {
+      "name": "key_order_a",
+      "site": {
+        "id": "ncat",
+        "status": "healthy",
+        "baseUrl": "https://ncat.example",
+        "allowedRedirectHosts": ["ncat.example"],
+        "baseline": { "z": 1, "a": "x" },
+        "hosts": ["ncat.example"],
+        "verificationMode": "automated"
+      }
+    },
+    {
+      "name": "key_order_b",
+      "site": {
+        "baseline": { "a": "x", "z": 1 },
+        "hosts": ["ncat.example"],
+        "allowedRedirectHosts": ["ncat.example"],
+        "baseUrl": "https://ncat.example",
+        "status": "healthy",
+        "id": "ncat",
+        "verificationMode": "automated"
+      }
+    },
+    {
+      "name": "field_omission",
+      "site": {
+        "id": "ncat",
+        "status": "healthy",
+        "baseUrl": "https://ncat.example",
+        "hosts": ["ncat.example"],
+        "baseline": { "titleMarker": "网飞猫" },
+        "verificationMode": "manual_user_environment",
+        "displayName": "网飞猫",
+        "reviewedBy": "MuAn",
+        "threatIntel": { "enabled": false },
+        "maintenancePermit": {
+          "approvedHost": "ncat.example",
+          "configVersion": 1,
+          "siteConfigHash": "deadbeef",
+          "issuedAt": "2026-08-25T00:00:00Z",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "name": "missing_security_field",
+      "site": {
+        "id": "ncat",
+        "status": "healthy",
+        "baseUrl": "https://ncat.example",
+        "hosts": ["ncat.example"],
+        "baseline": { "titleMarker": "网飞猫" }
+      }
+    },
+    {
+      "name": "mode_automated",
+      "site": {
+        "id": "ncat",
+        "status": "healthy",
+        "baseUrl": "https://ncat.example",
+        "hosts": ["ncat.example"],
+        "allowedRedirectHosts": ["ncat.example"],
+        "baseline": { "titleMarker": "网飞猫" },
+        "verificationMode": "automated"
+      }
+    },
+    {
+      "name": "mode_manual",
+      "site": {
+        "id": "ncat",
+        "status": "healthy",
+        "baseUrl": "https://ncat.example",
+        "hosts": ["ncat.example"],
+        "allowedRedirectHosts": ["ncat.example"],
+        "baseline": { "titleMarker": "网飞猫" },
+        "verificationMode": "manual_user_environment"
+      }
+    }
+  ]
+}
