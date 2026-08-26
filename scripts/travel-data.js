@@ -3,7 +3,8 @@
 // 文章 front-matter：categories 第一级「旅行」，第二级省名
 
 // 手动标记的已访问省份（还没写文章时先亮起来）
-var MANUAL_VISITED = ['河北', '陕西', '浙江', '江苏', '上海'];
+// 陕西/浙江/江苏/上海 已有旅行文章（自动计数），此处仅保留无文章的手动标记
+var MANUAL_VISITED = ['河北'];
 
 hexo.extend.generator.register('travel-data', function (locals) {
   var counts = {};
