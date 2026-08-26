@@ -11,65 +11,65 @@ tags:
 
 五一假期的时候去的苏州，一共带了300块钱，玩了两天一夜，可以说是相当拉垮的一次旅行。并不是穷游的问题，而是遇到的人素质比较低下。而且苏州这个城市，我说实话比较一般。首先，苏州虽然整个市的GDP确实比杭州要高，但实际上都是一些工业制造业，并不是非常高科技的产业。像是一个巨大的代工厂。而且苏州的互联网公司其实并不多，我想我以后也不会来苏州工作。苏州微软的话，当我没说。但我估计我这辈子也进不了这种公司。
 
-![苏州](/img/posts/suzhou/001.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/001.webp)
 
 晚上10:15到的苏州站，看着普普通通的火车站没什么出众的但也不拉垮。但是出去走了还没十几分钟，我就感觉我跟进村儿了一样。这么说也不至于吧，反正我感觉没和邯郸有太大区别，甚至比邯郸更拉垮，邯郸站好歹也是在市中心附近。但是苏州我很难说，真的好拉垮呀，怎么有这么牛马的火车站。
 
-![苏州](/img/posts/suzhou/002.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/002.webp)
 
 在一家麦当劳美餐一顿，并且在这里过了夜。因为亮着灯，其实也没怎么睡着。半夜两三点，还有一对情侣在这里吃东西。不知道是什么样的情侣才会半夜在这里吃东西，挺羡慕的。
 
-![苏州](/img/posts/suzhou/003.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/003.webp)
 
 早上吃了个煎饼果子。我是那个卖煎饼果子的阿姨的第一个顾客。带着煎饼果子我就去了地铁站，也是第一班地铁。地铁倒是非常干净，塑料座位，而且苏州地铁的设置确实可圈可点，比较人性化，这个没法喷。
 
 然后就到了七里山塘，刚出地铁站，我就看到了一大堆垃圾，估计是昨天剩下的还没打扫，拉完了。
 
-![苏州](/img/posts/suzhou/004.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/004.webp)
 
 在七里山塘拍了照。进去之后一个台湾的老爷子主动和我聊天，他让我给他拍照。七里山塘商业化太严重，而且这些建筑在我眼里就是一些发了霉的小房子，感觉跟村里也没啥区别，完全没有那种江南水乡的氛围，难道是我来的天气不对。也有可能是我来的时间不对，应该晚上亮灯了再来。我也不知道晚上会不会亮灯，但是晚上好像就要收门票了吧。
 
-![苏州](/img/posts/suzhou/005.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/005.webp)
 
 之后我离开了七里山塘，在苏州的街上步行，拿我的Action 4拍了一些桥。还有一个当地人问我这个Action 4怎么样，和他聊了聊天，是一个中年男子，他好像对这个挺感兴趣的。
 
-![苏州](/img/posts/suzhou/006.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/006.webp)
 
 然后就到了平江路，也是网上苏州必去的景点吧，但是感觉也比较一般，没什么特点。
 
 离开之后骑共享单车到了西园寺。之后我才知道，原来我那段骑了15公里，但是我自己竟然没感觉出来。在路上等灯的时候，还发现一个非常糟心的事情。一对四五十岁的夫妇，骑着电车都没戴头盔。我本来就在那里等灯，位置虽然靠右，但是闪着很大的位置，完全可以通行。那个人就踹我的共享单车，还用吴语骂我。我是外地人，我听不懂，应该是骂我赤佬吧，真是闹麻了。我就骑着共享单车追到下一个路口。我大声质问他为什么踹我的车，跟他讲道理。他爱人知道他们不占理，然后我就大声和他对峙，他最后加电门就走了。鉴定为拿不出全家福，真是给他们当地丢人。
 
-![苏州](/img/posts/suzhou/007.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/007.webp)
 
 西园寺倒是还可以，虽然比灵隐寺小很多，但是里面有非常多的猫，而且那些猫估计已经习惯了游客，怎么摸也没反应。
 
 中午去麦当劳爽吃一顿50元的炸鸡桶。
 
-![苏州](/img/posts/suzhou/008.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/008.webp)
 
 下午先是坐地铁到了广济路附近，那里应该是他们的中心商业区之一。但是你如果从立交桥上往周边拍，你会感觉跟邯郸也没啥大区别。
 
-![苏州](/img/posts/suzhou/009.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/009.webp)
 
 离开这里之后去了苏州的一个园林，留园。进出的地方都像城中村。留园人太多了，我也欣赏不来。好像还花了我40米的门票。出入的道路交通都非常差，交通信号灯比较少。有很多路口应该放个信号灯，结果没有，各种摩托乱窜。
 
-![苏州](/img/posts/suzhou/010.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/010.webp)
 
 离开这里之后，去了东方之门附近。上图是去往东方之门的一条路，我骑着共享单车。原图并不是这样的，我调了色。之后我就到了东方之门。人太多了，一直都在交通管制。根本没法拍照，我感觉场面一度非常混乱，就走了。
 
-![苏州](/img/posts/suzhou/011.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/011.webp)
 
-![苏州](/img/posts/suzhou/012.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/012.webp)
 
 晚上在网吧过的夜。配置还不错，玩到接近2点，然后一觉睡到7点。睡得非常死。
 
 之后我感觉平阳路不一定有我之前去的那么拉胯，然后我就又去了一次，结果不然。在平阳路那天早上，有一个神经病在那里乱喊乱叫，我服了。平江路的安保、辅警都没怎么管。那个神经病还和游客在那里对骂。我录了一个视频发在抖音上，有9万多人浏览。甚至我回到杭州的时候，大早上起来还被苏州警方打了电话让我删视频。我抖音上已经显示我的作品被投诉限流，但是没有到彻底下架的地步。我估计他们知道我什么时候看手机，已经定位到了这种程度，我不做评价。至于苏州这个城市怎么样，他们的文旅怎么样，感觉看到这里也高下立判了。
 
-![苏州](/img/posts/suzhou/013.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/013.webp)
 
 中午的时候去了金鸡湖。哎，被西湖吊打完了。可能也是因为我应该傍晚才来的，而且天气也不怎么样，没有蓝调时刻。倒是阳光挺大。
 
-![苏州](/img/posts/suzhou/014.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/014.webp)
 
 西湖赢麻了。iPhone 8p直出不调色。
 
@@ -77,6 +77,6 @@ tags:
 
 拉完了，苏州，没话说。
 
-![苏州](/img/posts/suzhou/015.webp)
+![苏州](https://cdn.jsdelivr.net/gh/MuAn1228/MuAn1228.github.io@main/source/img/posts/suzhou/015.webp)
 
 杭州东站附近，针不戳。
