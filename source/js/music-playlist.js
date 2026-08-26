@@ -1,5 +1,6 @@
 // ===== 静态音乐播放列表（网易云，49 首）=====
-// 有本地文件的歌曲优先用完整版（VIP 歌曲不再 30s 试听），其余走 Meting API 兜底
+// 本地文件（music-assets 仓库，155 首白名单）优先用完整版；其余依次尝试
+// Meting API → 网易云官方外链，全失败则由 error 兜底自动跳到下一首。
 // 本播放器是全站唯一的音频引擎：
 //  - 播放状态（当前曲目/进度/停止键状态）写入 sessionStorage，切页（整页刷新）后自动续播
 //  - 通过 window.__blogMusic 暴露接口，供音乐页紫色大播放器复用同一引擎
@@ -13,7 +14,7 @@
     "cover": "https://p2.music.126.net/nmOWPii-tnHeLzMjhbqaxA==/109951168945233919.jpg"
   },
   {
-    "id": 1496089152, "local": true,
+    "id": 1496089152,
     "name": "I Really Want to Stay at Your House",
     "artist": "Rosa Walton",
     "cover": "/img/music/IReallyWantToStayAtYourHouse.jpg"
@@ -103,7 +104,7 @@
     "cover": "https://p1.music.126.net/mxMez2A64_vH6aisW7R4XQ==/109951168299426988.jpg"
   },
   {
-    "id": 1831482748, "local": true,
+    "id": 1831482748,
     "name": "春娇与志明(抖音完整版)",
     "artist": "珊爷",
     "cover": "https://p2.music.126.net/pScUaISJzJwF5Ysp0A9PKg==/109951165825646959.jpg"
@@ -163,7 +164,7 @@
     "cover": "https://p2.music.126.net/3z0Sj3ihPvqGg5BaLfY2wA==/109951166611809914.jpg"
   },
   {
-    "id": 2101397575, "local": true,
+    "id": 2101397575,
     "name": "I Want You To Know (Hella x Pegato Remix)",
     "artist": "Pegato",
     "cover": "https://p1.music.126.net/R5jE_jqR3b2rShuC46pa3Q==/109951169067559689.jpg"
@@ -175,7 +176,7 @@
     "cover": "https://p2.music.126.net/CBx2K_jEN3SNWwYztagPPw==/109951164485969446.jpg"
   },
   {
-    "id": 1497588709, "local": true,
+    "id": 1497588709,
     "name": "给你呀（又名：for ya）",
     "artist": "蒋小呢",
     "cover": "https://p1.music.126.net/GI1Ex39x73zBT-1r7_o-sQ==/109951165494781109.jpg"
@@ -314,6 +315,11 @@
   var ap = null;
   var focusMeta = null; // {owner, index, url}：最近一次由大播放器指定播放的曲目
   var lastSaveTime = -1;
+  var userPaused = false;      // 用户显式暂停过（切页续播判断用）
+  var wasPlayingOnNav = false; // 进入本次 pjax 切换前是否正在播放
+  var LOCAL_IDS = null;        // music-assets 仓库白名单（加载后为 Set<String>）
+  var skipBound = false;       // error 自动跳歌是否已绑定
+  var skipCount = 0;           // 连续自动跳歌计数（防整目无法播放时死循环）
 
   function readState() {
     try { return JSON.parse(sessionStorage.getItem(STATE_KEY)); }
@@ -341,8 +347,15 @@
   }
 
   function bindAp() {
-    ap.on('play', saveState);
-    ap.on('pause', saveState);
+    ap.on('play', function () {
+      userPaused = false;
+      skipCount = 0; // 播放成功，重置失败计数
+      saveState();
+    });
+    ap.on('pause', function () {
+      userPaused = true;
+      saveState();
+    });
     ap.audio.addEventListener('timeupdate', function () {
       var t = ap.audio.currentTime;
       // 节流：进度变化超过 1s 才写一次
@@ -354,6 +367,22 @@
     // 一曲结束，等 APlayer 自动切到下一首后再保存
     ap.audio.addEventListener('ended', function () {
       setTimeout(saveState, 50);
+    });
+    // 音频源加载/解码失败（版权受限、防盗链、网络异常）：
+    // 当前是迷你列表连播（owner 非 big）时自动跳到下一首，避免卡死；
+    // 连续失败超过 2 次则停下（整单很可能都无法播放的情况）
+    ap.audio.addEventListener('error', function () {
+      var owner = (focusMeta && focusMeta.owner) || 'mini';
+      if (owner !== 'mini') return; // 大播放器曲目由音乐页自己处理（提示去网易云）
+      skipCount++;
+      if (skipCount > 2) { skipCount = 0; return; }
+      var audios = ap.list.audios || [];
+      var next = ap.list.index + 1;
+      if (next < audios.length) {
+        ap.list.switch(next, true);
+        var p = ap.play();
+        if (p && p.catch) p.catch(function () {});
+      }
     });
   }
 
@@ -406,7 +435,10 @@
   }
 
   function init() {
-    Promise.all(songs.map(resolve)).then(function (list) {
+    // 先加载仓库白名单，再解析歌单——否则本地歌曲会误走网络源
+    loadLocalIds().then(function () {
+      return Promise.all(songs.map(resolve));
+    }).then(function (list) {
       var container = document.createElement('div');
       document.body.appendChild(container);
       ap = new APlayer({
@@ -425,29 +457,54 @@
       });
       window.__blogMusic.ap = ap;
       bindAp();
+      // 切页保护：pjax 切换期间若播放器被意外暂停（非用户主动点击暂停），切换完成后自动续播
+      document.addEventListener('pjax:send', function () {
+        wasPlayingOnNav = !!(ap && !ap.audio.paused);
+      });
+      document.addEventListener('pjax:complete', function () {
+        if (wasPlayingOnNav && ap && ap.audio.paused && !userPaused) {
+          var r = ap.play();
+          if (r && r.catch) r.catch(function () {});
+        }
+      });
       var saved = readState();
       if (saved && saved.src) restoreSaved(saved);
       else saveState();
     });
   }
 
+  var CDN_BASE = 'https://cdn.jsdelivr.net/gh/MuAn1228/music-assets@master/';
+
+  // 加载仓库白名单（local-playlist-ids.json），失败时置空（全部走网络源）
+  function loadLocalIds() {
+    return fetch('/data/local-playlist-ids.json', { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (ids) {
+        LOCAL_IDS = new Set(ids.map(function (i) { return String(i); }));
+      })
+      .catch(function () { LOCAL_IDS = new Set(); });
+  }
+
   function resolve(s) {
-    // 有本地文件的直接返回完整版，不走 API
-    if (s.local) {
+    // 1) 仓库里有本地文件 → jsDelivr CDN 完整版（最稳定，切页也不受网络冲击）
+    var id = String(s.id);
+    if (LOCAL_IDS && LOCAL_IDS.has(id)) {
       return Promise.resolve({
         name: s.name, artist: s.artist,
-        url: 'https://cdn.jsdelivr.net/gh/MuAn1228/music-assets@master/' + s.id + '.mp3',
+        url: CDN_BASE + id + '.mp3',
         cover: s.cover, lrc: ''
       });
     }
-    var meting = 'https://api.injahow.cn/meting/?server=netease&type=song&id=' + s.id;
-    var fallback = 'https://music.163.com/song/media/outer/url?id=' + s.id + '.mp3';
-    return fetch(meting)
+    // 2) Meting API（拿真实 CDN 直链）
+    var fallback = 'https://music.163.com/song/media/outer/url?id=' + id + '.mp3';
+    return fetch('https://api.injahow.cn/meting/?server=netease&type=song&id=' + id, { cache: 'no-store' })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         var url = d && d[0] && d[0].url;
-        return url || fallback;
+        if (!url) throw new Error('no-url');
+        return url;
       })
+      // 3) 网易云官方外链兜底（免费可外链的歌曲仍可用）
       .catch(function () { return fallback; })
       .then(function (url) {
         return { name: s.name, artist: s.artist, url: url, cover: s.cover, lrc: '' };
