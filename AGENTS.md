@@ -38,6 +38,7 @@
 - **挂绳特效（lanyard）已删除**：曾加入首页（导航栏 Mu An's Blog 右侧的 3:4 照片胸卡 + 物理摆动），期间经历过位置/尺寸/图片方向多轮修改（fe22e45），最终用户决定整体删除（5e954f8）。相关文件 `lanyard.js`、`lib/GLTFLoader.js`、`img/lanyard/`、`lib/lanyard/` 均已删除。**`lib/three.min.js` 必须保留**（hero-3d / rubik / pixel-snow / game-ballpit 都在用）。
 - 以上特效及其样式均已提交并推送上线。
 - 球池可调参数在 `game-ballpit.js` 顶部的 `CFG` 对象里。
+- **Sakana 式物理立牌已全量回滚（2026-08-27，commit 34eb8e2）**：曾尝试为看板娘增加物理摆动/拖拽/弹性效果，因拖拽坐标系 bug（看板娘在右下角，clientX 被 clamp 到正最大值，永远锁在右下角方向）导致功能异常，用户决定放弃并全量回滚。文件 sakana-physics.js/sakana-widget.js/sakana.css 均已删除。**不要重新实现该功能。**
 
 ## 旅行页胶片画廊（travel-reel）
 - 展示源 `source/data/travel-gallery.json`，缩略图目录 `source/img/travel/`（md5 命名 .jpg，源图在 `D:\photo\lvxing\`）。
@@ -131,7 +132,7 @@
   - FAIL / 通用 UNKNOWN **永远不能人工翻案**（manual renew 门禁要求 health 已为 MANUAL_VERIFIED + BLOCKED_BY_WAF）；candidate 永远不能进入跳转链；禁止 fallback 旧域名/候选域名。
   - 时钟异常防护：客户端拒绝 `now < permit.issuedAt` 与 `now < health.generatedAt`（防回拨时钟复用过期许可），结合短 TTL 双重收窄窗口。
   - 人工签发 permit 走 `tools/domain-migrate.py renew --site ncat --issued-by 姓名 --verification-method … --verification-notes … --attestation <7 项>`（TTL 默认 24h，manual 强制 [12h,24h]）。
-- **当前状态（2026-08-25 正式启用）**：ncat = `healthy`（approvedHost=`www.ncat21.com`，唯一 approved host，configVersion=14）；health.json = `healthy + MANUAL_VERIFIED + BLOCKED_BY_WAF`（DNS/TLS PASS，内容被 WAF 阻断、由人工许可承接）；`maintenancePermit` 已签发（TTL 12h，人工 renew，禁止 24h/自动续签/永久 permit）。**状态只能人工变更：permit 到期须人工 `tools/domain-migrate.py renew`；禁止自动续签、自动改状态、自动 candidate→approved。**
+- **当前状态（2026-08-27 更新）**：ncat = `healthy`（approvedHost=`www.ncat21.com`，唯一 approved host，configVersion=14）；health.json = `healthy + MANUAL_VERIFIED + BLOCKED_BY_WAF`（DNS/TLS PASS，内容被 WAF 阻断、由人工许可承接）；`maintenancePermit` 已签发（TTL 12h，人工 renew，禁止 24h/自动续签/永久 permit）。**状态只能人工变更：permit 到期须人工续签；禁止自动续签、自动改状态、自动 candidate→approved。**
 - **watchdog 与部署**：watchdog 用 `GITHUB_TOKEN` push health.json 到 main **不会**触发 `update-contributions.yml`（GitHub 防递归规则），所以 watchdog 自己带部署步骤（Setup Pages + deploy-pages）。两者共用 `concurrency.group: pages` 防冲突。
 - 测试：`node test/watch-security.js`（177 个用例）+ `node test/fault-drill.js`（55）+ `node test/hash-crosscheck.js`（63）+ `python test/candidate-security.py`（52）+ `python test/dns-security.py`（55）+ `python test/domain-migrate-security.py`（77），全部 exit 0 才通过。
 
@@ -139,3 +140,9 @@
 1. 改代码 → 本地 `hexo s` 预览验证 → `git commit` → `git push origin source:main` → **自动部署（约 1-2 分钟），无需手动触发**。
 2. 尽量只改需要改的地方，不引入无关变更。
 3. 提交前先 `git status` 检查是否有历史遗留的本地未提交改动——用户说"线上没生效"时，多半是改动没推送，先查 diff 再动手。
+
+## ncat maintenancePermit 续签
+- 当前 permit 有效期至北京时间 **2026-08-28 06:33**（expiresAt=2026-08-27T22:33:39Z），configVersion=14，approvedHost=www.ncat21.com。
+- 到期后手动执行：`powershell -ExecutionPolicy Bypass -File d:\blog\tools\renew-permit.ps1`
+- 脚本已内置 [0/4] 同步远端 health.json 步骤，无需手动 fetch。脚本依赖 `$env:GITHUB_TOKEN` 环境变量（Fine-grained PAT，需 source 仓库 Pull requests: Read and write 权限）。
+- 若续签时提示 token 权限不足，先检查 `$env:GITHUB_TOKEN` 是否有效。
