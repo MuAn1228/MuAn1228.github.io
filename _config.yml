@@ -91,7 +91,9 @@ pagination_dir: page
 ## include:/exclude: options only apply to the 'source/' folder
 include:
 exclude:
-  - music_backup/
+  - 'music_backup/**'
+  - 'live2d_api/**'
+  - 'lib/live2d/**'
 ignore:
 
 # Extensions

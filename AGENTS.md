@@ -30,6 +30,7 @@
 | `source/js/travel-reel.js` | 旅行页标题横幅：胶片画廊（React Bits Pro ReelGallery 原生 JS 复刻，倾斜胶片条随滚动漂移） |
 | `source/js/cursor.js` | 鼠标指针：RGB Cursor Dark 动画（不再有紫色光点） |
 | `source/js/blackhole.js` | 展示页(`/showcase/`)顶部：Three.js 黑洞 hero（吸积盘+引力透镜+缩放运镜，左键旋转/右键平移/滚轮缩放） |
+| `source/js/kanban.js` | 右下角轻量看板娘：静态立牌 WebP（9KB）+ CSS 浮动动画 + 点击语录 + 拖拽，替换原 Live2D（~385KB） |
 
 ## 当前状态 & 重要决策（务必记住）
 - 游戏页顶部横幅的球池（`game-ballpit.js`）用 `/data/games.json` 里的游戏封面作为球体贴图，这是**最终采用方案**。
@@ -39,6 +40,7 @@
 - 以上特效及其样式均已提交并推送上线。
 - 球池可调参数在 `game-ballpit.js` 顶部的 `CFG` 对象里。
 - **Sakana 式物理立牌已全量回滚（2026-08-27，commit 34eb8e2）**：曾尝试为看板娘增加物理摆动/拖拽/弹性效果，因拖拽坐标系 bug（看板娘在右下角，clientX 被 clamp 到正最大值，永远锁在右下角方向）导致功能异常，用户决定放弃并全量回滚。文件 sakana-physics.js/sakana-widget.js/sakana.css 均已删除。**不要重新实现该功能。**
+- **Live2D 看板娘已替换为轻量立牌（2026-08-29）**：原 Live2D 看板娘（~385KB：live2d.min.js 126KB + index2.js 204KB + 模型/引擎）已替换为轻量静态立牌（~14KB：character.webp 9KB + kanban.js 5KB）。右侧浮动画 + 点击语录 + 拖拽，`live2d.js` 已从 inject 移除，`live2d_api/` 和 `lib/live2d/` 已加入 _config.yml exclude，不再部署。旧文件保留在 source/ 备回滚。
 
 ## 旅行页胶片画廊（travel-reel）
 - 展示源 `source/data/travel-gallery.json`，缩略图目录 `source/img/travel/`（md5 命名 .jpg，源图在 `D:\photo\lvxing\`）。
