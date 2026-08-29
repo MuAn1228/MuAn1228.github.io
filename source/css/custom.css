@@ -24,104 +24,13 @@
   background-color: #8e6bb5 !important;
 }
 
-/* ===== 轻量看板娘（替换 Live2D） ===== */
-#kanban {
-  position: fixed;
-  z-index: 9999;
-  bottom: 20px;
-  right: 20px;
-  cursor: grab;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-#kanban-card {
-  position: relative;
-  width: 130px;
-  border-radius: 16px;
-  overflow: hidden;
-  background: rgba(24, 24, 36, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  animation: kanban-float 3s ease-in-out infinite;
-  transition: box-shadow 0.3s;
-}
-
-#kanban-card:hover {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
-}
-
-#kanban-img {
-  display: block;
-  width: 100%;
-  height: auto;
-  pointer-events: none;
-}
-
-/* 浮动动画 */
-@keyframes kanban-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-/* 深色模式适配 */
-[data-theme='dark'] #kanban-card {
-  background: rgba(18, 18, 24, 0.82);
-  border-color: rgba(255, 255, 255, 0.06);
-}
-
-/* 语录气泡 */
-#kanban-bubble {
-  position: absolute;
-  bottom: calc(100% + 12px);
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: 200px;
-  min-width: 80px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(24, 24, 36, 0.88);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #ddd;
-  font-size: 13px;
-  line-height: 1.5;
-  text-align: center;
-  white-space: nowrap;
-  pointer-events: none;
-  transition: opacity 0.25s, transform 0.25s;
-}
-
-#kanban-bubble::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  margin-left: -6px;
-  border: 6px solid transparent;
-  border-top-color: rgba(24, 24, 36, 0.88);
-}
-
-#kanban-bubble.kb-hidden {
-  opacity: 0;
-  transform: translateX(-50%) translateY(6px);
-  pointer-events: none;
-}
-
-[data-theme='dark'] #kanban-bubble {
-  background: rgba(18, 18, 24, 0.9);
-}
-[data-theme='dark'] #kanban-bubble::after {
-  border-top-color: rgba(18, 18, 24, 0.9);
-}
-
-/* 移动端缩小 */
-@media (max-width: 768px) {
-  #kanban-card { width: 100px; }
-  #kanban-bubble { max-width: 160px; font-size: 12px; padding: 8px 12px; }
+/* 看板娘移到右下角，与左下角音乐播放器分开；缩小到 55% */
+#waifu {
+  left: auto !important;
+  right: 60px !important;
+  bottom: 0 !important;
+  scale: 0.4;
+  transform-origin: bottom right;
 }
 
 /* 音乐播放器：缩小 + 毛玻璃融合 + 给折叠按钮让位 */

@@ -123,11 +123,12 @@ inject:
   head:
     - '<link rel="stylesheet" href="/css/custom.css">'
     - '<link rel="stylesheet" href="/lib/APlayer.min.css">'
+    - '<link rel="preload" href="/lib/live2d/waifu.css" as="style" onload="this.rel=stylesheet">'
   bottom:
     - '<script src="/js/device-guard.js"></script>'
     - '<script src="/js/sakura.js"></script>'
     - '<script src="/js/click-effect.js"></script>'
-    - '<script src="/js/kanban.js"></script>'
+    - '<script src="/js/live2d.js"></script>'
     - '<script src="/js/pjax-prefetch.js"></script>'
     - '<script src="/js/visitor-count.js"></script>'
     - '<script src="/js/typing.js"></script>'
