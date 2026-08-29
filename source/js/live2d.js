@@ -69,24 +69,11 @@ async function runWidget() {
   });
 }
 
-// 不在首屏加载时跟 hero/vanta/粒子特效等重型资源抢带宽：
-// 等页面主内容就绪后用「空闲调度」启动看板娘，既能更快加载、也不拖慢首屏。
-function scheduleWidget() {
-  function start() {
-    runWidget();
-  }
-  if ('requestIdleCallback' in window) {
-    // 兜底：即使一直没空闲（如持续动画），800ms 内必须启动
-    window.requestIdleCallback(start, { timeout: 800 });
-  } else {
-    setTimeout(start, 400);
-  }
-}
-
+// 在 DOM 就绪后立即启动看板娘（含文本框），与页内其他元素同步加载
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  scheduleWidget();
+  runWidget();
 } else {
-  window.addEventListener('DOMContentLoaded', scheduleWidget);
+  window.addEventListener('DOMContentLoaded', runWidget);
 }
 
 console.log(`\n%cLive2D%cWidget%c\n`, 'padding: 8px; background: #cd3e45; font-weight: bold; font-size: large; color: white;', 'padding: 8px; background: #ff5450; font-size: large; color: #eee;', '');
