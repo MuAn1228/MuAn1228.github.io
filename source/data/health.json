@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "configVersion": 14,
-  "generatedAt": "2026-08-30T16:49:42Z",
+  "generatedAt": "2026-08-30T21:15:46Z",
   "ttlHours": 12,
   "environment": {
     "kind": "github_actions",
@@ -10,15 +10,15 @@
     "bits": "64",
     "dnsSource": "system_resolver + cloudflare_doh",
     "ci": {
-      "GITHUB_RUN_ID": "33323536811",
+      "GITHUB_RUN_ID": "33335926759",
       "GITHUB_RUN_ATTEMPT": "1",
-      "GITHUB_SHA": "5cf7ce78e0d6667029009befcd3b09c861a55aaa",
+      "GITHUB_SHA": "bfec6b3bc932b7b372bb8c888d1b40d4d74fc434",
       "GITHUB_REF": "refs/heads/main",
       "GITHUB_WORKFLOW": "Watchdog Health Check",
       "RUNNER_OS": "Linux",
       "RUNNER_ARCH": "X64"
     },
-    "egressIp": "132.196.31.86"
+    "egressIp": "20.106.22.181"
   },
   "note": "health.json 是 watchdog 在某次检查时的观察结果（Watchdog observation）；HEALTHY 仅表示该站点当时满足本站预定义的允许策略，不代表第三方网站绝对安全；用户实际访问（User navigation）由离站确认页自行判断。configVersion/siteConfigHash/approvedHost 用于与当前 sites.json 配置绑定，任何不一致客户端一律 DENY。",
   "sites": {
@@ -28,29 +28,29 @@
       "automatedContentCheck": "BLOCKED_BY_WAF",
       "verificationMode": "manual_user_environment",
       "reason": "machine basic gates PASS（DNS/TLS）；内容检查被明确 WAF/anti-bot 阻断，内容确认由人工限时 maintenancePermit 承接（MANUAL_VERIFIED，非内容自动 PASS）",
-      "lastCheck": "2026-08-30T16:49:45Z",
-      "observedAt": "2026-08-30T16:49:42Z",
+      "lastCheck": "2026-08-30T21:15:48Z",
+      "observedAt": "2026-08-30T21:15:46Z",
       "checks": {
         "dns": {
           "state": "PASS",
           "ok": true,
-          "detail": "www.ncat21.com: 固定公网 IP: 185.216.116.26,185.216.116.56",
+          "detail": "www.ncat21.com: 固定公网 IP: 185.216.116.56,185.216.116.26",
           "hosts": {
             "www.ncat21.com": {
               "state": "PASS",
               "ok": true,
-              "detail": "固定公网 IP: 185.216.116.26,185.216.116.56",
-              "system": "系统解析: 185.216.116.26",
-              "doh": "DoH 解析: 185.216.116.56",
+              "detail": "固定公网 IP: 185.216.116.56,185.216.116.26",
+              "system": "系统解析: 185.216.116.56",
+              "doh": "DoH 解析: 185.216.116.26",
               "resolvers": {
                 "system": {
                   "addresses": [
-                    "185.216.116.26"
+                    "185.216.116.56"
                   ]
                 },
                 "cloudflare": {
                   "addresses": [
-                    "185.216.116.56"
+                    "185.216.116.26"
                   ]
                 }
               },
@@ -62,17 +62,17 @@
                 "resolver_answers_differ"
               ],
               "ips": [
-                "185.216.116.26",
-                "185.216.116.56"
+                "185.216.116.56",
+                "185.216.116.26"
               ]
             }
           },
-          "pinnedIp": "185.216.116.26"
+          "pinnedIp": "185.216.116.56"
         },
         "tls": {
           "state": "PASS",
           "ok": true,
-          "detail": "TLS ok; 固定公网 IP=185.216.116.26, SNI=www.ncat21.com（notAfter=Oct 29 18:13:07 2026 GMT）",
+          "detail": "TLS ok; 固定公网 IP=185.216.116.56, SNI=www.ncat21.com（notAfter=Oct 29 18:13:07 2026 GMT）",
           "cert": {
             "subject": {
               "commonName": "ncat21.com"
@@ -267,7 +267,7 @@
               "status": 850,
               "location": null,
               "host": "www.ncat21.com",
-              "ip": "185.216.116.26",
+              "ip": "185.216.116.56",
               "state": "BLOCKED_BY_WAF",
               "detail": "WAF/anti-bot 阻断（status=850）"
             }
