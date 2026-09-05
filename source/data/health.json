@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "configVersion": 14,
-  "generatedAt": "2026-09-04T20:52:00Z",
+  "generatedAt": "2026-09-05T04:41:05Z",
   "ttlHours": 12,
   "environment": {
     "kind": "github_actions",
@@ -10,15 +10,15 @@
     "bits": "64",
     "dnsSource": "system_resolver + cloudflare_doh",
     "ci": {
-      "GITHUB_RUN_ID": "33918332102",
+      "GITHUB_RUN_ID": "33945215806",
       "GITHUB_RUN_ATTEMPT": "1",
-      "GITHUB_SHA": "62e2b2749fc791b5140a178958f4f84f5a4580ee",
+      "GITHUB_SHA": "1f5cac5f587a26190be558f17c811daa86047298",
       "GITHUB_REF": "refs/heads/main",
       "GITHUB_WORKFLOW": "Watchdog Health Check",
       "RUNNER_OS": "Linux",
       "RUNNER_ARCH": "X64"
     },
-    "egressIp": "172.174.198.162"
+    "egressIp": "4.155.111.50"
   },
   "note": "health.json 是 watchdog 在某次检查时的观察结果（Watchdog observation）；HEALTHY 仅表示该站点当时满足本站预定义的允许策略，不代表第三方网站绝对安全；用户实际访问（User navigation）由离站确认页自行判断。configVersion/siteConfigHash/approvedHost 用于与当前 sites.json 配置绑定，任何不一致客户端一律 DENY。",
   "sites": {
@@ -28,20 +28,20 @@
       "automatedContentCheck": "BLOCKED_BY_WAF",
       "verificationMode": "manual_user_environment",
       "reason": "machine basic gates PASS（DNS/TLS）；内容检查被明确 WAF/anti-bot 阻断，内容确认由人工限时 maintenancePermit 承接（MANUAL_VERIFIED，非内容自动 PASS）",
-      "lastCheck": "2026-09-04T20:52:02Z",
-      "observedAt": "2026-09-04T20:52:00Z",
+      "lastCheck": "2026-09-05T04:41:10Z",
+      "observedAt": "2026-09-05T04:41:05Z",
       "checks": {
         "dns": {
           "state": "PASS",
           "ok": true,
-          "detail": "www.ncat21.com: 固定公网 IP: 185.216.116.26",
+          "detail": "www.ncat21.com: 固定公网 IP: 185.216.116.26,118.107.9.139",
           "hosts": {
             "www.ncat21.com": {
               "state": "PASS",
               "ok": true,
-              "detail": "固定公网 IP: 185.216.116.26",
+              "detail": "固定公网 IP: 185.216.116.26,118.107.9.139",
               "system": "系统解析: 185.216.116.26",
-              "doh": "DoH 解析: 185.216.116.26",
+              "doh": "DoH 解析: 118.107.9.139",
               "resolvers": {
                 "system": {
                   "addresses": [
@@ -50,21 +50,20 @@
                 },
                 "cloudflare": {
                   "addresses": [
-                    "185.216.116.26"
+                    "118.107.9.139"
                   ]
                 }
               },
-              "intersection": [
-                "185.216.116.26"
-              ],
+              "intersection": [],
               "allPublic": true,
-              "multiEdge": false,
+              "multiEdge": true,
               "reason": [
                 "all_answers_public",
-                "resolvers_agree"
+                "resolver_answers_differ"
               ],
               "ips": [
-                "185.216.116.26"
+                "185.216.116.26",
+                "118.107.9.139"
               ]
             }
           },
