@@ -772,68 +772,14 @@
     ctx.globalAlpha = 1;
   }
 
-  // —— 翅膀状态（三态平滑过渡：上升 / 滑翔 / 下坠） ——
-  var wingPhase = 0, wingFreq = 0.08, wingAmp = 0.32, tiltNow = 0;
-
-  function drawWings(amp) {
-    // 两片白色小翼，从肩后展开，绕肩关节连续拍打
-    var sw = Math.sin(wingPhase);
-    var flap = sw * amp;
-    var S = BIRD_SCALE;
-    var len = 26 * S, wid = 10 * S;
-    var rootY = -15 * S, rootX = 5 * S;
-
-    ctx.lineCap = 'round';
-    for (var side = -1; side <= 1; side += 2) {
-      ctx.save();
-      ctx.translate(side * rootX, rootY);
-      ctx.rotate(side * (0.55 + flap));
-      // 翼主体（沿局部 +x 伸出）
-      var wg = ctx.createLinearGradient(0, 0, len, 0);
-      wg.addColorStop(0, 'rgba(250,247,252,0.98)');
-      wg.addColorStop(1, 'rgba(226,222,238,0.92)');
-      ctx.fillStyle = wg;
-      ell(ctx, len * 0.45, 0, len * 0.52, wid * 0.55);
-      ctx.fill();
-      // 翼尖小羽
-      ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ell(ctx, len * 0.82, 0, len * 0.16, wid * 0.42);
-      ctx.fill();
-      ctx.restore();
-    }
-  }
+  // （程序化翅膀动画已移除，全程使用待机形象）
 
   function drawBird() {
+    // 全程使用待机形象：参考图身体静态绘制（无翅膀拍打动画）
     if (!birdBody) return;
-    var target;
-    if (state === 'over') {
-      target = { freq: 0, amp: 0, tilt: 0.22 };
-    } else if (state === 'ready') {
-      target = { freq: 0.075, amp: 0.3, tilt: Math.sin(frame * 0.06) * 0.05 };
-    } else if (bird.vy < -0.5) {
-      // 上升：高频大幅拍翅 + 微仰
-      target = { freq: 0.2, amp: 0.85, tilt: Math.max(-0.42, bird.vy * 0.05) };
-    } else if (bird.vy > 1.1) {
-      // 下坠：收翅慢拍 + 俯冲
-      target = { freq: 0.05, amp: 0.14, tilt: Math.min(1.02, bird.vy * 0.055) };
-    } else {
-      // 滑翔：中频中幅
-      target = { freq: 0.11, amp: 0.42, tilt: bird.vy * 0.06 };
-    }
-    // 指数平滑，动画连续不跳变
-    wingFreq += (target.freq - wingFreq) * 0.08;
-    wingAmp += (target.amp - wingAmp) * 0.08;
-    tiltNow += (target.tilt - tiltNow) * 0.12;
-    wingPhase += wingFreq;
-
     var w = birdBody.width * BIRD_SCALE;
     var h = birdBody.height * BIRD_SCALE;
-    ctx.save();
-    ctx.translate(bird.x, bird.y);
-    ctx.rotate(tiltNow);
-    if (wingAmp > 0.03) drawWings(wingAmp);
-    ctx.drawImage(birdBody, -w / 2, -h / 2 + 2, w, h);
-    ctx.restore();
+    ctx.drawImage(birdBody, bird.x - w / 2, bird.y - h / 2 + 2, w, h);
   }
 
   function pill(x, y, w, h, pop) {
