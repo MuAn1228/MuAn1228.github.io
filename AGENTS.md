@@ -103,6 +103,15 @@
 - **当前状态（2026-08-26 用户实测后，已搁置）**：50 首中 10 首走 CDN（稳定），40 首走网络源（Meting 限流时仅官方外链可用歌能播）。**用户实测反馈：所有歌切页仍然断流**（并非个别歌断，而是普遍切页中断），用户决定「暂时先不做」，音乐播放器模块整体搁置。彻底方案（下载缺的 mp3 上传到 music-assets 仓库 + 同步白名单）未执行，重启排查时优先怀疑 pjax 续播逻辑（pjax:send/complete + sessionStorage 恢复）在真实浏览器中未按预期生效，而不是音源 failover。**下次重启先别动代码，先讨论排查方向。**
 - 验证：jsdom 冒烟测试可以端到端验证解析逻辑（stub APlayer/Audio + mock Meting 拒绝，见 .workbuddy/skills/hexo-jsdom-smoke-test/）；浏览器沙箱无音频输出，切页续播只能验证状态（isPlaying）即可。
 
+## 自制游戏《第九层事故 BULLET DEPTHS》（小游戏页 iframe 接入，2026-09-06）
+- **游戏本体在独立仓库** `MuAn1228/bullet-depths`（源码在本机 `D:\game\tingjindilao`，SSH remote 已配好）。GitHub Pages 已开启（**master 分支根目录**），线上地址 `https://muan1228.github.io/bullet-depths/`。
+- 游戏技术栈：纯原生 JS（27 个文件）+ 本地 vendored `lib/three.min.js`，零外部依赖、全相对路径、无构建步骤。**更新游戏 = 在 `D:\game\tingjindilao` 里 `git push`，Pages 约 1 分钟自动更新，博客侧无需任何改动**。
+- 博客接入点：`source/fun/arcade/index.md`（小游戏页）第 4 个标签「第九层事故」，iframe 嵌入线上游戏。**iframe 懒加载**：首次激活标签才设置 src（`source/js/arcade.js` 的 `loadBulletdepths()`，幂等），带加载占位、全屏按钮、「独立页打开」兜底链接。**再改 arcade.js 记得 bump `index.md` 里的 `?v=`**（当前 `?v=2`）。
+- 样式在 custom.css 的「小游戏·第九层事故」块（`.arcade-bd-*`）。
+- GitHub Pages 响应无 `X-Frame-Options`/CSP frame-ancestors，可被博客 iframe 嵌入（已实测）。游戏无触屏支持，页面已注明仅 PC。
+- 验证：线上 boottest 自测 `https://muan1228.github.io/bullet-depths/index.html?boottest` 标题应为 `BOOTTEST_PASS_P70_F0`（headless Chrome `--dump-dom` 实测通过）。**STEP 11 隐藏房偶发失败是游戏自身已知问题**（游戏 docs/KNOWN_ISSUES.md 已登记，file:// 下也会偶发），与托管无关，不是部署问题。
+- jsdom 冒烟测试：`tmp_test/arcade-jsdom-test.js`（11 用例，验证标签切换 + iframe 懒加载逻辑；基于构建产物 `public/` 运行）。
+
 ## 电影观看外链安全模块（/watch/，方案 A，2026-08-24）
 - **功能**：电影卡「在线观看」→ 离站确认页 `/watch/?movie=<id>` → 用户主动「继续访问」→ 第三方（目标为「网飞猫」）。**安全第一：宁可链接不可用，也不把用户带到未核验的第三方网站。**
 - 文件：
