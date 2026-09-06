@@ -111,6 +111,7 @@
 - GitHub Pages 响应无 `X-Frame-Options`/CSP frame-ancestors，可被博客 iframe 嵌入（已实测）。游戏无触屏支持，页面已注明仅 PC。
 - 验证：线上 boottest 自测 `https://muan1228.github.io/bullet-depths/index.html?boottest` 标题应为 `BOOTTEST_PASS_P70_F0`（headless Chrome `--dump-dom` 实测通过）。**STEP 11 隐藏房偶发失败是游戏自身已知问题**（游戏 docs/KNOWN_ISSUES.md 已登记，file:// 下也会偶发），与托管无关，不是部署问题。
 - jsdom 冒烟测试：`tmp_test/arcade-jsdom-test.js`（11 用例，验证标签切换 + iframe 懒加载逻辑；基于构建产物 `public/` 运行）。
+- **Flappy Bird 美术 v2（2026-09-06，「音乐街区」主题）**：`source/js/flappy-bird.js` 整体重制——像素商店街视差背景（唱片行/甜品店/LIVE HOUSE/贩卖机/行人，离屏预渲染 840px 循环带）+ CD 盒堆障碍（6 种程序化专辑封面，替代绿管）+ Q 版贴纸少女角色（三帧：滑翔/振翅/眩晕）+ 药丸计分 UI + 白闪/震屏/拖尾粒子。物理/判定/操作与旧版完全一致。全部程序化绘制零外部图片；**改它必 bump `index.md` 的 `?v=`（当前 `?v=2`）**。视觉验证探针：`tmp_test/flappy-probe.html`（无头 Chrome `--dump-dom` 运行，canvas 导出 dataURL 再解码成 PNG 目检；探针里把 rAF shim 成 setTimeout，否则虚拟时间下游戏循环不推进）。
 
 ## 电影观看外链安全模块（/watch/，方案 A，2026-08-24）
 - **功能**：电影卡「在线观看」→ 离站确认页 `/watch/?movie=<id>` → 用户主动「继续访问」→ 第三方（目标为「网飞猫」）。**安全第一：宁可链接不可用，也不把用户带到未核验的第三方网站。**
