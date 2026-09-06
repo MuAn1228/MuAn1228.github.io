@@ -37,5 +37,5 @@ title: 小游戏
 <script src="/lib/three.min.js" defer></script>
 <script src="/js/rubik.js" defer></script>
 <script src="/js/arcade.js?v=2"></script>
-<script src="/js/flappy-bird.js?v=3"></script>
+<script src="/js/flappy-bird.js?v=4"></script>
 <script src="/js/gesture-particles.js"></script>
