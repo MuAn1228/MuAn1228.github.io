@@ -644,142 +644,19 @@
     });
   })();
 
-  // —— Q 版贴纸少女（滑翔 / 振翅 / 眩晕 三帧） ——
-  var chibiFrames = (function () {
-    function build(mode) {
-      // mode: 0 滑翔（双臂前伸） 1 振翅（举手欢呼） 2 眩晕（X 眼）
-      var c = mkCanvas(84, 84);
-      var g = c.getContext('2d');
-      var cx = 42, cy = 40;
-      g.translate(cx, cy);
-      g.lineJoin = 'round'; g.lineCap = 'round';
-
-      var HAIR = '#f7a8c4', HAIR2 = '#e088aa', SKIN = '#ffe8d8', NAVY = '#34406b',
-          NAVY2 = '#4a5a8a', RED = '#e05656', SHOE = '#3a3542', INK = '#46304a';
-
-      function shapes(gg, outlinePass) {
-        function paint(fill) {
-          if (outlinePass) {
-            gg.strokeStyle = '#ffffff'; gg.lineWidth = 6;
-            gg.fill(); gg.stroke();
-          } else {
-            gg.fillStyle = fill; gg.fill();
-          }
-        }
-        // 双马尾（振翅时上扬）
-        var lift = mode === 1 ? -7 : 0;
-        gg.beginPath(); ell(gg, -25, -9 + lift, 13, 7, -0.5); paint(HAIR);
-        gg.beginPath(); ell(gg, -27, 4 + lift * 0.6, 11, 6, 0.35); paint(HAIR);
-        // 后发
-        gg.beginPath(); ell(gg, 0, -11, 18.5, 17); paint(HAIR);
-        // 腿（向后飘，白边贴纸风）
-        var kick = mode === 1 ? 3 : 0;
-        if (outlinePass) {
-          gg.strokeStyle = '#ffffff'; gg.lineWidth = 10.5;
-          gg.beginPath();
-          gg.moveTo(-5, 29); gg.lineTo(-17, 35 + kick);
-          gg.moveTo(-3, 31); gg.lineTo(-12, 39 + kick);
-          gg.stroke();
-        } else {
-          gg.strokeStyle = SKIN; gg.lineWidth = 5.5;
-          gg.beginPath();
-          gg.moveTo(-5, 29); gg.lineTo(-17, 35 + kick);
-          gg.moveTo(-3, 31); gg.lineTo(-12, 39 + kick);
-          gg.stroke();
-          // 白袜
-          gg.strokeStyle = '#fdfdfd'; gg.lineWidth = 6;
-          gg.beginPath();
-          gg.moveTo(-13, 33.5 + kick * 0.7); gg.lineTo(-16.5, 35.5 + kick);
-          gg.moveTo(-10.5, 36.5 + kick * 0.7); gg.lineTo(-13, 38.5 + kick);
-          gg.stroke();
-          gg.beginPath(); ell(gg, -19.5, 36 + kick, 4.5, 3, 0.3); paint(SHOE);
-          gg.beginPath(); ell(gg, -14.5, 40 + kick, 4.5, 3, 0.3); paint(SHOE);
-        }
-        // 裙（百褶）
-        gg.beginPath();
-        gg.moveTo(-10, 19); gg.lineTo(13, 19); gg.lineTo(17, 30); gg.lineTo(-14, 30);
-        gg.closePath(); paint(NAVY);
-        if (!outlinePass) {
-          gg.strokeStyle = NAVY2; gg.lineWidth = 1.4;
-          gg.beginPath();
-          gg.moveTo(-4, 20); gg.lineTo(-6, 29);
-          gg.moveTo(3, 20); gg.lineTo(3, 29);
-          gg.moveTo(9, 20); gg.lineTo(12, 29);
-          gg.stroke();
-        }
-        // 上衣 + 水手领
-        gg.beginPath(); rr(gg, -8, 4, 18, 17, 5); paint('#fdfdff');
-        if (!outlinePass) {
-          gg.fillStyle = NAVY;
-          gg.beginPath();
-          gg.moveTo(1, 4); gg.lineTo(12, 4); gg.lineTo(7, 12); gg.closePath(); gg.fill();
-          gg.fillStyle = RED; ell(gg, 7, 9, 2.6, 2.6); gg.fill();
-        }
-        // 头（脸）
-        gg.beginPath(); ell(gg, 2, -8, 17, 15.5); paint(SKIN);
-        // 刘海
-        gg.beginPath(); ell(gg, 1, -16, 17.5, 11); paint(HAIR);
-        gg.beginPath(); ell(gg, -8, -8.5, 5, 4); paint(HAIR);
-        gg.beginPath(); ell(gg, 1, -6.5, 5.5, 3.6); paint(HAIR);
-        gg.beginPath(); ell(gg, 11, -8.5, 5, 4); paint(HAIR);
-        gg.beginPath(); ell(gg, 18.5, -1, 3, 6, 0.15); paint(HAIR);
-        // 呆毛
-        gg.strokeStyle = outlinePass ? '#ffffff' : HAIR;
-        gg.lineWidth = outlinePass ? 7 : 2.5;
-        gg.beginPath(); gg.moveTo(0, -27); gg.quadraticCurveTo(4, -32, 7, -28); gg.stroke();
-        // 脸部
-        if (!outlinePass) {
-          if (mode === 2) {
-            // 眩晕 X 眼
-            gg.strokeStyle = INK; gg.lineWidth = 2;
-            gg.beginPath();
-            gg.moveTo(5, -6.5); gg.lineTo(10, -1.5); gg.moveTo(10, -6.5); gg.lineTo(5, -1.5);
-            gg.moveTo(13.5, -7.5); gg.lineTo(18.5, -2.5); gg.moveTo(18.5, -7.5); gg.lineTo(13.5, -2.5);
-            gg.stroke();
-            gg.fillStyle = '#d96a7a'; ell(gg, 11, 2, 2.4, 1.8); gg.fill();
-          } else {
-            gg.fillStyle = INK;
-            rr(gg, 4.5, -6.5, 4.6, 6.4, 2.2); gg.fill();
-            rr(gg, 13, -7.5, 4.6, 6.4, 2.2); gg.fill();
-            gg.fillStyle = '#fff';
-            ell(gg, 5.9, -5, 1.4, 1.4); gg.fill();
-            ell(gg, 14.4, -6, 1.4, 1.4); gg.fill();
-            gg.fillStyle = '#d96a7a'; ell(gg, 11, 1.5, 2.2, 1.6); gg.fill();
-          }
-          gg.fillStyle = 'rgba(255,179,189,0.85)';
-          ell(gg, 3.5, 0.5, 3, 1.8); gg.fill();
-          ell(gg, 16.5, -0.5, 2.6, 1.6); gg.fill();
-        }
-        // 手臂（白边贴纸风）
-        function armStrokes() {
-          if (mode === 1) {
-            gg.beginPath();
-            gg.moveTo(4, 8); gg.lineTo(15, 0);
-            gg.moveTo(2, 12); gg.lineTo(12, 6);
-            gg.stroke();
-          } else {
-            gg.beginPath();
-            gg.moveTo(5, 10); gg.lineTo(19, 13);
-            gg.moveTo(4, 14); gg.lineTo(16, 18);
-            gg.stroke();
-          }
-        }
-        if (outlinePass) {
-          gg.strokeStyle = '#ffffff'; gg.lineWidth = 10;
-          armStrokes();
-        } else {
-          gg.strokeStyle = SKIN; gg.lineWidth = 5;
-          armStrokes();
-        }
-      }
-
-      // 贴纸白边（两遍绘制）
-      shapes(g, true);
-      shapes(g, false);
-      return c;
-    }
-    return [build(0), build(1), build(2)];
-  })();
+  // —— 角色精灵图（从参考图裁剪，三帧：滑翔 / 振翅 / 眩晕） ——
+  var BIRD_SCALE = 0.72;
+  var birdImages = {};
+  var birdImgsLoaded = 0;
+  function loadBirdImg(name, src) {
+    var img = new Image();
+    img.onload = function () { birdImages[name] = img; birdImgsLoaded++; };
+    img.onerror = function () { birdImgsLoaded++; };
+    img.src = src;
+  }
+  loadBirdImg('glide', '/img/flappy/glide.png');
+  loadBirdImg('flap', '/img/flappy/flap.png');
+  loadBirdImg('dizzy', '/img/flappy/dizzy.png');
 
   // —— 拖尾光斑 / 星星精灵 ——
   var trailSpr = (function () {
@@ -901,17 +778,21 @@
   }
 
   function drawBird() {
-    var f;
-    if (state === 'over') f = 2;
-    else if (state === 'play') f = bird.wing > 0 ? 1 : 0;
-    else f = (frame >> 5) & 1;
+    var key;
+    if (state === 'over') key = 'dizzy';
+    else if (state === 'play') key = bird.wing > 0 ? 'flap' : 'glide';
+    else key = (frame >> 5) & 1 ? 'flap' : 'glide';
+    var img = birdImages[key];
+    if (!img) return;
     var tilt = state === 'play'
       ? Math.max(-0.45, Math.min(1.05, bird.vy * 0.06))
       : Math.sin(frame * 0.06) * 0.06;
+    var w = img.width * BIRD_SCALE;
+    var h = img.height * BIRD_SCALE;
     ctx.save();
     ctx.translate(bird.x, bird.y);
     ctx.rotate(tilt);
-    ctx.drawImage(chibiFrames[f], -42, -40);
+    ctx.drawImage(img, -w / 2, -h / 2 + 2, w, h);
     ctx.restore();
   }
 
