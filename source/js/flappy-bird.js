@@ -774,33 +774,17 @@
 
   // （程序化翅膀动画已移除，全程使用待机形象）
 
-  var tiltNow = 0;
-
   function drawBird() {
-    // 待机形象静态绘制 + 飞行俯仰倾斜（无翅膀动画）
+    // 待机形象静态绘制；飞行倾斜直接跟随速度（原始手感）
     if (!birdBody) return;
-    var target;
-    if (state === 'over') {
-      target = 0.22;
-    } else if (state === 'ready') {
-      target = Math.sin(frame * 0.06) * 0.05;
-    } else if (bird.vy < -0.5) {
-      // 上升：微仰
-      target = Math.max(-0.45, bird.vy * 0.06);
-    } else if (bird.vy > 1.1) {
-      // 下坠：俯冲，速度越大倾角越大
-      target = Math.min(0.9, bird.vy * 0.05);
-    } else {
-      // 滑翔：随速度微调
-      target = bird.vy * 0.06;
-    }
-    tiltNow += (target - tiltNow) * 0.12;
-
+    var tilt = state === 'play'
+      ? Math.max(-0.45, Math.min(1.05, bird.vy * 0.06))
+      : Math.sin(frame * 0.06) * 0.06;
     var w = birdBody.width * BIRD_SCALE;
     var h = birdBody.height * BIRD_SCALE;
     ctx.save();
     ctx.translate(bird.x, bird.y);
-    ctx.rotate(tiltNow);
+    ctx.rotate(tilt);
     ctx.drawImage(birdBody, -w / 2, -h / 2 + 2, w, h);
     ctx.restore();
   }
