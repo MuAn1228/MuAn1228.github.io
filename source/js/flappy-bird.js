@@ -644,19 +644,14 @@
     });
   })();
 
-  // —— 角色精灵图（从参考图裁剪，三帧：滑翔 / 振翅 / 眩晕） ——
+  // —— 角色：参考图身体 + 程序化翅膀（连续拍打动画） ——
   var BIRD_SCALE = 0.72;
-  var birdImages = {};
-  var birdImgsLoaded = 0;
-  function loadBirdImg(name, src) {
+  var birdBody = null;
+  (function () {
     var img = new Image();
-    img.onload = function () { birdImages[name] = img; birdImgsLoaded++; };
-    img.onerror = function () { birdImgsLoaded++; };
-    img.src = src;
-  }
-  loadBirdImg('glide', '/img/flappy/glide.png');
-  loadBirdImg('flap', '/img/flappy/flap.png');
-  loadBirdImg('dizzy', '/img/flappy/dizzy.png');
+    img.onload = function () { birdBody = img; };
+    img.src = '/img/flappy/body.png';
+  })();
 
   // —— 拖尾光斑 / 星星精灵 ——
   var trailSpr = (function () {
@@ -777,22 +772,67 @@
     ctx.globalAlpha = 1;
   }
 
+  // —— 翅膀状态（三态平滑过渡：上升 / 滑翔 / 下坠） ——
+  var wingPhase = 0, wingFreq = 0.08, wingAmp = 0.32, tiltNow = 0;
+
+  function drawWings(amp) {
+    // 两片白色小翼，从肩后展开，绕肩关节连续拍打
+    var sw = Math.sin(wingPhase);
+    var flap = sw * amp;
+    var S = BIRD_SCALE;
+    var len = 26 * S, wid = 10 * S;
+    var rootY = -15 * S, rootX = 5 * S;
+
+    ctx.lineCap = 'round';
+    for (var side = -1; side <= 1; side += 2) {
+      ctx.save();
+      ctx.translate(side * rootX, rootY);
+      ctx.rotate(side * (0.55 + flap));
+      // 翼主体（沿局部 +x 伸出）
+      var wg = ctx.createLinearGradient(0, 0, len, 0);
+      wg.addColorStop(0, 'rgba(250,247,252,0.98)');
+      wg.addColorStop(1, 'rgba(226,222,238,0.92)');
+      ctx.fillStyle = wg;
+      ell(ctx, len * 0.45, 0, len * 0.52, wid * 0.55);
+      ctx.fill();
+      // 翼尖小羽
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ell(ctx, len * 0.82, 0, len * 0.16, wid * 0.42);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
   function drawBird() {
-    var key;
-    if (state === 'over') key = 'dizzy';
-    else if (state === 'play') key = bird.wing > 0 ? 'flap' : 'glide';
-    else key = (frame >> 5) & 1 ? 'flap' : 'glide';
-    var img = birdImages[key];
-    if (!img) return;
-    var tilt = state === 'play'
-      ? Math.max(-0.45, Math.min(1.05, bird.vy * 0.06))
-      : Math.sin(frame * 0.06) * 0.06;
-    var w = img.width * BIRD_SCALE;
-    var h = img.height * BIRD_SCALE;
+    if (!birdBody) return;
+    var target;
+    if (state === 'over') {
+      target = { freq: 0, amp: 0, tilt: 0.22 };
+    } else if (state === 'ready') {
+      target = { freq: 0.075, amp: 0.3, tilt: Math.sin(frame * 0.06) * 0.05 };
+    } else if (bird.vy < -0.5) {
+      // 上升：高频大幅拍翅 + 微仰
+      target = { freq: 0.2, amp: 0.85, tilt: Math.max(-0.42, bird.vy * 0.05) };
+    } else if (bird.vy > 1.1) {
+      // 下坠：收翅慢拍 + 俯冲
+      target = { freq: 0.05, amp: 0.14, tilt: Math.min(1.02, bird.vy * 0.055) };
+    } else {
+      // 滑翔：中频中幅
+      target = { freq: 0.11, amp: 0.42, tilt: bird.vy * 0.06 };
+    }
+    // 指数平滑，动画连续不跳变
+    wingFreq += (target.freq - wingFreq) * 0.08;
+    wingAmp += (target.amp - wingAmp) * 0.08;
+    tiltNow += (target.tilt - tiltNow) * 0.12;
+    wingPhase += wingFreq;
+
+    var w = birdBody.width * BIRD_SCALE;
+    var h = birdBody.height * BIRD_SCALE;
     ctx.save();
     ctx.translate(bird.x, bird.y);
-    ctx.rotate(tilt);
-    ctx.drawImage(img, -w / 2, -h / 2 + 2, w, h);
+    ctx.rotate(tiltNow);
+    if (wingAmp > 0.03) drawWings(wingAmp);
+    ctx.drawImage(birdBody, -w / 2, -h / 2 + 2, w, h);
     ctx.restore();
   }
 
