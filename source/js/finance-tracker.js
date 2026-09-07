@@ -1329,14 +1329,24 @@
 
   // 最新净值 + 日涨跌 (腾讯行情批量，一次请求)
   async function fetchFundQuotes() {
-    try {
-      var codes = FUNDS.map(function (f) { return 'jj' + f.code; }).join(',');
-      await loadScriptTag('https://qt.gtimg.cn/q=' + codes + '&r=' + Date.now(), 'GBK', 8000);
+    var codes = FUNDS.map(function (f) { return 'jj' + f.code; }).join(',');
+    var url = 'https://qt.gtimg.cn/q=' + codes + '&r=' + Date.now();
+    var loaded = false;
+    for (var attempt = 0; attempt < 2 && !loaded; attempt++) {
+      try {
+        await loadScriptTag(url + '&_=' + attempt, 'GBK', 10000);
+        // 检查至少一个基金变量是否存在
+        var hasData = FUNDS.some(function (f) { return window['v_jj' + f.code]; });
+        if (hasData) loaded = true;
+      } catch (e) {
+        console.warn('[fund] 行情尝试' + (attempt + 1) + '失败: ' + e.message);
+      }
+    }
+    if (loaded) {
       FUNDS.forEach(function (f) {
         var raw = window['v_jj' + f.code];
         if (!raw) return;
         var p = raw.split('~');
-        // 字段: code~名称~估值~估算涨跌~~最新净值~累计净值~日涨跌%~净值日期~
         var est = parseFloat(p[2]);
         f.est = est > 0 ? est : null;
         var estPct = parseFloat(p[3]);
@@ -1345,11 +1355,11 @@
         f.accNav = parseFloat(p[6]) || null;
         f.dayPct = parseFloat(p[7]);
         f.navDate = p[8] || '';
-        try { delete window['v_jj' + f.code]; } catch (e) {}
+        try { delete window['v_jj' + f.code]; } catch (e) { window['v_jj' + f.code] = undefined; }
       });
       lastFundFetch = new Date();
-    } catch (e) {
-      console.warn('[fund] 行情: ' + e.message);
+    } else {
+      console.warn('[fund] 行情两次尝试均失败');
     }
     renderFunds();
   }
@@ -2302,7 +2312,21 @@
     updateClock();
     setInterval(updateClock, 1000);
 
-    // 初始渲染 (Demo 数据)
+    // 先从 localStorage 恢复上次成功的数据（避免先渲染 Demo 再覆盖的闪烁）
+    var quoteCached = null;
+    try {
+      var raw = localStorage.getItem('gmt-quote-cache');
+      if (raw) quoteCached = JSON.parse(raw);
+    } catch (e) { quoteCached = null; }
+    if (quoteCached && quoteCached.results && quoteCached.results.length > 0) {
+      try {
+        applyQuotes(quoteCached.results);
+        lastRefresh = new Date(quoteCached.ts);
+      } catch (e) { console.warn('[cache] 行情缓存恢复失败: ' + e.message); quoteCached = null; }
+    }
+    try { restoreChartCache(); } catch (e) { console.warn('[cache] 图表缓存恢复失败: ' + e.message); }
+
+    // 初始渲染（有缓存则渲染缓存数据，否则渲染 Demo）
     renderAll();
     renderClock();
     renderFunds();
@@ -2310,19 +2334,13 @@
     updateAddMenu();
     reflowGrid();
 
-    // 优先从 localStorage 恢复上次成功的数据（避免闪 7 月 Demo）
-    var quoteCached = null;
-    try { quoteCached = JSON.parse(localStorage.getItem('gmt-quote-cache') || 'null'); } catch (e) {}
-    if (quoteCached && quoteCached.results && quoteCached.results.length > 0) {
-      applyQuotes(quoteCached.results);
-      lastRefresh = new Date(quoteCached.ts);
+    // 启动实时数据
+    if (quoteCached) {
       var mins = Math.round((Date.now() - quoteCached.ts) / 60000);
       updateStatus('缓存·' + mins + '分钟前', '正在刷新实时数据…');
+    } else {
+      updateStatus('连接中', '正在连接实时数据源…');
     }
-    restoreChartCache();
-
-    // 启动实时数据
-    if (!quoteCached) updateStatus('连接中', '正在连接实时数据源…');
     refreshAll(false);
     fetchFundHistories(); // 历史净值仅加载一次 (量较大)
     startTimers();
