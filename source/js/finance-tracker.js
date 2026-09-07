@@ -1303,6 +1303,7 @@
   }
 
   // 历史净值 + 阶段收益 (天天基金 pingzhongdata，串行加载避免全局变量互相覆盖)
+  // 同时作为腾讯行情接口的兜底：如果腾讯被广告拦截/防火墙阻止，用历史净值最后一天的数据显示
   async function fetchFundHistories() {
     for (var i = 0; i < FUNDS.length; i++) {
       var f = FUNDS[i];
@@ -1313,6 +1314,16 @@
         f.trend = trend.slice(-90).map(function (p) { return { t: p.x, nav: p.y }; });
         if (w.fS_name) f.nameOfficial = w.fS_name;
         f.syl = { m1: w.syl_1y, m3: w.syl_3y, m6: w.syl_6y, y1: w.syl_1n };
+        // 兜底：如果腾讯行情还没拿到 dayPct，用历史净值最后两天计算
+        if (trend.length >= 2 && (typeof f.dayPct !== 'number' || isNaN(f.dayPct))) {
+          var last = trend[trend.length - 1];
+          var prev = trend[trend.length - 2];
+          f.nav = last.y;
+          f.accNav = last.y; // 历史净值里没有累计净值，用单位净值代替
+          f.dayPct = ((last.y - prev.y) / prev.y) * 100;
+          f.navDate = new Date(last.x).toISOString().slice(0, 10);
+          f._fromHistory = true;
+        }
         ['Data_netWorthTrend', 'Data_ACWorthTrend', 'Data_grandTotal', 'Data_rateInSimilarType',
          'Data_rateInSimilarPersent', 'Data_fluctuationScale', 'Data_holderStructure', 'Data_assetAllocation',
          'Data_performanceEvaluation', 'Data_currentFundManager', 'Data_buySedemption', 'Data_fundSharesPositions',
