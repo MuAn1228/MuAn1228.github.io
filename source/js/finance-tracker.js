@@ -236,8 +236,11 @@
   // 指数格式: 同美股 (usINX/usIXIC/usDJI/hkHSI/sh000001)
   async function fetchFromTencent() {
     // 1. 收集美股代码: STOCKS + 板块ETF + 跑马灯指数
+    // 注意: 带点的代码 (如 BRK.B) 会生成 v_usBRK.B="..." 非法变量名，导致整个 script 块语法失败，必须排除
     var usCodes = [];
-    STOCKS.forEach(function (s) { usCodes.push('us' + s.ticker); });
+    STOCKS.forEach(function (s) {
+      if (s.ticker.indexOf('.') === -1) usCodes.push('us' + s.ticker);
+    });
     ['XLK', 'XLE', 'XLF'].forEach(function (t) { usCodes.push('us' + t); });
     // 指数: 标普500, 纳斯达克, 道琼斯
     usCodes.push('usINX', 'usIXIC', 'usDJI');

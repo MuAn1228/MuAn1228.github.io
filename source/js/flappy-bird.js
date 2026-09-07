@@ -1,7 +1,8 @@
 // ===== Flappy Bird 小游戏（canvas 自包含，挂载于 /fun/arcade/） =====
-// 2026-09 v3：双地图 —— ①「音乐街区」像素商店街 + CD 盒障碍；②「极光雪镇」雪夜 + 冰砖障碍
-// 小鸟：企鹅装角角少女（参考 sprite sheet 自动抠帧：去白底 → 连通域 → 行聚类，
-//       侧面行走/奔跑/攻击帧做滑翔与振翅、受伤帧做眩晕；sheet 缺失时兜底旧贴纸图）
+// 2026-09 v4：三地图 —— ①「音乐街区」像素商店街 + CD 盒障碍；②「极光雪镇」雪夜 + 冰砖障碍；
+// ③「杭州夜航」西湖→西湖城区→钱塘江→钱江新城 四段式夜景旅程 + 杭州化障碍（石桥墩/塔身/桥墩钢架/高楼）
+// 小鸟：新角色（hero-sheet.png 参考图自动抠帧：深灰底紧阈值 flood-fill → 连通域 → 行聚类，
+//       待机/行走/奔跑/跳跃扇动/下落滑翔/攻击/受击 行序；滑翔/振翅/眩晕；失败回退企鹅帧 → body.png）
 // 灵感参考：抖音同款飞行挑战（堆叠障碍 / 街景背景 / 圆角计分药丸）
 // 物理/判定/操作与旧版一致
 (function () {
@@ -33,21 +34,32 @@
   var flashT = 0, shakeT = 0, scorePop = 0, newBest = false;
   try { best = parseInt(localStorage.getItem('arcade-flappy-best'), 10) || 0; } catch (e) { best = 0; }
 
-  // —— 地图主题：street=音乐街区 / snow=极光雪镇（localStorage 记忆） ——
+  // —— 地图主题：street=音乐街区 / snow=极光雪镇 / hangzhou=杭州夜航（localStorage 记忆） ——
   var MAPS = {
     street: { name: '音乐街区', sub: 'P I X E L  S T R E E T' },
-    snow: { name: '极光雪镇', sub: 'A U R O R A  S N O W' }
+    snow: { name: '极光雪镇', sub: 'A U R O R A  S N O W' },
+    hangzhou: { name: '杭州夜航', sub: 'N I G H T  V O Y A G E' }
   };
+  var MAP_ORDER = ['street', 'snow', 'hangzhou'];
   var mapId = 'street';
-  try { mapId = localStorage.getItem('arcade-flappy-map') === 'snow' ? 'snow' : 'street'; } catch (e) {}
+  try {
+    var _m = localStorage.getItem('arcade-flappy-map');
+    if (_m && MAPS[_m]) mapId = _m;
+  } catch (e) {}
   function toggleMap() {
-    mapId = mapId === 'snow' ? 'street' : 'snow';
+    var idx = MAP_ORDER.indexOf(mapId);
+    mapId = MAP_ORDER[(idx + 1) % MAP_ORDER.length];
     try { localStorage.setItem('arcade-flappy-map', mapId); } catch (e) {}
   }
   // 飘雪初始化
   for (var fi = 0; fi < 42; fi++) {
     flakes.push({ x: Math.random() * W, y: Math.random() * (H - GROUND), s: 1 + Math.random() * 2.2, sp: 0.5 + Math.random() * 0.9, ph: Math.random() * 7, dr: 0.2 + Math.random() * 0.5 });
   }
+
+  // —— 杭州夜航旅程状态（四段式：西湖→西湖城区→钱塘江→钱江新城，全程 4800px） ——
+  var HZ_SEG_W = 1200, HZ_FAR_SEG_W = 540, HZ_END_W = 840;
+  var HZ_JOURNEY_LEN = HZ_SEG_W * 4;
+  var hz = { jx: 0, gx: 0, introT: 0 };
 
   function reset() {
     bird = { x: W * 0.3, y: H * 0.45, vy: 0, r: 14, wing: 0 };
@@ -57,19 +69,21 @@
     trail = [];
     stars = [];
     newBest = false;
+    hz.jx = 0; hz.gx = 0; hz.introT = 0;
   }
   reset();
 
   function spawnPipe(x) {
     var margin = 60;
     var gy = margin + Math.random() * (H - GROUND - margin * 2 - PIPE_GAP);
-    pipes.push({ x: x, gy: gy, passed: false, seed: Math.floor(Math.random() * 997) });
+    pipes.push({ x: x, gy: gy, passed: false, seed: Math.floor(Math.random() * 997), hz: mapId === 'hangzhou' ? hzStage() : 0 });
   }
 
   function flap() {
     if (state === 'ready') {
       state = 'play';
       spawnPipe(W + 100);
+      if (mapId === 'hangzhou') hz.introT = 85;
     }
     if (state === 'play') {
       bird.vy = FLAP;
@@ -118,15 +132,15 @@
           score++;
           scorePop = 10;
         }
-        // 碰撞
+        // 碰撞（window.__flappyGod 供无头探针跳过死亡）
         if (bird.x + bird.r > p.x && bird.x - bird.r < p.x + PIPE_W) {
-          if (bird.y - bird.r < p.gy || bird.y + bird.r > p.gy + PIPE_GAP) {
+          if (!window.__flappyGod && (bird.y - bird.r < p.gy || bird.y + bird.r > p.gy + PIPE_GAP)) {
             gameOver();
           }
         }
       }
       // 地面 / 天花板
-      if (bird.y + bird.r > H - GROUND) { bird.y = H - GROUND - bird.r; gameOver(); }
+      if (bird.y + bird.r > H - GROUND) { bird.y = H - GROUND - bird.r; if (!window.__flappyGod) gameOver(); }
       if (bird.y - bird.r < 0) { bird.y = bird.r; bird.vy = 0; }
 
       // 飞行拖尾
@@ -137,9 +151,14 @@
     }
 
     if (state !== 'over') {
-      scrollFar = (scrollFar + SPEED * 0.22) % W;
-      scrollMid = (scrollMid + SPEED * 0.55) % (W * 2);
-      groundX = (groundX + SPEED) % W;
+      if (mapId === 'hangzhou') {
+        // 杭州：旅程仅在飞行中推进（ready/over 时画面静止）
+        if (state === 'play') { hz.jx += SPEED; hz.gx = (hz.gx + SPEED) % W; }
+      } else {
+        scrollFar = (scrollFar + SPEED * 0.22) % W;
+        scrollMid = (scrollMid + SPEED * 0.55) % (W * 2);
+        groundX = (groundX + SPEED) % W;
+      }
       // 飘雪（仅雪镇）
       if (mapId === 'snow') {
         for (var f = 0; f < flakes.length; f++) {
@@ -161,6 +180,7 @@
     if (flashT > 0) flashT--;
     if (shakeT > 0) shakeT--;
     if (scorePop > 0) scorePop--;
+    if (hz.introT > 0) hz.introT--;
   }
 
   // =====================================================================
@@ -1166,24 +1186,1032 @@
     return c;
   })();
 
-  // —— 角色：企鹅装角角少女（sprite sheet 自动抠帧；body.png 为兜底） ——
+  // =====================================================================
+  //   地图③「杭州夜航」美术资产
+  //   四段式夜景旅程：西湖(0-1200) → 西湖城区(1200-2400) → 钱塘江(2400-3600) → 钱江新城(3600-4800)
+  //   中景段 1200x480（×4）；远景段 540x480（×4，0.45x 视差与中景同步换段）；
+  //   旅程结束后进入 840 宽「钱江新城核心区」无缝循环带（跨缝塔保证接缝连续）
+  // =====================================================================
+
+  function hzStage() {
+    return Math.min(3, Math.floor(hz.jx / HZ_SEG_W));
+  }
+
+  // —— 夜空天空（渐变 + 星星 + 月亮 + 地平线城市微光） ——
+  var hzSkyTile = (function () {
+    var c = mkCanvas(W, H - GROUND);
+    var g = c.getContext('2d');
+    var grad = g.createLinearGradient(0, 0, 0, H - GROUND);
+    grad.addColorStop(0, '#060a24');
+    grad.addColorStop(0.45, '#0d1738');
+    grad.addColorStop(0.8, '#16264a');
+    grad.addColorStop(1, '#1e3a5e');
+    g.fillStyle = grad; g.fillRect(0, 0, W, H - GROUND);
+    // 地平线城市微光
+    var hg = g.createLinearGradient(0, H - GROUND - 90, 0, H - GROUND);
+    hg.addColorStop(0, 'rgba(255,170,80,0)');
+    hg.addColorStop(1, 'rgba(255,170,80,0.10)');
+    g.fillStyle = hg; g.fillRect(0, H - GROUND - 90, W, 90);
+    // 星星
+    for (var i = 0; i < 66; i++) {
+      var sx = Math.random() * W, sy = Math.random() * 290, sr = 0.6 + Math.random() * 0.9;
+      g.globalAlpha = 0.22 + 0.6 * ((i * 37) % 10) / 10;
+      g.fillStyle = '#dfe8ff';
+      g.beginPath(); g.arc(sx, sy, sr, 0, 7); g.fill();
+    }
+    for (var i2 = 0; i2 < 10; i2++) {
+      g.globalAlpha = 0.3;
+      g.fillStyle = '#c8d8f4';
+      g.fillRect(Math.random() * W, 300 + Math.random() * 110, 1.6, 1.6);
+    }
+    g.globalAlpha = 1;
+    // 月亮
+    var mg = g.createRadialGradient(352, 66, 10, 352, 66, 72);
+    mg.addColorStop(0, 'rgba(240,246,255,0.9)');
+    mg.addColorStop(0.35, 'rgba(220,235,255,0.28)');
+    mg.addColorStop(1, 'rgba(220,235,255,0)');
+    g.fillStyle = mg; g.fillRect(280, -6, 144, 144);
+    g.fillStyle = '#eef4ff';
+    ell(g, 352, 66, 19, 19); g.fill();
+    g.fillStyle = '#ccd8ec';
+    ell(g, 346, 60, 3.4, 3.4); g.fill();
+    ell(g, 359, 70, 2.6, 2.6); g.fill();
+    ell(g, 352, 76, 2, 2); g.fill();
+    ell(g, 344, 74, 1.4, 1.4); g.fill();
+    return c;
+  })();
+
+  // —— 山体剪影 ——
+  function hzMountain(g, color, pts) {
+    g.fillStyle = color;
+    g.beginPath();
+    g.moveTo(pts[0][0], H - GROUND);
+    for (var i = 0; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
+    g.lineTo(pts[pts.length - 1][0], H - GROUND);
+    g.closePath(); g.fill();
+  }
+
+  // —— 保俶塔（细石塔剪影，宝石山上） ——
+  function hzBaochu(g, x, yBase, h) {
+    g.fillStyle = '#141e3a';
+    g.beginPath();
+    g.moveTo(x - h * 0.10, yBase);
+    g.lineTo(x - h * 0.055, yBase - h * 0.72);
+    g.lineTo(x - h * 0.026, yBase - h * 0.82);
+    g.lineTo(x + h * 0.026, yBase - h * 0.82);
+    g.lineTo(x + h * 0.055, yBase - h * 0.72);
+    g.lineTo(x + h * 0.10, yBase);
+    g.closePath(); g.fill();
+    g.fillStyle = '#101a34';
+    g.beginPath();
+    g.moveTo(x - h * 0.062, yBase - h * 0.8);
+    g.lineTo(x + h * 0.062, yBase - h * 0.8);
+    g.lineTo(x, yBase - h * 0.96);
+    g.closePath(); g.fill();
+    for (var t = 1; t <= 3; t++) {
+      var yy = yBase - h * (0.16 + t * 0.16);
+      var ww = h * (0.075 + t * 0.014);
+      g.fillRect(x - ww, yy, ww * 2, h * 0.022);
+    }
+  }
+
+  // —— 雷峰塔（五层砖塔剪影 + 暖灯窗 + 顶层光晕），杭州第一地标 ——
+  function hzLeifeng(g, x, yBase, h) {
+    var tiers = [0.62, 0.52, 0.44, 0.36, 0.28];
+    var bw = h * 0.42;
+    for (var t = 0; t < 5; t++) {
+      var w = bw * tiers[t];
+      var yTop = yBase - h * (0.16 + t * 0.16);
+      g.fillStyle = t % 2 ? '#1a2444' : '#172040';
+      g.fillRect(x - w / 2, yTop, w, h * 0.16);
+      var eaveW = w * 1.18;
+      g.fillStyle = '#101a34';
+      g.beginPath();
+      g.moveTo(x - eaveW / 2, yTop - 2);
+      g.lineTo(x - eaveW / 2 + 8, yTop - 6);
+      g.lineTo(x - w / 2, yTop + 3);
+      g.lineTo(x + w / 2, yTop + 3);
+      g.lineTo(x + eaveW / 2 - 8, yTop - 6);
+      g.lineTo(x + eaveW / 2, yTop - 2);
+      g.closePath(); g.fill();
+      if (t < 4) {
+        g.fillStyle = 'rgba(255,206,120,0.85)';
+        g.fillRect(x - 4, yTop + 5, 8, 5);
+      }
+    }
+    g.fillStyle = '#101a34';
+    g.fillRect(x - bw * 0.72, yBase - 4, bw * 1.44, 6);
+    var tg = g.createRadialGradient(x, yBase - h * 0.88, 2, x, yBase - h * 0.88, 28);
+    tg.addColorStop(0, 'rgba(255,214,130,0.5)');
+    tg.addColorStop(1, 'rgba(255,214,130,0)');
+    g.fillStyle = tg;
+    g.fillRect(x - 28, yBase - h - 8, 56, 44);
+    g.fillStyle = '#e8d8a8';
+    g.fillRect(x - 1.5, yBase - h - 9, 3, 9);
+  }
+
+  // 远景无缝塔（旅程末段与循环带共用同一塔形，保证接缝连续）
+  var hzFarEdge = (function () {
+    var fc = mkCanvas(60, 200);
+    var fg = fc.getContext('2d');
+    fg.fillStyle = '#1c2c50';
+    fg.fillRect(10, 60, 40, 140);
+    fg.fillStyle = '#162244';
+    fg.fillRect(44, 60, 6, 140);
+    fg.fillRect(27, 40, 3, 20);
+    fg.fillStyle = 'rgba(255,205,120,0.5)';
+    for (var yy = 72; yy < 190; yy += 13) fg.fillRect(18, yy, 5, 4);
+    return fc;
+  })();
+
+  // —— 远景段（每段 540 宽；段序对应四阶段） ——
+  function hzFarSeg(k) {
+    var c = mkCanvas(HZ_FAR_SEG_W, H - GROUND);
+    var g = c.getContext('2d');
+    if (k === 0) {
+      // 西湖群山：后层山 + 夕照山（雷峰塔） + 宝石山（保俶塔）
+      hzMountain(g, '#16244a', [[-20, 305], [80, 212], [170, 262], [250, 192], [330, 252], [420, 208], [560, 305]]);
+      hzMountain(g, '#1d2f55', [[-30, 345], [90, 262], [180, 312], [280, 238], [360, 300], [470, 244], [580, 355]]);
+      hzBaochu(g, 150, 250, 88);
+      hzLeifeng(g, 500, 248, 152);
+    } else if (k === 1) {
+      // 城区远景：连绵屋顶轮廓 + 零星暖窗
+      var roofs = [[-10, 300, 96, 30], [60, 278, 84, 26], [120, 310, 100, 34], [200, 286, 72, 24], [250, 306, 108, 30], [340, 274, 92, 26], [410, 302, 82, 30], [470, 284, 92, 28]];
+      for (var i = 0; i < roofs.length; i++) {
+        var r = roofs[i];
+        g.fillStyle = '#182644';
+        g.fillRect(r[0], r[1], r[2], r[3]);
+        g.fillStyle = '#141c36';
+        g.beginPath();
+        g.moveTo(r[0] - 4, r[1]);
+        g.lineTo(r[0] + r[2] / 2, r[1] - 12);
+        g.lineTo(r[0] + r[2] + 4, r[1]);
+        g.closePath(); g.fill();
+        if (i % 2 === 0) {
+          g.fillStyle = 'rgba(255,200,110,0.5)';
+          g.fillRect(r[0] + r[2] * 0.3, r[1] + 8, 7, 6);
+          g.fillRect(r[0] + r[2] * 0.65, r[1] + 16, 6, 5);
+        }
+      }
+    } else if (k === 2) {
+      // 江对岸：中低层城市轮廓
+      var blocks = [[-10, 280, 90, 30], [70, 258, 70, 24], [130, 288, 96, 28], [220, 264, 80, 26], [290, 284, 70, 24], [350, 256, 84, 26], [420, 278, 80, 26], [486, 258, 70, 26]];
+      for (var i2 = 0; i2 < blocks.length; i2++) {
+        var b = blocks[i2];
+        g.fillStyle = '#1a2a4c';
+        g.fillRect(b[0], b[1], b[2], b[3]);
+        if (i2 % 2 === 0) {
+          g.fillStyle = 'rgba(255,205,120,0.55)';
+          g.fillRect(b[0] + b[2] * 0.35, b[1] + 8, 6, 5);
+          g.fillRect(b[0] + b[2] * 0.6, b[1] + 16, 6, 5);
+        }
+      }
+    } else {
+      // 钱江新城天际线：高层剪影 + 杭州之门式双子塔
+      var towers = [[-10, 232, 34, 110], [26, 208, 40, 134], [84, 222, 36, 120], [150, 196, 42, 146], [214, 226, 38, 116], [280, 200, 44, 142], [460, 230, 36, 112]];
+      for (var i3 = 0; i3 < towers.length; i3++) {
+        var tv = towers[i3];
+        g.fillStyle = '#1c2c50';
+        g.fillRect(tv[0], tv[1], tv[2], tv[3]);
+        g.fillStyle = '#162244';
+        g.fillRect(tv[0] + tv[2] - 3, tv[1], 3, tv[3]);
+        g.fillRect(tv[0] + tv[2] / 2 - 1, tv[1] - 10, 2, 10);
+        if (i3 % 2 === 0) {
+          g.fillStyle = 'rgba(255,205,120,0.5)';
+          for (var wy = tv[1] + 8; wy < tv[1] + tv[3] - 6; wy += 12) g.fillRect(tv[0] + tv[2] * 0.3, wy, 5, 4);
+        }
+      }
+      // 杭州之门（双子塔 + 顶部拱形连接 + 灯光带）
+      var hx = 330;
+      g.fillStyle = '#20325a';
+      g.beginPath(); g.moveTo(hx, 300); g.lineTo(hx + 20, 300); g.lineTo(hx + 24, 110); g.lineTo(hx + 2, 110); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(hx + 46, 300); g.lineTo(hx + 66, 300); g.lineTo(hx + 62, 110); g.lineTo(hx + 40, 110); g.closePath(); g.fill();
+      g.fillStyle = '#263a68';
+      g.fillRect(hx + 2, 102, 62, 10);
+      g.fillStyle = 'rgba(255,214,140,0.6)';
+      g.fillRect(hx + 4, 118, 58, 2);
+      // 右缘跨缝塔（与循环带共用）
+      g.drawImage(hzFarEdge, 510, 120);
+    }
+    return c;
+  }
+  var hzFarSegs = [hzFarSeg(0), hzFarSeg(1), hzFarSeg(2), hzFarSeg(3)];
+
+  // —— 水面（段内水面 + 波光） ——
+  function hzWater(g, waterTop) {
+    var grad = g.createLinearGradient(0, waterTop, 0, H - GROUND);
+    grad.addColorStop(0, '#0b1834');
+    grad.addColorStop(0.6, '#0e1e3e');
+    grad.addColorStop(1, '#142a4e');
+    g.fillStyle = grad;
+    g.fillRect(0, waterTop, HZ_SEG_W, H - GROUND - waterTop);
+    g.strokeStyle = 'rgba(120,165,220,0.14)';
+    g.lineWidth = 1;
+    for (var y = waterTop + 6; y < H - GROUND - 2; y += 11) {
+      var off = (y * 7) % 42;
+      g.beginPath();
+      for (var x = off - 80; x < HZ_SEG_W + 60; x += 92) {
+        g.moveTo(x, y); g.lineTo(x + 26, y);
+      }
+      g.stroke();
+    }
+  }
+
+  // —— 白墙黛瓦江南屋 ——
+  function hzJiangnanHouse(g, x, yBase) {
+    var h = 92;
+    g.fillStyle = '#3a4a6a';
+    g.fillRect(x, yBase - h, 100, h);
+    g.fillStyle = '#2c3a58';
+    g.fillRect(x + 94, yBase - h, 6, h);
+    g.fillStyle = '#101a34';
+    g.beginPath();
+    g.moveTo(x - 12, yBase - h);
+    g.lineTo(x + 50, yBase - h - 26);
+    g.lineTo(x + 112, yBase - h);
+    g.closePath(); g.fill();
+    g.beginPath();
+    g.moveTo(x - 12, yBase - h); g.lineTo(x - 17, yBase - h - 7); g.lineTo(x - 4, yBase - h + 2);
+    g.closePath(); g.fill();
+    g.beginPath();
+    g.moveTo(x + 112, yBase - h); g.lineTo(x + 117, yBase - h - 7); g.lineTo(x + 104, yBase - h + 2);
+    g.closePath(); g.fill();
+    // 暖窗
+    g.fillStyle = 'rgba(255,200,110,0.85)';
+    g.fillRect(x + 14, yBase - h + 24, 22, 26);
+    g.fillRect(x + 52, yBase - h + 24, 22, 26);
+    g.fillStyle = '#101a34';
+    g.fillRect(x + 14, yBase - h + 36, 22, 2);
+    g.fillRect(x + 24, yBase - h + 24, 2, 26);
+    g.fillRect(x + 52, yBase - h + 36, 22, 2);
+    g.fillRect(x + 62, yBase - h + 24, 2, 26);
+    g.fillStyle = '#0e1830';
+    g.fillRect(x + 84, yBase - 40, 12, 40);
+  }
+
+  // —— 亭子 ——
+  function hzPavilion(g, x, yBase) {
+    g.fillStyle = '#23304e';
+    g.fillRect(x - 2, yBase - 46, 4, 46);
+    g.fillRect(x + 18, yBase - 46, 4, 46);
+    g.fillStyle = '#101a34';
+    g.beginPath();
+    g.moveTo(x - 22, yBase - 46);
+    g.lineTo(x + 10, yBase - 74);
+    g.lineTo(x + 42, yBase - 46);
+    g.closePath(); g.fill();
+    g.beginPath();
+    g.moveTo(x - 14, yBase - 64);
+    g.lineTo(x + 10, yBase - 82);
+    g.lineTo(x + 34, yBase - 64);
+    g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(x - 22, yBase - 46); g.lineTo(x - 27, yBase - 52); g.lineTo(x - 13, yBase - 48); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(x + 42, yBase - 46); g.lineTo(x + 47, yBase - 52); g.lineTo(x + 33, yBase - 48); g.closePath(); g.fill();
+    g.fillStyle = 'rgba(255,200,110,0.75)';
+    g.fillRect(x + 4, yBase - 40, 12, 16);
+    g.fillStyle = '#1b2c4e';
+    g.fillRect(x - 10, yBase - 4, 40, 6);
+  }
+
+  // —— 垂柳（西湖标志） ——
+  function hzWillow(g, x, yBase, sc) {
+    g.fillStyle = '#2a3a44';
+    g.fillRect(x - 2 * sc, yBase - 34 * sc, 4 * sc, 34 * sc);
+    g.strokeStyle = '#1e3a3e';
+    g.lineWidth = 1.4 * sc;
+    g.beginPath();
+    for (var i = 0; i < 7; i++) {
+      var ax = x + (i - 3) * 7 * sc;
+      g.moveTo(ax, yBase - 32 * sc);
+      g.quadraticCurveTo(ax + (i - 3) * 3 * sc, yBase - 12 * sc, ax + (i - 3) * 4.5 * sc, yBase + 6 * sc);
+    }
+    g.stroke();
+    g.fillStyle = 'rgba(96,150,120,0.6)';
+    for (var j = 0; j < 18; j++) {
+      g.fillRect(x + (Math.random() * 44 - 22) * sc, yBase - 30 * sc + Math.random() * 36 * sc, 2, 3);
+    }
+    g.fillStyle = '#35505a';
+    g.fillRect(x, yBase - 32 * sc, 1.5 * sc, 30 * sc);
+  }
+
+  // —— 石拱桥（跨水小桥） ——
+  function hzStoneBridge(g, x, waterTop) {
+    g.fillStyle = '#33446a';
+    g.beginPath();
+    g.moveTo(x, waterTop + 34);
+    g.quadraticCurveTo(x + 40, waterTop + 6, x + 80, waterTop + 34);
+    g.lineTo(x + 80, waterTop + 46);
+    g.quadraticCurveTo(x + 40, waterTop + 18, x, waterTop + 46);
+    g.closePath(); g.fill();
+    g.strokeStyle = '#3d4f78';
+    g.lineWidth = 2;
+    g.beginPath(); g.moveTo(x, waterTop + 30); g.quadraticCurveTo(x + 40, waterTop + 2, x + 80, waterTop + 30); g.stroke();
+    g.fillStyle = 'rgba(255,206,120,0.9)';
+    g.fillRect(x + 36, waterTop + 10, 3, 4);
+    g.fillRect(x + 44, waterTop + 12, 3, 4);
+    g.fillStyle = 'rgba(0,0,0,0.28)';
+    g.beginPath(); g.ellipse(x + 40, waterTop + 46, 30, 6, 0, 0, Math.PI * 2); g.fill();
+  }
+
+  // —— 湖边路灯 ——
+  function hzLamp(g, x, yBase) {
+    g.fillStyle = '#22304a';
+    g.fillRect(x - 2, yBase - 66, 4, 66);
+    g.strokeStyle = '#22304a';
+    g.lineWidth = 3.5;
+    g.beginPath();
+    g.moveTo(x, yBase - 64);
+    g.quadraticCurveTo(x + 2, yBase - 76, x + 12, yBase - 74);
+    g.stroke();
+    var hg = g.createRadialGradient(x + 15, yBase - 72, 2, x + 15, yBase - 72, 18);
+    hg.addColorStop(0, 'rgba(255,214,140,0.5)');
+    hg.addColorStop(1, 'rgba(255,214,140,0)');
+    g.fillStyle = hg;
+    g.fillRect(x - 6, yBase - 92, 42, 42);
+    g.fillStyle = '#ffd98e';
+    ell(g, x + 15, yBase - 72, 5.5, 5.5); g.fill();
+  }
+
+  // —— 西湖小舟（渔灯） ——
+  function hzBoat(g, x, y) {
+    g.fillStyle = '#0e1830';
+    g.beginPath();
+    g.moveTo(x - 16, y); g.quadraticCurveTo(x, y + 7, x + 16, y);
+    g.lineTo(x + 10, y - 8); g.lineTo(x - 10, y - 8);
+    g.closePath(); g.fill();
+    g.fillStyle = '#0c1428';
+    g.beginPath(); g.arc(x - 2, y - 13, 3.5, 0, 7); g.fill();
+    var lg = g.createRadialGradient(x + 6, y - 14, 1, x + 6, y - 14, 12);
+    lg.addColorStop(0, 'rgba(255,190,90,0.85)');
+    lg.addColorStop(1, 'rgba(255,190,90,0)');
+    g.fillStyle = lg;
+    g.fillRect(x - 8, y - 28, 28, 28);
+    g.fillStyle = '#ffbe5a';
+    g.fillRect(x + 5, y - 15, 3, 4);
+    g.fillStyle = 'rgba(255,190,90,0.15)';
+    g.fillRect(x - 4, y + 7, 8, 18);
+  }
+
+  // —— 荷叶 ——
+  function hzLotus(g, x, y) {
+    g.fillStyle = 'rgba(46,96,74,0.5)';
+    g.beginPath(); g.ellipse(x, y, 10, 3.6, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = 'rgba(56,110,84,0.5)';
+    g.beginPath(); g.ellipse(x + 3, y - 1.5, 8, 3, 0, 0, Math.PI * 2); g.fill();
+  }
+
+  // —— 现代多层楼（暖窗网格 + 底商） ——
+  function hzCityHouse(g, x, yBase, h, floors) {
+    g.fillStyle = '#1e2c4c';
+    g.fillRect(x, yBase - h, 90, h);
+    g.fillStyle = '#182644';
+    g.fillRect(x + 84, yBase - h, 6, h);
+    g.fillRect(x, yBase - h - 6, 90, 6);
+    g.fillStyle = '#141c36';
+    g.fillRect(x + 60, yBase - h - 16, 18, 10);
+    var fh = Math.floor(h / floors);
+    for (var f = 0; f < floors; f++) {
+      for (var wx = 0; wx < 4; wx++) {
+        var xx = x + 10 + wx * 18, yy = yBase - h + 10 + f * fh + 4;
+        var on = ((xx * 13 + yy * 7) % 11) < 4;
+        g.fillStyle = on ? 'rgba(255,200,110,' + (0.45 + ((xx % 3) * 0.15)) + ')' : '#0c1428';
+        g.fillRect(xx, yy, 10, fh - 12);
+      }
+    }
+    g.fillStyle = '#101a34';
+    g.fillRect(x + 6, yBase - 26, 78, 20);
+    g.fillStyle = 'rgba(255,160,90,0.8)';
+    g.fillRect(x + 10, yBase - 22, 70, 3);
+  }
+
+  // —— 城区行道树 ——
+  function hzTree(g, x, yBase) {
+    g.fillStyle = '#2a3a44';
+    g.fillRect(x - 2, yBase - 30, 4, 30);
+    g.fillStyle = '#203a3c';
+    ell(g, x, yBase - 42, 14, 12); g.fill();
+    ell(g, x - 10, yBase - 36, 9, 8); g.fill();
+    ell(g, x + 10, yBase - 36, 9, 8); g.fill();
+  }
+
+  // —— 暖光小招牌 ——
+  function hzSign(g, x, yBase) {
+    g.fillStyle = '#141c36';
+    g.fillRect(x + 46, yBase - 48, 4, 26);
+    g.fillStyle = '#2a3858';
+    g.fillRect(x, yBase - 60, 60, 20);
+    var lg = g.createRadialGradient(x + 30, yBase - 50, 2, x + 30, yBase - 50, 26);
+    lg.addColorStop(0, 'rgba(255,200,120,0.35)');
+    lg.addColorStop(1, 'rgba(255,200,120,0)');
+    g.fillStyle = lg; g.fillRect(x - 16, yBase - 76, 92, 52);
+    g.fillStyle = 'rgba(255,214,140,0.9)';
+    g.fillRect(x + 6, yBase - 56, 48, 12);
+  }
+
+  // —— 红灯笼 ——
+  function hzLantern(g, x, yBase) {
+    g.fillStyle = '#1a2438';
+    g.fillRect(x - 1, yBase - 26, 2, 26);
+    g.fillStyle = '#d84a4a';
+    ell(g, x, yBase - 34, 6, 8); g.fill();
+    g.fillStyle = '#f27a6a';
+    ell(g, x, yBase - 36, 2.4, 2.4); g.fill();
+    var lg = g.createRadialGradient(x, yBase - 34, 1, x, yBase - 34, 12);
+    lg.addColorStop(0, 'rgba(255,150,110,0.5)');
+    lg.addColorStop(1, 'rgba(255,150,110,0)');
+    g.fillStyle = lg; g.fillRect(x - 12, yBase - 46, 24, 24);
+  }
+
+  // —— 钱塘江斜拉桥（A 形主塔 + 桥面 + 扇面索） ——
+  function hzCableBridge(g, x1, x2, deckY) {
+    g.fillStyle = '#22304e';
+    g.fillRect(x1, deckY, x2 - x1, 8);
+    g.fillStyle = '#2c3c5e';
+    g.fillRect(x1, deckY - 2, x2 - x1, 3);
+    g.fillStyle = 'rgba(255,214,140,0.75)';
+    for (var x = x1 + 14; x < x2 - 8; x += 34) g.fillRect(x, deckY - 3, 3, 3);
+    function pylon(cx) {
+      g.fillStyle = '#182644';
+      g.beginPath();
+      g.moveTo(cx - 26, H - GROUND);
+      g.lineTo(cx - 6, deckY - 88);
+      g.lineTo(cx + 6, deckY - 88);
+      g.lineTo(cx + 26, H - GROUND);
+      g.closePath(); g.fill();
+      g.fillRect(cx - 12, deckY - 100, 24, 14);
+      g.fillStyle = '#ff5a5a';
+      g.fillRect(cx - 1, deckY - 106, 3, 4);
+    }
+    pylon(x1 + 70);
+    pylon(x2 - 70);
+    g.strokeStyle = 'rgba(180,200,230,0.35)';
+    g.lineWidth = 1.2;
+    for (var t = 0; t < 5; t++) {
+      var dx = 30 + t * 26;
+      for (var s = -1; s <= 1; s += 2) {
+        var bx = s === -1 ? x1 + 70 : x2 - 70;
+        g.beginPath();
+        g.moveTo(bx, deckY - 100);
+        g.lineTo(bx + dx * s, deckY);
+        g.stroke();
+        g.beginPath();
+        g.moveTo(bx, deckY - 100);
+        g.lineTo(bx - dx, deckY);
+        g.stroke();
+      }
+    }
+    g.fillStyle = '#14203e';
+    g.fillRect(x1 + 60, deckY + 8, 20, H - GROUND - deckY - 8);
+    g.fillRect(x2 - 80, deckY + 8, 20, H - GROUND - deckY - 8);
+    g.fillRect(x1 + 40, 340, 10, 140);
+    g.fillRect(x2 - 50, 340, 10, 140);
+  }
+
+  // —— 现代高楼（玻璃幕墙 + 亮窗 + 天线） ——
+  function hzTower(g, x, yBase, h, cols) {
+    var w = 90;
+    g.fillStyle = '#1a2848';
+    g.fillRect(x, yBase - h, w, h);
+    g.fillStyle = '#162244';
+    g.fillRect(x + w - 6, yBase - h, 6, h);
+    var rows = Math.round(h / 16);
+    for (var r = 0; r < rows; r++) {
+      for (var cc = 0; cc < cols; cc++) {
+        var xx = x + 6 + cc * ((w - 12) / cols), yy = yBase - h + 6 + r * 14;
+        var on = ((xx * 17 + yy * 11) % 13) < 5;
+        g.fillStyle = on ? 'rgba(255,205,120,' + (0.4 + ((xx % 4) * 0.12)) + ')' : 'rgba(140,190,230,0.16)';
+        g.fillRect(xx, yy, (w - 12) / cols - 3, 7);
+      }
+    }
+    g.fillStyle = '#0e1830';
+    g.fillRect(x + w / 2 - 1.5, yBase - h - 18, 3, 18);
+    g.fillStyle = '#ff5a5a';
+    g.fillRect(x + w / 2 - 1.5, yBase - h - 22, 3, 4);
+  }
+
+  // —— 杭州之门式双子塔 ——
+  function hzTwinTower(g, x, yBase, h) {
+    g.fillStyle = '#1c2c52';
+    g.beginPath();
+    g.moveTo(x, yBase);
+    g.lineTo(x + 34, yBase);
+    g.lineTo(x + 40, yBase - h);
+    g.lineTo(x + 4, yBase - h);
+    g.closePath(); g.fill();
+    g.fillStyle = '#18264a';
+    g.beginPath();
+    g.moveTo(x + 66, yBase);
+    g.lineTo(x + 100, yBase);
+    g.lineTo(x + 96, yBase - h);
+    g.lineTo(x + 60, yBase - h);
+    g.closePath(); g.fill();
+    g.fillStyle = '#22335e';
+    g.fillRect(x + 4, yBase - h - 8, 92, 8);
+    var rows = Math.round(h / 15);
+    for (var r = 0; r < rows; r++) {
+      for (var cc = 0; cc < 4; cc++) {
+        var yy = yBase - h + 8 + r * 13;
+        var on = ((r * 7 + cc * 13) % 9) < 4;
+        g.fillStyle = on ? 'rgba(255,205,120,0.5)' : 'rgba(140,190,230,0.18)';
+        g.fillRect(x + 6 + cc * 7, yy, 5, 6);
+      }
+    }
+    for (var r2 = 0; r2 < rows; r2++) {
+      for (var cc2 = 0; cc2 < 3; cc2++) {
+        var yy2 = yBase - h + 8 + r2 * 13;
+        var on2 = ((r2 * 11 + cc2 * 7) % 9) < 4;
+        g.fillStyle = on2 ? 'rgba(255,205,120,0.5)' : 'rgba(140,190,230,0.18)';
+        g.fillRect(x + 70 + cc2 * 8, yy2, 6, 6);
+      }
+    }
+    g.fillStyle = 'rgba(160,220,255,0.5)';
+    g.fillRect(x + 4, yBase - h - 2, 92, 2);
+    g.fillStyle = 'rgba(255,214,140,0.5)';
+    g.fillRect(x + 4, yBase - h - 6, 92, 2);
+  }
+
+  // —— LED 大屏 ——
+  function hzLedScreen(g, x, yBase, towerH) {
+    g.fillStyle = '#0e1830';
+    g.fillRect(x + 92, yBase - towerH + 60, 26, 44);
+    var lg = g.createLinearGradient(0, 0, 0, 44);
+    lg.addColorStop(0, 'rgba(255,120,140,0.75)');
+    lg.addColorStop(0.5, 'rgba(120,200,255,0.75)');
+    lg.addColorStop(1, 'rgba(255,200,120,0.75)');
+    g.fillStyle = lg;
+    g.fillRect(x + 94, yBase - towerH + 62, 22, 40);
+    g.fillStyle = 'rgba(255,255,255,0.85)';
+    g.fillRect(x + 96, yBase - towerH + 70, 6, 3);
+    g.fillRect(x + 104, yBase - towerH + 76, 8, 3);
+    g.fillRect(x + 98, yBase - towerH + 84, 6, 3);
+  }
+
+  // —— 高架路 ——
+  function hzHighway(g, x0, y, w) {
+    g.fillStyle = '#182444';
+    g.fillRect(x0, y, w, 8);
+    g.fillStyle = '#223056';
+    g.fillRect(x0, y - 2, w, 3);
+    g.fillStyle = 'rgba(255,214,140,0.8)';
+    for (var x = x0 + 20; x < x0 + w - 10; x += 70) g.fillRect(x, y - 5, 3, 3);
+    g.fillStyle = '#101a34';
+    for (var px = x0 + 16; px < x0 + w; px += 90) g.fillRect(px, y + 8, 10, H - GROUND - y - 8);
+  }
+
+  // —— 循环带/段尾跨缝塔（同一塔形画在左右接缝处，保证无缝循环） ——
+  var hzEdgeTower = (function () {
+    var tc = mkCanvas(90, 300);
+    hzTower(tc.getContext('2d'), 0, 300, 260, 6);
+    return tc;
+  })();
+
+  // —— 中景段①：西湖（湖面宽，远岸 + 江南屋 + 垂柳 + 石拱桥 + 小舟） ——
+  var hzMidSeg1 = (function () {
+    var c = mkCanvas(HZ_SEG_W, H - GROUND);
+    var g = c.getContext('2d');
+    hzWater(g, 340);
+    // 远岸线
+    g.fillStyle = '#1b2c4e';
+    g.fillRect(0, 322, HZ_SEG_W, 20);
+    hzJiangnanHouse(g, 60, 322);
+    hzJiangnanHouse(g, 250, 322);
+    hzPavilion(g, 468, 322);
+    hzWillow(g, 565, 322, 1);
+    hzWillow(g, 705, 322, 0.8);
+    hzWillow(g, 1005, 322, 1.05);
+    hzLamp(g, 155, 322);
+    hzLamp(g, 875, 322);
+    hzStoneBridge(g, 795, 342);
+    hzBoat(g, 940, 402);
+    hzLotus(g, 350, 428);
+    hzLotus(g, 385, 442);
+    hzLotus(g, 325, 446);
+    hzLotus(g, 700, 452);
+    hzLotus(g, 1120, 438);
+    return c;
+  })();
+
+  // —— 中景段②：西湖城区（窄水面，白墙黛瓦 + 多层楼 + 路灯 + 灯笼招牌） ——
+  var hzMidSeg2 = (function () {
+    var c = mkCanvas(HZ_SEG_W, H - GROUND);
+    var g = c.getContext('2d');
+    hzWater(g, 436);
+    g.fillStyle = '#1b2c4e';
+    g.fillRect(0, 428, HZ_SEG_W, 12);
+    hzJiangnanHouse(g, 20, 428);
+    hzCityHouse(g, 170, 428, 120, 4);
+    hzJiangnanHouse(g, 320, 428);
+    hzCityHouse(g, 470, 428, 96, 3);
+    hzCityHouse(g, 610, 428, 150, 5);
+    hzCityHouse(g, 800, 428, 110, 4);
+    hzJiangnanHouse(g, 950, 428);
+    hzCityHouse(g, 1070, 428, 130, 5);
+    hzLamp(g, 145, 428);
+    hzTree(g, 300, 428);
+    hzLamp(g, 450, 428);
+    hzTree(g, 580, 428);
+    hzLamp(g, 760, 428);
+    hzTree(g, 915, 428);
+    hzLamp(g, 1045, 428);
+    hzSign(g, 205, 428);
+    hzSign(g, 690, 428);
+    hzLantern(g, 115, 428);
+    hzLantern(g, 410, 428);
+    hzLantern(g, 890, 428);
+    return c;
+  })();
+
+  // —— 中景段③：钱塘江（宽阔江面 + 斜拉桥 + 两岸） ——
+  var hzMidSeg3 = (function () {
+    var c = mkCanvas(HZ_SEG_W, H - GROUND);
+    var g = c.getContext('2d');
+    hzWater(g, 260);
+    // 左岸堤岸 + 楼（岸顶 y=160）
+    g.fillStyle = '#16244a';
+    g.fillRect(0, 160, 150, 320);
+    g.fillStyle = '#101a34';
+    g.fillRect(0, 144, 150, 16);
+    hzCityHouse(g, 18, 144, 96, 4);
+    g.fillStyle = 'rgba(255,200,110,0.5)';
+    for (var i = 0; i < 5; i++) g.fillRect(24 + i * 26, 206, 12, 16);
+    // 右岸远景建筑群
+    g.fillStyle = '#182848';
+    g.fillRect(960, 176, 240, 304);
+    for (var b = 0; b < 4; b++) {
+      g.fillStyle = '#14203e';
+      g.fillRect(970 + b * 56, 150 + (b % 2) * 26, 44, 330 - (b % 2) * 26);
+    }
+    g.fillStyle = 'rgba(255,200,110,0.5)';
+    for (var i2 = 0; i2 < 5; i2++) g.fillRect(980 + i2 * 44, 220 + (i2 % 2) * 18, 12, 16);
+    // 斜拉桥
+    hzCableBridge(g, 300, 820, 238);
+    // 桥下倒影
+    g.fillStyle = 'rgba(200,220,255,0.08)';
+    g.fillRect(300, 402, 520, 4);
+    g.fillRect(320, 418, 480, 3);
+    return c;
+  })();
+
+  // —— 中景段④：钱江新城（高楼 + 杭州之门 + 高架 + LED 大屏） ——
+  var hzMidSeg4 = (function () {
+    var c = mkCanvas(HZ_SEG_W, H - GROUND);
+    var g = c.getContext('2d');
+    hzWater(g, 380);
+    g.fillStyle = '#141e3a';
+    g.fillRect(0, 372, HZ_SEG_W, 10);
+    hzTower(g, 30, 372, 240, 6);
+    hzTower(g, 175, 372, 300, 8);
+    hzTwinTower(g, 420, 372, 360);
+    hzTower(g, 640, 372, 220, 6);
+    hzTower(g, 800, 372, 320, 9);
+    hzTower(g, 980, 372, 260, 7);
+    hzLedScreen(g, 830, 372, 320);
+    hzHighway(g, 0, 318, HZ_SEG_W);
+    // 右缘跨缝塔（与循环带左缘同塔，保证旅程结束无缝衔接）
+    g.drawImage(hzEdgeTower, 1155, 72);
+    return c;
+  })();
+  var hzMidSegs = [hzMidSeg1, hzMidSeg2, hzMidSeg3, hzMidSeg4];
+
+  // —— 钱江新城核心区无缝循环带（旅程结束后 840 宽） ——
+  var hzEndMidTile = (function () {
+    var c = mkCanvas(HZ_END_W, H - GROUND);
+    var g = c.getContext('2d');
+    hzWater(g, 380);
+    g.fillStyle = '#141e3a';
+    g.fillRect(0, 372, HZ_END_W, 10);
+    g.drawImage(hzEdgeTower, -45, 72);   // 左缘跨缝塔
+    g.drawImage(hzEdgeTower, 795, 72);   // 右缘跨缝塔（840-45）
+    hzTower(g, 100, 372, 300, 8);
+    hzTower(g, 280, 372, 230, 6);
+    hzTwinTower(g, 430, 372, 330);
+    hzTower(g, 610, 372, 280, 7);
+    hzHighway(g, 0, 318, HZ_END_W);
+    return c;
+  })();
+
+  // —— 远景无缝循环带 ——
+  var hzEndFarTile = (function () {
+    var c = mkCanvas(HZ_END_W, H - GROUND);
+    var g = c.getContext('2d');
+    g.drawImage(hzFarEdge, -30, 120);
+    g.drawImage(hzFarEdge, 810, 120);
+    var ft = [[70, 196, 42, 146], [150, 222, 36, 120], [230, 190, 44, 152], [320, 214, 40, 128], [410, 200, 42, 142], [500, 226, 36, 116], [590, 204, 40, 138], [680, 218, 38, 124], [760, 196, 42, 146]];
+    for (var i = 0; i < ft.length; i++) {
+      var tv = ft[i];
+      g.fillStyle = '#1c2c50';
+      g.fillRect(tv[0], tv[1], tv[2], tv[3]);
+      g.fillStyle = '#162244';
+      g.fillRect(tv[0] + tv[2] - 3, tv[1], 3, tv[3]);
+      g.fillRect(tv[0] + tv[2] / 2 - 1, tv[1] - 10, 2, 10);
+      if (i % 2 === 0) {
+        g.fillStyle = 'rgba(255,205,120,0.5)';
+        for (var wy = tv[1] + 8; wy < tv[1] + tv[3] - 6; wy += 12) g.fillRect(tv[0] + tv[2] * 0.3, wy, 5, 4);
+      }
+    }
+    return c;
+  })();
+
+  // —— 杭州地面（夜间水面：湖面 / 江面两版） ——
+  function hzGroundTile(water) {
+    var c = mkCanvas(W, GROUND);
+    var g = c.getContext('2d');
+    var base = water === 'lake' ? '#0c1c3c' : '#081830';
+    g.fillStyle = base;
+    g.fillRect(0, 0, W, GROUND);
+    g.strokeStyle = water === 'lake' ? 'rgba(110,150,200,0.20)' : 'rgba(150,180,220,0.16)';
+    g.lineWidth = 1;
+    for (var y = 6; y < GROUND; y += 9) {
+      var off = (y * 5) % 34;
+      g.beginPath();
+      for (var x = off - 40; x < W + 40; x += 84) { g.moveTo(x, y); g.lineTo(x + 20, y); }
+      g.stroke();
+    }
+    g.fillStyle = 'rgba(255,190,110,0.10)';
+    for (var x2 = 8; x2 < W; x2 += 42) {
+      if ((x2 * 7) % 5 < 2) g.fillRect(x2, 2, 5, GROUND - 4);
+    }
+    g.fillStyle = 'rgba(180,210,240,0.07)';
+    g.fillRect(0, 2, W, 3);
+    return c;
+  }
+  var hzGroundLake = hzGroundTile('lake');
+  var hzGroundRiver = hzGroundTile('river');
+
+  // —— 杭州障碍（6 种杭州化变体，64x52；按阶段取用） ——
+  var HZ_W = 64, HZ_H = 52;
+  var hzVariants = (function () {
+    var painters = [
+      // 0 西湖石桥墩
+      function (g) {
+        g.fillStyle = '#39496e'; g.fillRect(0, 0, HZ_W, HZ_H);
+        g.fillStyle = '#2c3a58';
+        for (var y = 0; y < HZ_H; y += 13) g.fillRect(0, y, HZ_W, 2);
+        g.fillStyle = '#46587e'; g.fillRect(0, 0, HZ_W, 4);
+        g.fillStyle = '#1c2844';
+        g.beginPath(); g.arc(32, HZ_H, 16, Math.PI, 0); g.closePath(); g.fill();
+        g.fillStyle = 'rgba(255,190,110,0.5)'; g.fillRect(27, HZ_H - 14, 10, 14);
+        g.fillStyle = '#ffd98e'; g.fillRect(6, 8, 4, 4); g.fillRect(54, 8, 4, 4);
+      },
+      // 1 雷峰塔身
+      function (g) {
+        g.fillStyle = '#1e2a48'; g.fillRect(6, 0, 52, HZ_H);
+        g.fillStyle = '#182244'; g.fillRect(6, 0, 52, 4);
+        g.fillStyle = '#101a34';
+        g.fillRect(0, 14, 64, 5);
+        g.beginPath(); g.moveTo(0, 16); g.lineTo(7, 11); g.lineTo(11, 16); g.fill();
+        g.beginPath(); g.moveTo(64, 16); g.lineTo(57, 11); g.lineTo(53, 16); g.fill();
+        g.fillRect(0, 38, 64, 5);
+        g.beginPath(); g.moveTo(0, 40); g.lineTo(7, 35); g.lineTo(11, 40); g.fill();
+        g.beginPath(); g.moveTo(64, 40); g.lineTo(57, 35); g.lineTo(53, 40); g.fill();
+        g.fillStyle = 'rgba(255,206,120,0.8)';
+        g.fillRect(28, 22, 8, 7); g.fillRect(28, 45, 8, 4);
+      },
+      // 2 白墙黛瓦
+      function (g) {
+        g.fillStyle = '#46546e'; g.fillRect(0, 8, HZ_W, HZ_H - 8);
+        g.fillStyle = '#101a34';
+        g.fillRect(-2, 2, 68, 8);
+        g.beginPath(); g.moveTo(-2, 6); g.lineTo(6, -2); g.lineTo(12, 6); g.fill();
+        g.beginPath(); g.moveTo(66, 6); g.lineTo(58, -2); g.lineTo(52, 6); g.fill();
+        g.fillStyle = 'rgba(255,200,110,0.75)';
+        g.fillRect(10, 20, 16, 16); g.fillRect(38, 20, 16, 16);
+        g.fillStyle = '#101a34';
+        g.fillRect(10, 27, 16, 2); g.fillRect(17, 20, 2, 16);
+        g.fillRect(38, 27, 16, 2); g.fillRect(45, 20, 2, 16);
+        g.fillStyle = '#0e1830'; g.fillRect(27, 38, 10, HZ_H - 38);
+      },
+      // 3 钱塘江桥墩钢架
+      function (g) {
+        g.fillStyle = '#2e3a52'; g.fillRect(0, 0, HZ_W, HZ_H);
+        g.strokeStyle = '#3e4e6e'; g.lineWidth = 4;
+        g.beginPath();
+        g.moveTo(6, 0); g.lineTo(58, HZ_H);
+        g.moveTo(58, 0); g.lineTo(6, HZ_H);
+        g.stroke();
+        g.strokeStyle = '#1c2844'; g.lineWidth = 2;
+        g.beginPath();
+        g.moveTo(0, 14); g.lineTo(HZ_W, 14);
+        g.moveTo(0, 38); g.lineTo(HZ_W, 38);
+        g.stroke();
+        g.fillStyle = '#5a6a8a';
+        for (var i = 0; i < 4; i++) g.fillRect(8 + i * 16, 26, 3, 3);
+        g.fillStyle = '#ff9a5a'; g.fillRect(6, 4, 5, 5);
+      },
+      // 4 高楼玻璃幕墙
+      function (g) {
+        g.fillStyle = '#22304e'; g.fillRect(0, 0, HZ_W, HZ_H);
+        g.fillStyle = '#1a2844'; g.fillRect(0, 0, HZ_W, 3);
+        for (var r = 0; r < 4; r++) {
+          for (var cc = 0; cc < 4; cc++) {
+            var on = ((cc * 7 + r * 13) % 5) < 2;
+            g.fillStyle = on ? 'rgba(255,205,120,0.55)' : 'rgba(150,195,235,0.15)';
+            g.fillRect(6 + cc * 14, 8 + r * 11, 9, 6);
+          }
+        }
+        g.fillStyle = '#162244'; g.fillRect(HZ_W - 5, 0, 5, HZ_H);
+        g.fillStyle = 'rgba(120,200,255,0.5)'; g.fillRect(0, HZ_H - 4, HZ_W, 4);
+      },
+      // 5 灯柱广告牌
+      function (g) {
+        g.fillStyle = '#1c2844'; g.fillRect(30, 0, 5, HZ_H);
+        g.fillRect(24, 46, 17, 6);
+        g.fillStyle = '#0e1830'; g.fillRect(14, 6, 36, 24);
+        g.fillStyle = 'rgba(255,214,140,0.85)'; g.fillRect(18, 10, 28, 16);
+        g.fillStyle = '#0e1830';
+        g.fillRect(24, 16, 16, 2); g.fillRect(28, 12, 8, 10);
+        var lg = g.createRadialGradient(32, 18, 2, 32, 18, 22);
+        lg.addColorStop(0, 'rgba(255,200,120,0.35)');
+        lg.addColorStop(1, 'rgba(255,200,120,0)');
+        g.fillStyle = lg; g.fillRect(10, -4, 44, 44);
+        g.fillStyle = '#ffd98e'; g.fillRect(29, -2, 4, 4);
+      }
+    ];
+    return painters.map(function (paint) {
+      var c = mkCanvas(HZ_W, HZ_H);
+      var g = c.getContext('2d');
+      paint(g);
+      g.strokeStyle = 'rgba(10,16,34,0.9)'; g.lineWidth = 2;
+      rr(g, 1, 1, HZ_W - 2, HZ_H - 2, 3); g.stroke();
+      g.fillStyle = 'rgba(8,12,28,0.5)';
+      g.fillRect(2, HZ_H - 4, HZ_W - 4, 3);
+      return c;
+    });
+  })();
+
+  // 阶段 → 障碍变体清单（0 西湖石桥 / 1 塔身 / 2 白墙黛瓦 / 3 桥墩钢架 / 4 高楼 / 5 灯柱广告）
+  var HZ_STAGE_VARIANTS = [
+    [0, 1, 5],
+    [2, 5, 1],
+    [3, 5, 2],
+    [4, 5, 3]
+  ];
+
+  // 杭州障碍口缘（gap 上下沿檐口 / 灯带，按阶段）
+  function hzCap(g, x, gapStart, gapEnd, stage) {
+    if (stage === 0) {
+      g.fillStyle = '#46587e'; g.fillRect(x - 3, gapStart - 7, HZ_W + 6, 6);
+      g.fillStyle = '#ffd98e'; g.fillRect(x + 8, gapStart - 6, 4, 4); g.fillRect(x + HZ_W - 14, gapStart - 6, 4, 4);
+      g.fillStyle = '#46587e'; g.fillRect(x - 3, gapEnd + 1, HZ_W + 6, 6);
+      g.fillStyle = '#ffd98e'; g.fillRect(x + 8, gapEnd + 3, 4, 4); g.fillRect(x + HZ_W - 14, gapEnd + 3, 4, 4);
+    } else if (stage === 1) {
+      g.fillStyle = '#101a34'; g.fillRect(x - 4, gapStart - 9, HZ_W + 8, 8);
+      g.beginPath(); g.moveTo(x - 4, gapStart - 4); g.lineTo(x + 2, gapStart - 10); g.lineTo(x + 6, gapStart - 4); g.fill();
+      g.beginPath(); g.moveTo(x + HZ_W + 4, gapStart - 4); g.lineTo(x + HZ_W - 2, gapStart - 10); g.lineTo(x + HZ_W - 6, gapStart - 4); g.fill();
+      g.fillStyle = '#101a34'; g.fillRect(x - 4, gapEnd, HZ_W + 8, 8);
+      g.fillStyle = 'rgba(255,200,110,0.4)'; g.fillRect(x - 4, gapEnd + 6, HZ_W + 8, 2);
+    } else if (stage === 2) {
+      g.fillStyle = '#2e3a52'; g.fillRect(x - 3, gapStart - 8, HZ_W + 6, 7);
+      g.fillStyle = '#ff9a5a'; g.fillRect(x + 10, gapStart - 7, 4, 5); g.fillRect(x + HZ_W - 16, gapStart - 7, 4, 5);
+      g.fillStyle = '#2e3a52'; g.fillRect(x - 3, gapEnd + 1, HZ_W + 6, 7);
+      g.fillStyle = '#ff9a5a'; g.fillRect(x + 10, gapEnd + 3, 4, 5); g.fillRect(x + HZ_W - 16, gapEnd + 3, 4, 5);
+    } else {
+      g.fillStyle = '#22304e'; g.fillRect(x - 3, gapStart - 8, HZ_W + 6, 7);
+      g.fillStyle = 'rgba(120,200,255,0.6)'; g.fillRect(x - 3, gapStart - 8, HZ_W + 6, 2);
+      g.fillStyle = '#22304e'; g.fillRect(x - 3, gapEnd + 1, HZ_W + 6, 7);
+      g.fillStyle = 'rgba(255,214,140,0.5)'; g.fillRect(x - 3, gapEnd + 5, HZ_W + 6, 2);
+    }
+  }
+
+  // 杭州环境动画：星星闪烁 / 城市灯光闪烁 / 桥上车辆 / 高架车流 / 飞机 / 水面月影
+  var hzFlicker = [
+    [0, 70, 246, 22, 26, 0.4], [0, 260, 246, 22, 26, 1.2], [0, 938, 390, 8, 14, 2.1],
+    [1, 200, 332, 10, 10, 0.8], [1, 520, 362, 10, 10, 1.7], [1, 700, 338, 10, 10, 2.6], [1, 990, 336, 10, 10, 0.2], [1, 1100, 300, 10, 10, 1.5],
+    [2, 60, 206, 12, 16, 0.9], [2, 1000, 180, 14, 18, 1.9], [2, 1080, 170, 14, 18, 2.9],
+    [3, 210, 200, 12, 12, 0.5], [3, 470, 220, 10, 12, 1.4], [3, 830, 180, 12, 12, 2.3], [3, 1010, 190, 12, 12, 3.1]
+  ];
+  function hzEnvFX() {
+    // 星星闪烁（天空固定 4 颗）
+    for (var i = 0; i < 4; i++) {
+      var tw = 0.25 + 0.55 * (0.5 + 0.5 * Math.sin(frame * 0.06 + i * 1.7));
+      ctx.globalAlpha = tw;
+      ctx.fillStyle = '#e8efff';
+      ctx.fillRect(40 + i * 90, 26 + (i % 2) * 42, 2, 2);
+    }
+    // 城市灯光闪烁（仅当前可见段）
+    for (var i2 = 0; i2 < hzFlicker.length; i2++) {
+      var f = hzFlicker[i2];
+      var segX0 = f[0] * HZ_SEG_W, segX1 = segX0 + HZ_SEG_W;
+      if (segX1 <= hz.jx || segX0 >= hz.jx + W) continue;
+      var sx = segX0 + f[1] - hz.jx;
+      if (sx < -30 || sx > W + 10) continue;
+      ctx.globalAlpha = 0.35 + 0.5 * (0.5 + 0.5 * Math.sin(frame * 0.09 + f[5]));
+      ctx.fillStyle = '#ffd98e';
+      ctx.fillRect(sx, f[2], f[3], f[4]);
+    }
+    ctx.globalAlpha = 1;
+    // 桥上车辆（钱塘江段桥面）
+    var s3x0 = 2 * HZ_SEG_W, s3x1 = s3x0 + HZ_SEG_W;
+    if (s3x1 > hz.jx && s3x0 < hz.jx + W) {
+      for (var c3 = 0; c3 < 3; c3++) {
+        var sx3 = s3x0 + 300 + ((frame * 2.2 + c3 * 190) % 520) - hz.jx;
+        if (sx3 < -20 || sx3 > W + 20) continue;
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = '#ffe2a0';
+        ctx.fillRect(sx3, 236, 5, 2);
+        ctx.globalAlpha = 0.3;
+        ctx.fillRect(sx3 - 12, 236, 12, 2);
+      }
+    }
+    // 高架车流（钱江新城段）
+    var s4x0 = 3 * HZ_SEG_W, s4x1 = s4x0 + HZ_SEG_W;
+    if (s4x1 > hz.jx && s4x0 < hz.jx + W) {
+      for (var c4 = 0; c4 < 4; c4++) {
+        var sx4 = s4x0 + 30 + ((frame * 3.2 + c4 * 220) % 1140) - hz.jx;
+        if (sx4 < -20 || sx4 > W + 20) continue;
+        ctx.globalAlpha = 0.95;
+        ctx.fillStyle = '#fff0c0';
+        ctx.fillRect(sx4, 316, 6, 2);
+        ctx.globalAlpha = 0.25;
+        ctx.fillRect(sx4 - 14, 316, 14, 2);
+      }
+    }
+    // 遥远飞机
+    ctx.globalAlpha = 0.8;
+    var px = (frame * 0.35) % (W + 140) - 70;
+    var py = 84 + Math.sin(frame * 0.02) * 6;
+    ctx.fillStyle = '#cfe0ff';
+    ctx.fillRect(px, py, 7, 1.5);
+    ctx.fillStyle = '#ff9a6a';
+    ctx.fillRect(px + 4, py - 0.5, 2, 2);
+    // 水面月影（随阶段水线）
+    var wt = [340, 436, 260, 380][hzStage()];
+    var mg2 = ctx.createLinearGradient(352, wt, 352, H);
+    mg2.addColorStop(0, 'rgba(230,240,255,0.20)');
+    mg2.addColorStop(1, 'rgba(230,240,255,0)');
+    ctx.fillStyle = mg2;
+    ctx.fillRect(344, wt, 16, H - wt);
+    ctx.globalAlpha = 0.10 + 0.06 * Math.sin(frame * 0.08);
+    ctx.fillStyle = '#e8f0ff';
+    ctx.beginPath(); ctx.ellipse(352, H - GROUND + 12, 40, 6, 0, 0, Math.PI * 2); ctx.fill();
+    // 水面波光
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = '#cfe0f5';
+    for (var w = 0; w < 5; w++) {
+      var wy = H - GROUND + 10 + w * 14;
+      var wox = (frame * (1.2 + w * 0.3) + w * 60) % (W + 60) - 30;
+      ctx.fillRect(wox, wy, 22, 1.5);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // —— 绘制杭州场景 ——
+  function drawHzScene() {
+    ctx.drawImage(hzSkyTile, 0, 0);
+    var fp = hz.jx * 0.45;
+    if (hz.jx < HZ_JOURNEY_LEN) {
+      for (var fk = 0; fk < 4; fk++) {
+        var fx = fk * HZ_FAR_SEG_W - fp;
+        if (fx > -HZ_FAR_SEG_W && fx < W) ctx.drawImage(hzFarSegs[fk], fx, 0);
+      }
+    } else {
+      var fEnd = -((fp - HZ_JOURNEY_LEN * 0.45) % HZ_END_W);
+      ctx.drawImage(hzEndFarTile, fEnd, 0);
+      ctx.drawImage(hzEndFarTile, fEnd + HZ_END_W, 0);
+    }
+    if (hz.jx < HZ_JOURNEY_LEN) {
+      for (var mk = 0; mk < 4; mk++) {
+        var mx = mk * HZ_SEG_W - hz.jx;
+        if (mx > -HZ_SEG_W && mx < W) ctx.drawImage(hzMidSegs[mk], mx, 0);
+      }
+    } else {
+      var mEnd = -((hz.jx - HZ_JOURNEY_LEN) % HZ_END_W);
+      ctx.drawImage(hzEndMidTile, mEnd, 0);
+      ctx.drawImage(hzEndMidTile, mEnd + HZ_END_W, 0);
+    }
+    hzEnvFX();
+  }
+
+  // —— 角色：新角色参考图（hero-sheet.png 自动抠帧，三张地图统一主用；失败回退企鹅帧 → body.png） ——
   var BIRD_SCALE = 0.72;
   var BIRD_DRAW_H = 46;        // 帧归一化身高（CSS px）
   var BIRD_FLIP = false;       // 侧面帧朝向：探针核对后如需镜像置 true
   var birdBody = null;
-  var birdFrames = null;       // { glide, flapUp, flapDown, hurt }
+  var birdFrames = null;       // 旧企鹅帧（hero 失败时兜底）
+  var birdHero = null;         // 新角色帧 { glide, flapUp, flapDown, hurt, idle }
   (function () {
     var img = new Image();
     img.onload = function () { birdBody = img; };
     img.src = ABASE + '/img/flappy/body.png';
   })();
+  // 主用：新角色参考图；加载失败再回退企鹅 sheet
   (function () {
+    var img = new Image();
+    img.onload = function () {
+      try { birdHero = extractHeroFrames(img); } catch (e) { birdHero = null; }
+      if (!birdHero) loadPenguinSheet();
+    };
+    img.onerror = loadPenguinSheet;
+    img.src = ABASE + '/img/flappy/hero-sheet.png';
+  })();
+  function loadPenguinSheet() {
+    if (birdFrames) return;
     var img = new Image();
     img.onload = function () {
       try { birdFrames = extractBirdFrames(img); } catch (e) { birdFrames = null; }
     };
     img.src = ABASE + '/img/flappy/penguin-sheet.png';
-  })();
+  }
 
   // 从参考 sprite sheet 自动抠帧：去近白底 → 连通域 → 过滤 → 按行聚类
   // 行序（主区，排除右侧头像/表情面板与左侧大立绘）：待机/行走/奔跑/跳跃/攻击/受伤[/死亡]
@@ -1284,6 +2312,105 @@
     };
   }
 
+  // 从新角色参考图自动抠帧：深灰底 flood-fill → 连通域 → 行聚类
+  // 行序（主区）：待机6/行走8/奔跑8/跳跃扇动6/下落滑翔6/攻击6/受击&死亡10
+  function extractHeroFrames(img) {
+    var sw = img.naturalWidth, sh = img.naturalHeight;
+    var sheet = mkCanvas(sw, sh);
+    var g = sheet.getContext('2d');
+    g.drawImage(img, 0, 0);
+    var data = g.getImageData(0, 0, sw, sh);
+    var px = data.data, N = sw * sh;
+    // 1) 四边 flood-fill 去深灰背景（近 bg 色 rgb(40,43,48) 容差 13）
+    var bg = new Uint8Array(N), st = [];
+    function tryPush(x, y) {
+      var i = y * sw + x;
+      if (bg[i]) return;
+      var id = i * 4, r = px[id], gg = px[id + 1], b = px[id + 2];
+      var d = Math.max(Math.abs(r - 40), Math.abs(gg - 43), Math.abs(b - 48));
+      if (d <= 13) { bg[i] = 1; st.push(i); }
+    }
+    for (var x0 = 0; x0 < sw; x0++) { tryPush(x0, 0); tryPush(x0, sh - 1); }
+    for (var y0 = 0; y0 < sh; y0++) { tryPush(0, y0); tryPush(sw - 1, y0); }
+    while (st.length) {
+      var i = st.pop(), cx = i % sw, cy = (i / sw) | 0;
+      px[i * 4 + 3] = 0;
+      if (cx > 0) tryPush(cx - 1, cy);
+      if (cx < sw - 1) tryPush(cx + 1, cy);
+      if (cy > 0) tryPush(cx, cy - 1);
+      if (cy < sh - 1) tryPush(cx, cy + 1);
+    }
+    g.putImageData(data, 0, 0);
+    // 2) 8 邻域连通域
+    var seen = new Uint8Array(N), comps = [], stack = [];
+    for (var i0 = 0; i0 < N; i0++) {
+      if (seen[i0] || px[i0 * 4 + 3] <= 25) continue;
+      seen[i0] = 1; stack.length = 0; stack.push(i0);
+      var minX = sw, minY = sh, maxX = 0, maxY = 0, cnt = 0;
+      while (stack.length) {
+        var j = stack.pop(), jx = j % sw, jy = (j / sw) | 0;
+        cnt++;
+        if (jx < minX) minX = jx; if (jx > maxX) maxX = jx;
+        if (jy < minY) minY = jy; if (jy > maxY) maxY = jy;
+        for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
+          if (!dx && !dy) continue;
+          var nx = jx + dx, ny = jy + dy;
+          if (nx < 0 || ny < 0 || nx >= sw || ny >= sh) continue;
+          var ni = ny * sw + nx;
+          if (seen[ni] || px[ni * 4 + 3] <= 25) continue;
+          seen[ni] = 1; stack.push(ni);
+        }
+      }
+      comps.push({ x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2, n: cnt });
+    }
+    // 3) 过滤：主区（排除右侧头像面板）/ 够大 / 填充率够
+    var fr = comps.filter(function (c) {
+      return c.cx < sw * 0.78 &&
+        c.h >= sh * 0.04 && c.w >= sw * 0.018 &&
+        c.n / (c.w * c.h) >= 0.16;
+    });
+    if (fr.length < 10) return null;
+    var medH = fr.map(function (c) { return c.h; }).sort(function (a, b) { return a - b; })[fr.length >> 1];
+    fr = fr.filter(function (c) { return c.h < medH * 1.7; }); // 排除左侧大立绘
+    // 4) 按 cy 聚行，行内按 x 排序
+    fr.sort(function (a, b) { return a.cy - b.cy; });
+    var rows = [];
+    fr.forEach(function (c) {
+      var row = null;
+      for (var i = rows.length - 1; i >= 0; i--) {
+        if (Math.abs(rows[i][0].cy - c.cy) < medH * 0.9) { row = rows[i]; break; }
+      }
+      if (row) row.push(c); else rows.push([c]);
+    });
+    rows.forEach(function (r) { r.sort(function (a, b) { return a.cx - b.cx; }); });
+    if (rows.length < 6) return null;
+    function crop(c) {
+      var cc = mkCanvas(c.w, c.h);
+      cc.getContext('2d').drawImage(sheet, c.x, c.y, c.w, c.h, 0, 0, c.w, c.h);
+      return cc;
+    }
+    function pick(row, idx) { return row ? crop(row[Math.min(idx, row.length - 1)]) : null; }
+    var idle = rows[0], walk = rows[1], run = rows[2], jump = rows[3], glide = rows[4], hurt = rows[5];
+    if (!walk || !run || !jump || !glide || !hurt) return null;
+    var glideC = crop(glide[Math.min(2, glide.length - 1)]);
+    var k = BIRD_DRAW_H / glideC.height;
+    function norm(cv) {
+      var w = Math.max(1, Math.round(cv.width * k)), h = Math.max(1, Math.round(cv.height * k));
+      var out = mkCanvas(w, h), og = out.getContext('2d');
+      og.imageSmoothingEnabled = true; og.imageSmoothingQuality = 'high';
+      og.drawImage(cv, 0, 0, w, h);
+      return out;
+    }
+    return {
+      glide: norm(glideC),
+      flapUp: norm(pick(run, 1) || glideC),
+      flapDown: norm(pick(jump, 2) || glideC),
+      hurt: norm(pick(hurt, 0) || glideC),
+      idle: norm(pick(idle, 2) || glideC),
+      _rows: rows.length, _comps: fr.length
+    };
+  }
+
   // —— 拖尾光斑 / 星星精灵 ——
   var trailSpr = (function () {
     var c = mkCanvas(28, 28);
@@ -1315,6 +2442,7 @@
   //   绘制
   // =====================================================================
   function drawScene() {
+    if (mapId === 'hangzhou') { drawHzScene(); return; }
     if (mapId === 'snow') {
       // 雪夜天空 + 远景冰山
       ctx.drawImage(snowSkyTile, 0, 0);
@@ -1342,37 +2470,43 @@
     ctx.drawImage(midTile, MID_W - scrollMid, 0);
   }
 
-  function drawStackColumn(x, seed, gapStart, gapEnd) {
+  function drawStackColumn(x, seed, gapStart, gapEnd, hzForPipe) {
     var snow = mapId === 'snow';
-    var variants = snow ? iceVariants : caseVariants;
-    var step = CASE_H + 3;
+    var hzn = mapId === 'hangzhou';
+    var variants = hzn ? hzVariants : (snow ? iceVariants : caseVariants);
+    var CW = hzn ? HZ_W : CASE_W, CH = hzn ? HZ_H : CASE_H;
+    var step = CH + 3;
+    var stage = hzn ? (hzForPipe !== undefined ? hzForPipe : hzStage()) : 0;
+    var vlist = hzn ? HZ_STAGE_VARIANTS[stage] : null;
     // 上半：从画面顶垂下来的堆叠
     var y = -8, k = 0;
     while (y < gapStart) {
-      var visH = Math.min(CASE_H, gapStart - y);
+      var visH = Math.min(CH, gapStart - y);
       var jx = ((seed + k * 29) % 5) - 2;
-      var va = (seed + k * 13) % 6;
-      if (visH > 4) ctx.drawImage(variants[va], 0, 0, CASE_W, visH, x + jx, y, CASE_W, visH);
+      var va = hzn ? vlist[(seed + k * 13) % vlist.length] : (seed + k * 13) % 6;
+      if (visH > 4) ctx.drawImage(variants[va], 0, 0, CW, visH, x + jx, y, CW, visH);
       y += step; k++;
     }
     // 下半：从地面叠起来的堆叠
     var base = H - GROUND;
     var kk = 0;
     var yBottom = base;
-    while (yBottom - CASE_H > gapEnd - CASE_H) {
-      var top = yBottom - CASE_H;
+    while (yBottom - CH > gapEnd - CH) {
+      var top = yBottom - CH;
       var jx2 = ((seed + kk * 29) % 5) - 2;
-      var va2 = (seed + kk * 13 + 3) % 6;
+      var va2 = hzn ? vlist[(seed + kk * 13 + 3) % vlist.length] : (seed + kk * 13 + 3) % 6;
       if (top < gapEnd + 5) {
         var cut = gapEnd + 5 - top;
-        if (cut < CASE_H) ctx.drawImage(variants[va2], 0, cut, CASE_W, CASE_H - cut, x + jx2, gapEnd + 5, CASE_W, CASE_H - cut);
+        if (cut < CH) ctx.drawImage(variants[va2], 0, cut, CW, CH - cut, x + jx2, gapEnd + 5, CW, CH - cut);
       } else {
         ctx.drawImage(variants[va2], x + jx2, top);
       }
       yBottom -= step; kk++;
       if (kk > 12) break;
     }
-    if (snow) {
+    if (hzn) {
+      hzCap(ctx, x, gapStart, gapEnd, stage);
+    } else if (snow) {
       // 雪盖：上柱底缘雪挂、下柱顶缘雪堆
       snowBar(ctx, x - 3, gapStart - 8, CASE_W + 6, 7, 'down');
       ctx.fillStyle = 'rgba(120,160,200,0.5)';
@@ -1395,11 +2529,17 @@
   function drawPipes() {
     for (var i = 0; i < pipes.length; i++) {
       var p = pipes[i];
-      drawStackColumn(Math.round(p.x), p.seed, Math.round(p.gy), Math.round(p.gy + PIPE_GAP));
+      drawStackColumn(Math.round(p.x), p.seed, Math.round(p.gy), Math.round(p.gy + PIPE_GAP), p.hz);
     }
   }
 
   function drawGround() {
+    if (mapId === 'hangzhou') {
+      var ht = hzStage() >= 2 ? hzGroundRiver : hzGroundLake;
+      ctx.drawImage(ht, -hz.gx, H - GROUND);
+      ctx.drawImage(ht, W - hz.gx, H - GROUND);
+      return;
+    }
     var tile = mapId === 'snow' ? snowGroundTile : groundTile;
     ctx.drawImage(tile, -groundX, H - GROUND);
     ctx.drawImage(tile, W - groundX, H - GROUND);
@@ -1441,7 +2581,20 @@
 
   // 当前动作帧：over=眩晕；ready=慢速悬停振翅循环；play=拍翅触发短促三连振翅，其余滑翔
   function birdSprite() {
-    if (mapId !== 'snow') return null; // 仅极光雪镇用企鹅帧；音乐街区保留原 body.png 少女贴纸
+    if (birdHero) {
+      // 新角色帧：三张地图统一使用
+      if (state === 'over') return birdHero.hurt || birdHero.glide;
+      if (state === 'ready') {
+        var hc = frame % 26;
+        if (hc < 15) return birdHero.glide;
+        if (hc < 20) return birdHero.flapUp;
+        return birdHero.flapDown;
+      }
+      if (bird.wing > 6) return birdHero.flapDown;
+      if (bird.wing > 2) return birdHero.flapUp;
+      return birdHero.glide;
+    }
+    if (mapId !== 'snow') return null; // hero 缺失时：仅极光雪镇用企鹅帧；音乐街区保留 body.png
     if (!birdFrames) return null;
     if (state === 'over') return birdFrames.hurt || birdFrames.glide;
     if (state === 'ready') {
@@ -1555,6 +2708,16 @@
       }
       drawText('点击重新开始', W / 2, py2 + ph2 + 30, 15, '#fff', 4);
     }
+    // 杭州夜航开场标题（进入飞行后短暂展示约 1.4s）
+    if (mapId === 'hangzhou' && state === 'play' && hz.introT > 0) {
+      var it = hz.introT;
+      ctx.globalAlpha = Math.min(1, it / 55);
+      ctx.fillStyle = 'rgba(6,10,26,0.55)';
+      ctx.fillRect(0, H * 0.16, W, 96);
+      drawText('MAP 03', W / 2, H * 0.16 + 30, 20, '#9fc0e8', 0);
+      drawText('杭州夜航', W / 2, H * 0.16 + 64, 32, '#ffe2a8', 0);
+      ctx.globalAlpha = 1;
+    }
     // 受击白闪
     if (flashT > 0) {
       ctx.fillStyle = 'rgba(255,255,255,' + (flashT / 6) * 0.75 + ')';
@@ -1610,6 +2773,13 @@
     pipeInfo: function () { return pipes.map(function (p) { return { x: p.x, gy: p.gy }; }); },
     scrollInfo: function () { return { far: scrollFar, mid: scrollMid, ground: groundX, frame: frame }; },
     midTileUrl: function () { if (!snowMidTile) snowMidTile = buildSnowMidTile(); return snowMidTile.toDataURL("image/png"); },
+    hzInfo: function () { return { jx: hz.jx, stage: hzStage(), introT: hz.introT, len: HZ_JOURNEY_LEN, gx: hz.gx }; },
+    hzSet: function (v) { hz.jx = v; },
+    heroFrames: function () { return birdHero; },
+    hzTileUrl: function (name) {
+      var t = name === 'far1' ? hzFarSegs[0] : name === 'far4' ? hzFarSegs[3] : name === 'mid1' ? hzMidSegs[0] : name === 'mid4' ? hzMidSegs[3] : name === 'end' ? hzEndMidTile : null;
+      return t ? t.toDataURL('image/png') : '';
+    },
     tiltInfo: function () {
       var t = state === 'play' ? Math.max(-0.45, Math.min(1.05, bird.vy * 0.06)) : Math.sin(frame * 0.06) * 0.06;
       return { state: state, vy: bird.vy, tilt: t, y: bird.y, frame: frame };
