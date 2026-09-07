@@ -2377,26 +2377,47 @@
       }
       comps.push({ x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2, n: cnt });
     }
-    // 3) 过滤：主区（排除右侧头像面板）/ 够大 / 填充率够
+    // 3) 过滤：降低阈值以捕获较矮的受伤/死亡帧，排除右侧面板
     var fr = comps.filter(function (c) {
       return c.cx < sw * 0.78 &&
-        c.h >= sh * 0.04 && c.w >= sw * 0.018 &&
-        c.n / (c.w * c.h) >= 0.12;
+        c.h >= sh * 0.02 && c.w >= sw * 0.01 &&
+        c.n / (c.w * c.h) >= 0.04;
     });
-    if (fr.length < 10) return null;
-    var medH = fr.map(function (c) { return c.h; }).sort(function (a, b) { return a - b; })[fr.length >> 1];
-    fr = fr.filter(function (c) { return c.h < medH * 1.7; }); // 排除左侧大立绘
-    // 4) 按 cy 聚行，行内按 x 排序
-    fr.sort(function (a, b) { return a.cy - b.cy; });
+    if (fr.length < 20) return null;
+    // 排除左侧大立绘（高度异常大的组件）
+    var hsorted = fr.map(function (c) { return c.h; }).sort(function (a, b) { return a - b; });
+    var bigThresh = hsorted[Math.floor(hsorted.length * 0.85)] * 1.5;
+    fr = fr.filter(function (c) { return c.h < bigThresh; });
+    // 4) 固定 y 波段分配（已知 8 行布局：待机/行走/奔跑/跳跃/下落+攻击/受伤+死亡）
+    var bands = [
+      { y0: 40, y1: 210 },   // 0 待机
+      { y0: 210, y1: 380 },  // 1 行走
+      { y0: 380, y1: 540 },  // 2 奔跑
+      { y0: 540, y1: 700 },  // 3 跳跃
+      { y0: 700, y1: 850 },  // 4 下落(左)+攻击(右)
+      { y0: 850, y1: 1024 }  // 5 受伤(左)+死亡(右)
+    ];
     var rows = [];
-    fr.forEach(function (c) {
-      var row = null;
-      for (var i = rows.length - 1; i >= 0; i--) {
-        if (Math.abs(rows[i][0].cy - c.cy) < medH * 0.9) { row = rows[i]; break; }
-      }
-      if (row) row.push(c); else rows.push([c]);
+    bands.forEach(function (b) {
+      var row = fr.filter(function (c) { return c.cy >= b.y0 && c.cy < b.y1; });
+      row.sort(function (a, b2) { return a.cx - b2.cx; });
+      rows.push(row);
     });
-    rows.forEach(function (r) { r.sort(function (a, b) { return a.cx - b.cx; }); });
+    // 4b) 拆分下落+攻击行(band4)和受伤+死亡行(band5)，从后往前拆避免索引偏移
+    [5, 4].forEach(function (bi) {
+      var rw = rows[bi];
+      if (rw && rw.length >= 6) {
+        var lg = { i: 1, gap: 0 };
+        for (var gi = 1; gi < rw.length; gi++) {
+          var g = rw[gi].cx - rw[gi - 1].cx;
+          if (g > lg.gap) lg = { i: gi, gap: g };
+        }
+        if (lg.gap > 50 && lg.i >= 2 && rw.length - lg.i >= 2) {
+          rows.splice(bi, 1, rw.slice(0, lg.i), rw.slice(lg.i));
+        }
+      }
+    });
+    rows = rows.filter(function (r) { return r.length >= 2; });
     if (rows.length < 6) return null;
     function crop(c) {
       var cc = mkCanvas(c.w, c.h);
@@ -2404,7 +2425,10 @@
       return cc;
     }
     function pick(row, idx) { return row ? crop(row[Math.min(idx, row.length - 1)]) : null; }
-    var idle = rows[0], walk = rows[1], run = rows[2], jump = rows[3], glide = rows[4], hurt = rows[6], death = rows[7];
+    // 行映射：待机/行走/奔跑/跳跃/下落/攻击/受伤/死亡
+    var idle = rows[0], walk = rows[1], run = rows[2], jump = rows[3], glide = rows[4];
+    var hurt = rows.length >= 7 ? rows[rows.length - 2] : rows[rows.length - 1];
+    var deathRow = rows.length >= 8 ? rows[rows.length - 1] : null;
     if (!walk || !run || !jump || !glide || !hurt) return null;
     var glideC = crop(glide[Math.min(2, glide.length - 1)]);
     var k = BIRD_DRAW_H / glideC.height;
@@ -2423,7 +2447,7 @@
       dcc.getContext('2d').drawImage(sheet, dx0 + di * dw, dy0, dw, dh, 0, 0, dw, dh);
       deathManual.push(dcc);
     }
-    var deathSrc = (death && death.length >= 2) ? death.map(function (c) { return crop(c); }) : deathManual;
+    var deathSrc = (deathRow && deathRow.length >= 2) ? deathRow.map(function (c) { return crop(c); }) : deathManual;
     return {
       glide: norm(glideC),
       flapUp: norm(pick(run, 1) || glideC),
