@@ -2285,6 +2285,30 @@
       if (row) row.push(c); else rows.push([c]);
     });
     rows.forEach(function (r) { r.sort(function (a, b) { return a.cx - b.cx; }); });
+    // 拆分左右并排的行（受伤左+死亡右，或下落左+攻击右）
+    for (var si = rows.length - 1; si >= 0; si--) {
+      var rw = rows[si];
+      if (rw.length >= 8 && (rw[rw.length - 1].cx - rw[0].cx) > sw * 0.35) {
+        var gaps = [];
+        for (var gi = 1; gi < rw.length; gi++) gaps.push({ i: gi, gap: rw[gi].cx - rw[gi - 1].cx });
+        gaps.sort(function (a, b) { return b.gap - a.gap; });
+        if (gaps[0].gap > 80) {
+          var leftP = rw.slice(0, gaps[0].i), rightP = rw.slice(gaps[0].i);
+          if (leftP.length >= 3 && rightP.length >= 3) {
+            rows.splice(si, 1, leftP, rightP);
+          }
+        }
+      }
+    }
+    // 行内清理：移除远小于行中位高度的噪声粒子组件
+    rows.forEach(function (rw) {
+      var hs = rw.map(function (c) { return c.h; }).sort(function (a, b) { return a - b; });
+      var rowMed = hs[hs.length >> 1];
+      for (var ri = rw.length - 1; ri >= 0; ri--) {
+        if (rw[ri].h < rowMed * 0.35 && rw[ri].w < rowMed * 0.5) rw.splice(ri, 1);
+      }
+    });
+    rows = rows.filter(function (rw) { return rw.length >= 2; });
     if (rows.length < 6) return null;
     function crop(c) {
       var cc = mkCanvas(c.w, c.h);
@@ -2324,24 +2348,11 @@
     g.drawImage(img, 0, 0);
     var data = g.getImageData(0, 0, sw, sh);
     var px = data.data, N = sw * sh;
-    // 1) 四边 flood-fill 去深灰背景（近 bg 色 rgb(40,43,48) 容差 13）
-    var bg = new Uint8Array(N), st = [];
-    function tryPush(x, y) {
-      var i = y * sw + x;
-      if (bg[i]) return;
-      var id = i * 4, r = px[id], gg = px[id + 1], b = px[id + 2];
-      var d = Math.max(Math.abs(r - 40), Math.abs(gg - 43), Math.abs(b - 48));
-      if (d <= 13) { bg[i] = 1; st.push(i); }
-    }
-    for (var x0 = 0; x0 < sw; x0++) { tryPush(x0, 0); tryPush(x0, sh - 1); }
-    for (var y0 = 0; y0 < sh; y0++) { tryPush(0, y0); tryPush(sw - 1, y0); }
-    while (st.length) {
-      var i = st.pop(), cx = i % sw, cy = (i / sw) | 0;
-      px[i * 4 + 3] = 0;
-      if (cx > 0) tryPush(cx - 1, cy);
-      if (cx < sw - 1) tryPush(cx + 1, cy);
-      if (cy > 0) tryPush(cx, cy - 1);
-      if (cy < sh - 1) tryPush(cx, cy + 1);
+    // 1) 颜色阈值去深灰背景（近 bg 色 rgb(40,43,48) 容差 13）
+    // 用简单阈值而非 flood-fill，避免稀疏的死亡/粒子帧缝隙泄漏导致整帧被擦除
+    for (var bi = 0; bi < N; bi++) {
+      var bid = bi * 4, br = px[bid], bg2 = px[bid + 1], bb = px[bid + 2];
+      if (Math.max(Math.abs(br - 40), Math.abs(bg2 - 43), Math.abs(bb - 48)) <= 13) px[bid + 3] = 0;
     }
     g.putImageData(data, 0, 0);
     // 2) 8 邻域连通域
@@ -2370,7 +2381,7 @@
     var fr = comps.filter(function (c) {
       return c.cx < sw * 0.78 &&
         c.h >= sh * 0.04 && c.w >= sw * 0.018 &&
-        c.n / (c.w * c.h) >= 0.16;
+        c.n / (c.w * c.h) >= 0.12;
     });
     if (fr.length < 10) return null;
     var medH = fr.map(function (c) { return c.h; }).sort(function (a, b) { return a - b; })[fr.length >> 1];
@@ -2393,7 +2404,7 @@
       return cc;
     }
     function pick(row, idx) { return row ? crop(row[Math.min(idx, row.length - 1)]) : null; }
-    var idle = rows[0], walk = rows[1], run = rows[2], jump = rows[3], glide = rows[4], hurt = rows[5];
+    var idle = rows[0], walk = rows[1], run = rows[2], jump = rows[3], glide = rows[4], hurt = rows[6], death = rows[7];
     if (!walk || !run || !jump || !glide || !hurt) return null;
     var glideC = crop(glide[Math.min(2, glide.length - 1)]);
     var k = BIRD_DRAW_H / glideC.height;
@@ -2404,14 +2415,29 @@
       og.drawImage(cv, 0, 0, w, h);
       return out;
     }
+    // 手动裁剪死亡帧（底部右侧区域，自动聚类对稀疏粒子不可靠）
+    var deathManual = [];
+    var dx0 = 680, dy0 = 880, dw = 84, dh = 130;
+    for (var di = 0; di < 5; di++) {
+      var dcc = mkCanvas(dw, dh);
+      dcc.getContext('2d').drawImage(sheet, dx0 + di * dw, dy0, dw, dh, 0, 0, dw, dh);
+      deathManual.push(dcc);
+    }
+    var deathSrc = (death && death.length >= 2) ? death.map(function (c) { return crop(c); }) : deathManual;
     return {
       glide: norm(glideC),
       flapUp: norm(pick(run, 1) || glideC),
       flapDown: norm(pick(jump, 2) || glideC),
-      hurt: norm(pick(hurt, 0) || glideC),
+      hurt: norm(pick(hurt, hurt.length - 1) || glideC),
       idle: norm(pick(idle, 2) || glideC),
       hurtSeq: hurt.map(function (c) { return norm(crop(c)); }),
-      _rows: rows.length, _comps: fr.length
+      deathSeq: (function () {
+        var hl = crop(hurt[hurt.length - 1]);
+        var dp = deathSrc.length >= 2 ? deathSrc[deathSrc.length - 2] : hl;
+        var df = deathSrc[deathSrc.length - 1];
+        return [norm(hl), norm(hl), norm(dp), norm(df)];
+      })(),
+      _rows: rows.length, _comps: fr.length, _rowCounts: rows.map(function (r) { return r.length; })
     };
   }
 
@@ -2588,7 +2614,7 @@
     // 死亡动画：hurt 行逐帧播放，播完停在最后一帧
     if (state === 'over') {
       var dseq = null;
-      if (mapId === 'hangzhou' && birdHero && birdHero.hurtSeq) dseq = birdHero.hurtSeq;
+      if (mapId === 'hangzhou' && birdHero && birdHero.deathSeq) dseq = birdHero.deathSeq;
       else if (mapId === 'snow' && birdFrames && birdFrames.hurtSeq) dseq = birdFrames.hurtSeq;
       if (dseq && dseq.length) {
         var didx = Math.min(dseq.length - 1, ((frame - overStartFrame) / 5) | 0);
