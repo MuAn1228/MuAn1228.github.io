@@ -552,45 +552,48 @@
   var lastSectorCharts = null;
   var lastGoldChart = null;
 
-  // 腾讯K线转 Yahoo chart 格式 (供现有渲染函数复用)
-  function convertTencentKline(tencentData, code) {
-    if (!tencentData || !tencentData.data || !tencentData.data[code]) return null;
-    var days = tencentData.data[code].day || tencentData.data[code].qfqday || [];
-    if (!days || days.length === 0) return null;
+  // 东方财富K线转 Yahoo chart 格式 (供现有渲染函数复用)
+  // 东方财富格式: "日期,开盘,收盘,最高,最低,成交量,成交额,振幅,涨跌幅,涨跌额,换手率"
+  function convertEastMoneyKline(data) {
+    if (!data || !data.data || !data.data.klines) return null;
+    var klines = data.data.klines;
+    if (!klines || klines.length === 0) return null;
     var timestamps = [], opens = [], closes = [], highs = [], lows = [], volumes = [];
-    days.forEach(function (d) {
-      // 腾讯格式: [date, open, close, high, low, volume, ...]
-      var ts = new Date(d[0] + 'T00:00:00').getTime() / 1000;
-      timestamps.push(ts);
-      opens.push(parseFloat(d[1]));
-      closes.push(parseFloat(d[2]));
-      highs.push(parseFloat(d[3]));
-      lows.push(parseFloat(d[4]));
-      volumes.push(parseFloat(d[5]));
+    klines.forEach(function (line) {
+      var p = line.split(',');
+      if (p.length < 6) return;
+      timestamps.push(new Date(p[0] + 'T00:00:00').getTime() / 1000);
+      opens.push(parseFloat(p[1]));
+      closes.push(parseFloat(p[2]));
+      highs.push(parseFloat(p[3]));
+      lows.push(parseFloat(p[4]));
+      volumes.push(parseFloat(p[5]));
     });
+    if (closes.length === 0) return null;
     return {
       timestamp: timestamps,
       indicators: { quote: [{ close: closes, open: opens, high: highs, low: lows, volume: volumes }] },
-      meta: { symbol: code }
+      meta: { symbol: data.data.name || '' }
     };
   }
 
   async function fetchChartData() {
-    // 腾讯K线接口 (web.ifzq.gtimg.cn，CORS 允许 *，免代理)
-    // 贵金属 hf_GC 无K线接口，暂时用缓存
+    // 东方财富K线接口 (push2his.eastmoney.com，CORS 允许 github.io，免代理)
+    // secid: 105.xxx 为美股; 贵金属/ETF 如不可用则降级
     var chartReqs = [
-      { key: 'aapl', code: 'usAAPL', range: '90' },
-      { key: 'XLK',  code: 'usXLK',  range: '30' },
-      { key: 'XLE',  code: 'usXLE',  range: '30' },
-      { key: 'XLF',  code: 'usXLF',  range: '30' },
+      { key: 'aapl', secid: '105.AAPL' },
+      { key: 'XLK',  secid: '105.XLK'  },
+      { key: 'XLE',  secid: '105.XLE'  },
+      { key: 'XLF',  secid: '105.XLF'  },
     ];
 
     var results = await Promise.all(chartReqs.map(function (item) {
-      var url = 'https://web.ifzq.gtimg.cn/appstock/app/usfqkline/get?param=' + item.code + ',day,,' + ',' + item.range + ',qfq';
-      return fetch(url)
+      var url = 'https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=' + item.secid +
+        '&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&klt=101&fqt=1&beg=20260601&end=20500101';
+      return fetch(url, { headers: { 'Referer': 'https://quote.eastmoney.com/' } })
         .then(function (resp) { return resp.json(); })
         .then(function (data) {
-          var converted = convertTencentKline(data, item.code);
+          var converted = convertEastMoneyKline(data);
           return { key: item.key, data: converted };
         })
         .catch(function (e) {
