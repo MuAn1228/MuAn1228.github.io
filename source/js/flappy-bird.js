@@ -151,12 +151,6 @@
         }
       }
     }
-    // 身体倾斜平滑过渡（上升抬头 / 下坠俯冲 / 坠机倒栽）
-    var targetTilt;
-    if (state === 'play') targetTilt = Math.max(-0.45, Math.min(1.05, bird.vy * 0.06));
-    else if (state === 'over') targetTilt = 1.3;
-    else targetTilt = Math.sin(frame * 0.06) * 0.08;
-    bird.tilt += (targetTilt - bird.tilt) * 0.18;
     // 粒子衰减
     for (var j = trail.length - 1; j >= 0; j--) { trail[j].t--; trail[j].x -= SPEED * 0.55; if (trail[j].t <= 0) trail.splice(j, 1); }
     for (var k = stars.length - 1; k >= 0; k--) {
@@ -1461,9 +1455,13 @@
   }
 
   function drawBird() {
+    // 飞行倾斜直接跟随速度（上升抬头/下坠俯冲，恢复 84b46ba 原始手感）；待机轻微浮动
+    var tilt = state === 'play'
+      ? Math.max(-0.45, Math.min(1.05, bird.vy * 0.06))
+      : Math.sin(frame * 0.06) * 0.06;
     ctx.save();
     ctx.translate(bird.x, bird.y);
-    ctx.rotate(bird.tilt || 0);
+    ctx.rotate(tilt);
     var sp = birdSprite();
     if (sp) {
       if (BIRD_FLIP) ctx.scale(-1, 1);
@@ -1610,7 +1608,11 @@
     sheetReady: function () { return !!birdFrames; },
     pipeInfo: function () { return pipes.map(function (p) { return { x: p.x, gy: p.gy }; }); },
     scrollInfo: function () { return { far: scrollFar, mid: scrollMid, ground: groundX, frame: frame }; },
-    midTileUrl: function () { if (!snowMidTile) snowMidTile = buildSnowMidTile(); return snowMidTile.toDataURL("image/png"); }
+    midTileUrl: function () { if (!snowMidTile) snowMidTile = buildSnowMidTile(); return snowMidTile.toDataURL("image/png"); },
+    tiltInfo: function () {
+      var t = state === 'play' ? Math.max(-0.45, Math.min(1.05, bird.vy * 0.06)) : Math.sin(frame * 0.06) * 0.06;
+      return { state: state, vy: bird.vy, tilt: t, y: bird.y, frame: frame };
+    }
   };
 
   // ===== 输入 =====
