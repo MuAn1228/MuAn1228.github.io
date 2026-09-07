@@ -51,6 +51,11 @@ jobs:
       - name: Install dependencies
         run: npm ci || npm install
 
+      - name: Fetch GitHub contributions
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: python3 fetch_contributions.py
+
       - name: Build
         run: npx hexo generate
 
