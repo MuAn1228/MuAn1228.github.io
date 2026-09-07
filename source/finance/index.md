@@ -354,4 +354,4 @@ title: 交易
 </div>
 {% endraw %}
 
-<script src="/js/finance-tracker.js?v=3"></script>
+<script src="/js/finance-tracker.js?v=4"></script>
