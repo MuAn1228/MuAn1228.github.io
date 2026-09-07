@@ -31,7 +31,7 @@
   var scrollFar = 0, scrollMid = 0;
   var trail = [], stars = [];          // 拖尾光斑 / 振翅星星
   var flakes = [];                     // 雪镇地图：环境飘雪
-  var flashT = 0, shakeT = 0, scorePop = 0, newBest = false;
+  var flashT = 0, shakeT = 0, scorePop = 0, newBest = false, overStartFrame = 0;
   try { best = parseInt(localStorage.getItem('arcade-flappy-best'), 10) || 0; } catch (e) { best = 0; }
 
   // —— 地图主题：street=音乐街区 / snow=极光雪镇 / hangzhou=杭州夜航（localStorage 记忆） ——
@@ -102,6 +102,7 @@
   function gameOver() {
     if (state !== 'play') return;
     state = 'over';
+    overStartFrame = frame;
     flashT = 6;
     shakeT = 8;
     newBest = score > best;
@@ -2302,11 +2303,14 @@
       og.drawImage(cv, 0, 0, w, h);
       return out;
     }
+    var _idleRow = rows[0];
     return {
       glide: norm(glideC),
       flapUp: norm(pick(run, 1)),
       flapDown: norm(pick(attack, 3)),
       hurt: norm(pick(hurt, 0)),
+      idle: _idleRow ? norm(pick(_idleRow, _idleRow.length >> 1)) : null,
+      hurtSeq: hurt.map(function (c) { return norm(crop(c)); }),
       _rows: rows.length, _comps: fr.length
     };
   }
@@ -2406,6 +2410,7 @@
       flapDown: norm(pick(jump, 2) || glideC),
       hurt: norm(pick(hurt, 0) || glideC),
       idle: norm(pick(idle, 2) || glideC),
+      hurtSeq: hurt.map(function (c) { return norm(crop(c)); }),
       _rows: rows.length, _comps: fr.length
     };
   }
@@ -2580,23 +2585,29 @@
 
   // 当前动作帧：over=眩晕；ready=慢速悬停振翅循环；play=拍翅触发短促三连振翅，其余滑翔
   function birdSprite() {
+    // 死亡动画：hurt 行逐帧播放，播完停在最后一帧
+    if (state === 'over') {
+      var dseq = null;
+      if (mapId === 'hangzhou' && birdHero && birdHero.hurtSeq) dseq = birdHero.hurtSeq;
+      else if (mapId === 'snow' && birdFrames && birdFrames.hurtSeq) dseq = birdFrames.hurtSeq;
+      if (dseq && dseq.length) {
+        var didx = Math.min(dseq.length - 1, ((frame - overStartFrame) / 5) | 0);
+        return dseq[didx];
+      }
+      if (mapId === 'hangzhou' && birdHero) return birdHero.hurt || birdHero.glide;
+      if (mapId === 'snow' && birdFrames) return birdFrames.hurt || birdFrames.glide;
+      return null;
+    }
     if (mapId === 'hangzhou' && birdHero) {
-      // 杭州：新角色帧
-      if (state === 'over') return birdHero.hurt || birdHero.glide;
+      // 杭州：新角色帧，ready=待机
       if (state === 'ready') return birdHero.idle || birdHero.glide;
       if (bird.wing > 6) return birdHero.flapDown;
       if (bird.wing > 2) return birdHero.flapUp;
       return birdHero.glide;
     }
     if (mapId === 'snow' && birdFrames) {
-      // 雪镇：企鹅帧
-      if (state === 'over') return birdFrames.hurt || birdFrames.glide;
-      if (state === 'ready') {
-        var c = frame % 26;
-        if (c < 15) return birdFrames.glide;
-        if (c < 20) return birdFrames.flapUp;
-        return birdFrames.flapDown;
-      }
+      // 雪镇：企鹅帧，ready=待机
+      if (state === 'ready') return birdFrames.idle || birdFrames.glide;
       if (bird.wing > 6) return birdFrames.flapDown;
       if (bird.wing > 2) return birdFrames.flapUp;
       return birdFrames.glide;
