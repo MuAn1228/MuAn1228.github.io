@@ -179,9 +179,10 @@
   //  代 理 池 (CORS proxy pool，自动熔断 + 记忆可用代理)
   // ============================================================
   var PROXIES = [
-    { name: 'corsproxy',  wrap: function (u) { return 'https://corsproxy.io/?url=' + encodeURIComponent(u); } },
-    { name: 'allorigins', wrap: function (u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); } },
-    { name: 'codetabs',   wrap: function (u) { return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); } },
+    { name: 'allorigins-get', wrap: function (u) { return 'https://api.allorigins.win/get?url=' + encodeURIComponent(u); }, unwrap: 'contents' },
+    { name: 'allorigins-raw', wrap: function (u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); } },
+    { name: 'codetabs',      wrap: function (u) { return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); } },
+    { name: 'corsproxy',     wrap: function (u) { return 'https://corsproxy.io/?url=' + encodeURIComponent(u); } },
   ];
   var proxyIdx = 0; // 上次成功的代理下标，下次优先用
 
@@ -191,13 +192,22 @@
       var idx = (proxyIdx + i) % PROXIES.length;
       var p = PROXIES[idx];
       try {
-        var resp = await fetch(p.wrap(url), { signal: timeoutSignal(timeoutMs || 9000) });
-        if (resp.ok) {
-          if (idx !== proxyIdx) console.log('[proxy] 切换到 ' + p.name);
-          proxyIdx = idx;
-          return resp;
+        var resp = await fetch(p.wrap(url), { signal: timeoutSignal(timeoutMs || 12000) });
+        if (!resp.ok) { errors.push(p.name + ':' + resp.status); continue; }
+        // allorigins-get 返回 {contents: "<json string>", status: {...}}，需解包
+        if (p.unwrap === 'contents') {
+          var wrapper = await resp.json();
+          if (wrapper && wrapper.contents) {
+            if (idx !== proxyIdx) console.log('[proxy] 切换到 ' + p.name);
+            proxyIdx = idx;
+            return new Response(wrapper.contents, { status: 200, headers: { 'Content-Type': 'application/json' } });
+          }
+          errors.push(p.name + ':bad-wrapper');
+          continue;
         }
-        errors.push(p.name + ':' + resp.status);
+        if (idx !== proxyIdx) console.log('[proxy] 切换到 ' + p.name);
+        proxyIdx = idx;
+        return resp;
       } catch (e) {
         errors.push(p.name + ':' + (e.name === 'TimeoutError' || e.name === 'AbortError' ? 'timeout' : e.message));
       }
@@ -381,7 +391,7 @@
     if (ft) ft.textContent = '数据源：' + detail + (lastRefresh ? ' · 更新于 ' + fmtTime(lastRefresh) : '');
   }
 
-  // 主行情获取：Yahoo spark → Demo
+  // 主行情获取：Yahoo spark → 保持上次缓存/Demo
   async function fetchQuotes(force) {
     if (dataFetching) return;
     dataFetching = true;
@@ -390,14 +400,40 @@
       applyQuotes(results);
       lastRefresh = new Date();
       updateStatus(livePaused ? '快照·暂停' : '实时', 'Yahoo Finance（对前收口径）');
+      // 缓存成功的行情数据到 localStorage
+      try {
+        localStorage.setItem('gmt-quote-cache', JSON.stringify({ ts: Date.now(), results: results }));
+      } catch (e) {}
       dataFetching = false;
       return;
     } catch (e) {
       console.warn('[quote] Yahoo 失败: ' + e.message);
     }
-    console.warn('[quote] 实时源失败，保持 Demo 快照');
-    updateStatus('快照·离线', 'Demo 快照（实时源暂不可用）');
+    // 尝试从 localStorage 恢复上次成功的数据
+    var cached = null;
+    try { cached = JSON.parse(localStorage.getItem('gmt-quote-cache') || 'null'); } catch (e) {}
+    if (cached && cached.results && cached.results.length > 0) {
+      applyQuotes(cached.results);
+      lastRefresh = new Date(cached.ts);
+      var mins = Math.round((Date.now() - cached.ts) / 60000);
+      updateStatus('缓存·' + mins + '分钟前', '实时源暂不可用，显示上次缓存数据');
+    } else {
+      console.warn('[quote] 实时源失败且无缓存，保持 Demo 快照');
+      updateStatus('快照·离线', 'Demo 快照（实时源暂不可用）');
+    }
     dataFetching = false;
+  }
+
+  // 从 localStorage 恢复图表缓存（init 时调用，避免闪 Demo 数据）
+  function restoreChartCache() {
+    try {
+      var cache = JSON.parse(localStorage.getItem('gmt-chart-cache') || 'null');
+      if (!cache) return false;
+      if (cache.aapl) { lastAAPLChart = cache.aapl; renderAAPLChart(); }
+      if (cache.sector) { lastSectorCharts = cache.sector; renderSectorChart(); }
+      if (cache.gold) { lastGoldChart = cache.gold; renderMetalChart(); updateMetalRanges(); }
+      return cache.aapl || cache.sector || cache.gold;
+    } catch (e) { return false; }
   }
 
   // ============================================================
@@ -408,45 +444,62 @@
   var lastGoldChart = null;
 
   async function fetchChartData() {
-    // AAPL 60日
-    try {
-      var aaplResp = await proxiedFetch('https://query1.finance.yahoo.com/v8/finance/chart/AAPL?range=3mo&interval=1d', 9000);
-      var aaplData = await aaplResp.json();
-      if (aaplData.chart && aaplData.chart.result && aaplData.chart.result[0]) {
-        lastAAPLChart = aaplData.chart.result[0];
-        renderAAPLChart();
-      }
-    } catch (e) { console.warn('[chart] AAPL: ' + e.message); }
+    // 并行请求所有图表数据（原串行会导致超时累加，第一个失败后面全挂）
+    var chartUrls = [
+      { key: 'aapl',   url: 'https://query1.finance.yahoo.com/v8/finance/chart/AAPL?range=3mo&interval=1d' },
+      { key: 'XLK',    url: 'https://query1.finance.yahoo.com/v8/finance/chart/XLK?range=1d&interval=5m' },
+      { key: 'XLE',    url: 'https://query1.finance.yahoo.com/v8/finance/chart/XLE?range=1d&interval=5m' },
+      { key: 'XLF',    url: 'https://query1.finance.yahoo.com/v8/finance/chart/XLF?range=1d&interval=5m' },
+      { key: 'gold',   url: 'https://query1.finance.yahoo.com/v8/finance/chart/GC=F?range=3mo&interval=1d' },
+    ];
 
-    // 板块日内 (XLK/XLE/XLF 5分钟线)
+    var results = await Promise.all(chartUrls.map(function (item) {
+      return proxiedFetch(item.url, 12000)
+        .then(function (resp) { return resp.json(); })
+        .then(function (data) {
+          if (data && data.chart && data.chart.result && data.chart.result[0]) {
+            return { key: item.key, data: data.chart.result[0] };
+          }
+          return { key: item.key, data: null };
+        })
+        .catch(function (e) {
+          console.warn('[chart] ' + item.key + ': ' + e.message);
+          return { key: item.key, data: null };
+        });
+    }));
+
+    var map = {};
+    results.forEach(function (r) { map[r.key] = r.data; });
+
+    // AAPL
+    if (map.aapl) {
+      lastAAPLChart = map.aapl;
+      renderAAPLChart();
+    }
+
+    // 板块
     var sectorData = {};
     var got = 0;
-    for (var i = 0; i < 3; i++) {
-      var sym = ['XLK', 'XLE', 'XLF'][i];
-      try {
-        var resp = await proxiedFetch('https://query1.finance.yahoo.com/v8/finance/chart/' + sym + '?range=1d&interval=5m', 9000);
-        var d = await resp.json();
-        if (d.chart && d.chart.result && d.chart.result[0]) {
-          sectorData[sym] = d.chart.result[0];
-          got++;
-        }
-      } catch (e) { console.warn('[chart] ' + sym + ': ' + e.message); }
-    }
+    ['XLK', 'XLE', 'XLF'].forEach(function (sym) {
+      if (map[sym]) { sectorData[sym] = map[sym]; got++; }
+    });
     if (got > 0) {
       lastSectorCharts = sectorData;
       renderSectorChart();
     }
 
-    // 黄金 60日
+    // 黄金
+    if (map.gold) {
+      lastGoldChart = map.gold;
+      renderMetalChart();
+      updateMetalRanges();
+    }
+
+    // 缓存成功的图表数据到 localStorage
     try {
-      var goldResp = await proxiedFetch('https://query1.finance.yahoo.com/v8/finance/chart/GC=F?range=3mo&interval=1d', 9000);
-      var goldData = await goldResp.json();
-      if (goldData.chart && goldData.chart.result && goldData.chart.result[0]) {
-        lastGoldChart = goldData.chart.result[0];
-        renderMetalChart();
-        updateMetalRanges();
-      }
-    } catch (e) { console.warn('[chart] 黄金: ' + e.message); }
+      var cache = { ts: Date.now(), aapl: lastAAPLChart, sector: lastSectorCharts, gold: lastGoldChart };
+      localStorage.setItem('gmt-chart-cache', JSON.stringify(cache));
+    } catch (e) {}
   }
 
   function updateMetalRanges() {
@@ -2249,7 +2302,7 @@
     updateClock();
     setInterval(updateClock, 1000);
 
-    // 初始渲染 (Demo 数据，实时数据到达后覆盖)
+    // 初始渲染 (Demo 数据)
     renderAll();
     renderClock();
     renderFunds();
@@ -2257,8 +2310,19 @@
     updateAddMenu();
     reflowGrid();
 
+    // 优先从 localStorage 恢复上次成功的数据（避免闪 7 月 Demo）
+    var quoteCached = null;
+    try { quoteCached = JSON.parse(localStorage.getItem('gmt-quote-cache') || 'null'); } catch (e) {}
+    if (quoteCached && quoteCached.results && quoteCached.results.length > 0) {
+      applyQuotes(quoteCached.results);
+      lastRefresh = new Date(quoteCached.ts);
+      var mins = Math.round((Date.now() - quoteCached.ts) / 60000);
+      updateStatus('缓存·' + mins + '分钟前', '正在刷新实时数据…');
+    }
+    restoreChartCache();
+
     // 启动实时数据
-    updateStatus('连接中', '正在连接实时数据源…');
+    if (!quoteCached) updateStatus('连接中', '正在连接实时数据源…');
     refreshAll(false);
     fetchFundHistories(); // 历史净值仅加载一次 (量较大)
     startTimers();

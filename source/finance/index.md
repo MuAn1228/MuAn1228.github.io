@@ -55,7 +55,7 @@ title: 交易
       <div class="w-head">
         <span class="w-num">01</span>
         <span class="w-title">个股追踪 · 热力矩阵</span>
-        <span class="w-asof" id="hm-asof">as-of 2026-07-27 16:00（美东 EDT）</span>
+        <span class="w-asof" id="hm-asof">加载中…</span>
         <span class="w-order">
           <button class="w-btn" data-act="up" title="上移">▲</button>
           <button class="w-btn" data-act="down" title="下移">▼</button>
@@ -95,7 +95,7 @@ title: 交易
       <div class="w-head">
         <span class="w-num">02</span>
         <span class="w-title">市场宽度</span>
-        <span class="w-asof" id="bd-asof">as-of 2026-07-27 16:00（美东 EDT）</span>
+        <span class="w-asof" id="bd-asof">加载中…</span>
         <span class="w-order">
           <button class="w-btn" data-act="up" title="上移">▲</button>
           <button class="w-btn" data-act="down" title="下移">▼</button>
@@ -119,7 +119,7 @@ title: 交易
       <div class="w-head">
         <span class="w-num">03</span>
         <span class="w-title">新闻快讯</span>
-        <span class="w-asof" id="news-asof">自动 30s · 抓取于 07-28 15:34（北京）</span>
+        <span class="w-asof" id="news-asof">加载中…</span>
         <span class="w-order">
           <button class="w-btn" data-act="up" title="上移">▲</button>
           <button class="w-btn" data-act="down" title="下移">▼</button>
@@ -153,7 +153,7 @@ title: 交易
       <div class="w-head">
         <span class="w-num">05</span>
         <span class="w-title">板块日内走势</span>
-        <span class="w-asof">2026-07-27 美东常规时段 · 等权</span>
+        <span class="w-asof">加载中…</span>
         <span class="w-order">
           <button class="w-btn" data-act="up" title="上移">▲</button>
           <button class="w-btn" data-act="down" title="下移">▼</button>
@@ -180,7 +180,7 @@ title: 交易
       <div class="w-head">
         <span class="w-num">04</span>
         <span class="w-title">AAPL · 近 60 个交易日</span>
-        <span class="w-asof">as-of 2026-07-27（美东 EDT 收盘）</span>
+        <span class="w-asof">加载中…</span>
         <span class="w-order">
           <button class="w-btn" data-act="up" title="上移">▲</button>
           <button class="w-btn" data-act="down" title="下移">▼</button>
@@ -207,7 +207,7 @@ title: 交易
       <div class="w-head">
         <span class="w-num">06</span>
         <span class="w-title">贵金属 · XAU XAG XPT XPD</span>
-        <span class="w-asof">as-of 2026-07-28（期货日线）</span>
+        <span class="w-asof">加载中…</span>
         <span class="w-order">
           <button class="w-btn" data-act="up" title="上移">▲</button>
           <button class="w-btn" data-act="down" title="下移">▼</button>
@@ -354,4 +354,4 @@ title: 交易
 </div>
 {% endraw %}
 
-<script src="/js/finance-tracker.js"></script>
+<script src="/js/finance-tracker.js?v=3"></script>
