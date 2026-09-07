@@ -1441,6 +1441,7 @@
 
   // 当前动作帧：over=眩晕；ready=慢速悬停振翅循环；play=拍翅触发短促三连振翅，其余滑翔
   function birdSprite() {
+    if (mapId !== 'snow') return null; // 仅极光雪镇用企鹅帧；音乐街区保留原 body.png 少女贴纸
     if (!birdFrames) return null;
     if (state === 'over') return birdFrames.hurt || birdFrames.glide;
     if (state === 'ready') {
