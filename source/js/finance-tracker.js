@@ -232,7 +232,8 @@
 
   // 数据源 1: 腾讯财经批量行情 (qt.gtimg.cn，script 标签加载，免代理，2026-09-08 启用)
   // 美股格式: v_usAAPL="200~苹果~AAPL.OQ~现价~昨收~今开~成交量~..." (~分隔)
-  // 贵金属格式: v_hf_GC="现价,涨跌幅%,?,昨收,最高,最低,时间,...,日期,名称" (,分隔)
+  // 贵金属格式: v_hf_GC="现价,涨跌幅%,?,开盘,最高,最低,时间,昨收,?,...,日期,名称" (,分隔)
+  // 注意: p[7]才是昨收(用于计算涨跌额), p[3]是开盘价 (2026-09-08 修正)
   // 指数格式: 同美股 (usINX/usIXIC/usDJI/hkHSI/sh000001)
   async function fetchFromTencent() {
     // 1. 收集美股代码: STOCKS + 板块ETF + 跑马灯指数
@@ -293,7 +294,7 @@
         if (p.length < 4) return;
         var price = parseFloat(p[0]);
         var chgPct = parseFloat(p[1]);
-        var prev = parseFloat(p[3]);
+        var prev = parseFloat(p[7]); // p[7]是昨收/昨结，p[3]是开盘价（2026-09-08 修正）
         if (isNaN(price) || isNaN(chgPct)) return;
         results.push({
           symbol: metalMap[code],
