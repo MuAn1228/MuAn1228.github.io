@@ -2583,12 +2583,7 @@
     if (mapId === 'hangzhou' && birdHero) {
       // 杭州：新角色帧
       if (state === 'over') return birdHero.hurt || birdHero.glide;
-      if (state === 'ready') {
-        var hc = frame % 26;
-        if (hc < 15) return birdHero.glide;
-        if (hc < 20) return birdHero.flapUp;
-        return birdHero.flapDown;
-      }
+      if (state === 'ready') return birdHero.idle || birdHero.glide;
       if (bird.wing > 6) return birdHero.flapDown;
       if (bird.wing > 2) return birdHero.flapUp;
       return birdHero.glide;
