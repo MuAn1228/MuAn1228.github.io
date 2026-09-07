@@ -263,7 +263,7 @@
     "id": 25706247,
     "name": "Kerosene",
     "artist": "Crystal Castles",
-    "cover": "https://p1.music.126.net/w3wJ5IZjvFWY7wIA-nLewg==/109951168271665093.jpg"
+    "cover": "/img/music/kerosene.jpg"
   },
   {
     "id": 1397330334,
