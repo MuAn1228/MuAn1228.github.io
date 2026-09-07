@@ -230,7 +230,113 @@
     return symbols.join(',');
   }
 
-  // 数据源 1: Yahoo v8 spark 批量接口 (一次请求覆盖全部标的；v7 已被官方锁死)
+  // 数据源 1: 腾讯财经批量行情 (qt.gtimg.cn，script 标签加载，免代理，2026-09-08 启用)
+  // 美股格式: v_usAAPL="200~苹果~AAPL.OQ~现价~昨收~今开~成交量~..." (~分隔)
+  // 贵金属格式: v_hf_GC="现价,涨跌幅%,?,昨收,最高,最低,时间,...,日期,名称" (,分隔)
+  // 指数格式: 同美股 (usINX/usIXIC/usDJI/hkHSI/sh000001)
+  async function fetchFromTencent() {
+    // 1. 收集美股代码: STOCKS + 板块ETF + 跑马灯指数
+    var usCodes = [];
+    STOCKS.forEach(function (s) { usCodes.push('us' + s.ticker); });
+    ['XLK', 'XLE', 'XLF'].forEach(function (t) { usCodes.push('us' + t); });
+    // 指数: 标普500, 纳斯达克, 道琼斯
+    usCodes.push('usINX', 'usIXIC', 'usDJI');
+    // 去重
+    usCodes = usCodes.filter(function (c, i) { return usCodes.indexOf(c) === i; });
+
+    var results = [];
+
+    // 2. 批量加载美股行情 (分批，每批 50 个)
+    var BATCH = 50;
+    // 指数代码映射: 腾讯代码 -> 本地符号 (与 applyQuotes 的 giMap 兼容)
+    var idxCodeMap = { usINX: 'SPX', usIXIC: 'IXIC', usDJI: 'DJI' };
+    for (var bi = 0; bi < usCodes.length; bi += BATCH) {
+      var batch = usCodes.slice(bi, bi + BATCH);
+      try {
+        await loadScriptTag('https://qt.gtimg.cn/q=' + batch.join(',') + '&_=' + Date.now(), 'GBK', 10000);
+        batch.forEach(function (code) {
+          var raw = window['v_' + code];
+          if (!raw) return;
+          var p = raw.split('~');
+          if (p.length < 5) return;
+          var price = parseFloat(p[3]);
+          var prev = parseFloat(p[4]);
+          if (isNaN(price) || isNaN(prev) || prev === 0) return;
+          // 指数用映射后的符号，股票去掉 us 前缀
+          var ticker = idxCodeMap[code] || code.substring(2);
+          results.push({
+            symbol: ticker,
+            price: price,
+            change: price - prev,
+            chgPct: (price - prev) / prev * 100,
+            marketCap: null,
+            marketState: null
+          });
+          try { delete window['v_' + code]; } catch (e) { window['v_' + code] = undefined; }
+        });
+      } catch (e) {
+        console.warn('[tencent] 美股批次失败: ' + e.message);
+      }
+    }
+
+    // 3. 贵金属 (黄金/白银，逗号分隔格式)
+    try {
+      await loadScriptTag('https://qt.gtimg.cn/q=hf_GC,hf_SI&_=' + Date.now(), 'GBK', 8000);
+      var metalMap = { hf_GC: 'XAU', hf_SI: 'XAG' };
+      Object.keys(metalMap).forEach(function (code) {
+        var raw = window['v_' + code];
+        if (!raw) return;
+        var p = raw.split(',');
+        if (p.length < 4) return;
+        var price = parseFloat(p[0]);
+        var chgPct = parseFloat(p[1]);
+        var prev = parseFloat(p[3]);
+        if (isNaN(price) || isNaN(chgPct)) return;
+        results.push({
+          symbol: metalMap[code],
+          price: price,
+          change: isNaN(prev) ? 0 : price - prev,
+          chgPct: chgPct,
+          marketCap: null,
+          marketState: null
+        });
+        try { delete window['v_' + code]; } catch (e) { window['v_' + code] = undefined; }
+      });
+    } catch (e) {
+      console.warn('[tencent] 贵金属失败: ' + e.message);
+    }
+
+    // 4. 港股/A股指数 (恒生、上证)
+    try {
+      await loadScriptTag('https://qt.gtimg.cn/q=hkHSI,sh000001&_=' + Date.now(), 'GBK', 8000);
+      var idxMap = { hkHSI: 'HSI', sh000001: 'SSE' };
+      Object.keys(idxMap).forEach(function (code) {
+        var raw = window['v_' + code];
+        if (!raw) return;
+        var p = raw.split('~');
+        if (p.length < 5) return;
+        var price = parseFloat(p[3]);
+        var prev = parseFloat(p[4]);
+        if (isNaN(price) || isNaN(prev) || prev === 0) return;
+        results.push({
+          symbol: idxMap[code],
+          price: price,
+          change: price - prev,
+          chgPct: (price - prev) / prev * 100,
+          marketCap: null,
+          marketState: null
+        });
+        try { delete window['v_' + code]; } catch (e) { window['v_' + code] = undefined; }
+      });
+    } catch (e) {
+      console.warn('[tencent] 港股/A股指数失败: ' + e.message);
+    }
+
+    if (results.length === 0) throw new Error('腾讯行情返回空数据');
+    return results;
+  }
+
+  // 数据源 2: Yahoo v8 spark 批量接口 (已弃用，代理池全部不可用，保留作参考)
   // 注: spark 不返回市值与盘态，市值沿用内置快照(变化缓慢可接受)，盘态由本地时钟计算
   async function fetchFromYahoo() {
     var symbols = getYahooBatchSymbols().split(',');
@@ -391,15 +497,15 @@
     if (ft) ft.textContent = '数据源：' + detail + (lastRefresh ? ' · 更新于 ' + fmtTime(lastRefresh) : '');
   }
 
-  // 主行情获取：Yahoo spark → 保持上次缓存/Demo
+  // 主行情获取：腾讯批量行情 (script 标签免代理)
   async function fetchQuotes(force) {
     if (dataFetching) return;
     dataFetching = true;
     try {
-      var results = await fetchFromYahoo();
+      var results = await fetchFromTencent();
       applyQuotes(results);
       lastRefresh = new Date();
-      updateStatus(livePaused ? '快照·暂停' : '实时', 'Yahoo Finance（对前收口径）');
+      updateStatus(livePaused ? '快照·暂停' : '实时', '腾讯财经（对前收口径）');
       // 缓存成功的行情数据到 localStorage
       try {
         localStorage.setItem('gmt-quote-cache', JSON.stringify({ ts: Date.now(), results: results }));
@@ -407,7 +513,7 @@
       dataFetching = false;
       return;
     } catch (e) {
-      console.warn('[quote] Yahoo 失败: ' + e.message);
+      console.warn('[quote] 腾讯失败: ' + e.message);
     }
     // 尝试从 localStorage 恢复上次成功的数据
     var cached = null;
@@ -443,24 +549,46 @@
   var lastSectorCharts = null;
   var lastGoldChart = null;
 
+  // 腾讯K线转 Yahoo chart 格式 (供现有渲染函数复用)
+  function convertTencentKline(tencentData, code) {
+    if (!tencentData || !tencentData.data || !tencentData.data[code]) return null;
+    var days = tencentData.data[code].day || tencentData.data[code].qfqday || [];
+    if (!days || days.length === 0) return null;
+    var timestamps = [], opens = [], closes = [], highs = [], lows = [], volumes = [];
+    days.forEach(function (d) {
+      // 腾讯格式: [date, open, close, high, low, volume, ...]
+      var ts = new Date(d[0] + 'T00:00:00').getTime() / 1000;
+      timestamps.push(ts);
+      opens.push(parseFloat(d[1]));
+      closes.push(parseFloat(d[2]));
+      highs.push(parseFloat(d[3]));
+      lows.push(parseFloat(d[4]));
+      volumes.push(parseFloat(d[5]));
+    });
+    return {
+      timestamp: timestamps,
+      indicators: { quote: [{ close: closes, open: opens, high: highs, low: lows, volume: volumes }] },
+      meta: { symbol: code }
+    };
+  }
+
   async function fetchChartData() {
-    // 并行请求所有图表数据（原串行会导致超时累加，第一个失败后面全挂）
-    var chartUrls = [
-      { key: 'aapl',   url: 'https://query1.finance.yahoo.com/v8/finance/chart/AAPL?range=3mo&interval=1d' },
-      { key: 'XLK',    url: 'https://query1.finance.yahoo.com/v8/finance/chart/XLK?range=1d&interval=5m' },
-      { key: 'XLE',    url: 'https://query1.finance.yahoo.com/v8/finance/chart/XLE?range=1d&interval=5m' },
-      { key: 'XLF',    url: 'https://query1.finance.yahoo.com/v8/finance/chart/XLF?range=1d&interval=5m' },
-      { key: 'gold',   url: 'https://query1.finance.yahoo.com/v8/finance/chart/GC=F?range=3mo&interval=1d' },
+    // 腾讯K线接口 (web.ifzq.gtimg.cn，CORS 允许 *，免代理)
+    // 贵金属 hf_GC 无K线接口，暂时用缓存
+    var chartReqs = [
+      { key: 'aapl', code: 'usAAPL', range: '90' },
+      { key: 'XLK',  code: 'usXLK',  range: '30' },
+      { key: 'XLE',  code: 'usXLE',  range: '30' },
+      { key: 'XLF',  code: 'usXLF',  range: '30' },
     ];
 
-    var results = await Promise.all(chartUrls.map(function (item) {
-      return proxiedFetch(item.url, 12000)
+    var results = await Promise.all(chartReqs.map(function (item) {
+      var url = 'https://web.ifzq.gtimg.cn/appstock/app/usfqkline/get?param=' + item.code + ',day,,' + ',' + item.range + ',qfq';
+      return fetch(url)
         .then(function (resp) { return resp.json(); })
         .then(function (data) {
-          if (data && data.chart && data.chart.result && data.chart.result[0]) {
-            return { key: item.key, data: data.chart.result[0] };
-          }
-          return { key: item.key, data: null };
+          var converted = convertTencentKline(data, item.code);
+          return { key: item.key, data: converted };
         })
         .catch(function (e) {
           console.warn('[chart] ' + item.key + ': ' + e.message);
@@ -1303,7 +1431,6 @@
   }
 
   // 历史净值 + 阶段收益 (天天基金 pingzhongdata，串行加载避免全局变量互相覆盖)
-  // 同时作为腾讯行情接口的兜底：如果腾讯被广告拦截/防火墙阻止，用历史净值最后一天的数据显示
   async function fetchFundHistories() {
     for (var i = 0; i < FUNDS.length; i++) {
       var f = FUNDS[i];
@@ -1314,16 +1441,6 @@
         f.trend = trend.slice(-90).map(function (p) { return { t: p.x, nav: p.y }; });
         if (w.fS_name) f.nameOfficial = w.fS_name;
         f.syl = { m1: w.syl_1y, m3: w.syl_3y, m6: w.syl_6y, y1: w.syl_1n };
-        // 兜底：如果腾讯行情还没拿到 dayPct，用历史净值最后两天计算
-        if (trend.length >= 2 && (typeof f.dayPct !== 'number' || isNaN(f.dayPct))) {
-          var last = trend[trend.length - 1];
-          var prev = trend[trend.length - 2];
-          f.nav = last.y;
-          f.accNav = last.y; // 历史净值里没有累计净值，用单位净值代替
-          f.dayPct = ((last.y - prev.y) / prev.y) * 100;
-          f.navDate = new Date(last.x).toISOString().slice(0, 10);
-          f._fromHistory = true;
-        }
         ['Data_netWorthTrend', 'Data_ACWorthTrend', 'Data_grandTotal', 'Data_rateInSimilarType',
          'Data_rateInSimilarPersent', 'Data_fluctuationScale', 'Data_holderStructure', 'Data_assetAllocation',
          'Data_performanceEvaluation', 'Data_currentFundManager', 'Data_buySedemption', 'Data_fundSharesPositions',
@@ -1340,24 +1457,14 @@
 
   // 最新净值 + 日涨跌 (腾讯行情批量，一次请求)
   async function fetchFundQuotes() {
-    var codes = FUNDS.map(function (f) { return 'jj' + f.code; }).join(',');
-    var url = 'https://qt.gtimg.cn/q=' + codes + '&r=' + Date.now();
-    var loaded = false;
-    for (var attempt = 0; attempt < 2 && !loaded; attempt++) {
-      try {
-        await loadScriptTag(url + '&_=' + attempt, 'GBK', 10000);
-        // 检查至少一个基金变量是否存在
-        var hasData = FUNDS.some(function (f) { return window['v_jj' + f.code]; });
-        if (hasData) loaded = true;
-      } catch (e) {
-        console.warn('[fund] 行情尝试' + (attempt + 1) + '失败: ' + e.message);
-      }
-    }
-    if (loaded) {
+    try {
+      var codes = FUNDS.map(function (f) { return 'jj' + f.code; }).join(',');
+      await loadScriptTag('https://qt.gtimg.cn/q=' + codes + '&r=' + Date.now(), 'GBK', 8000);
       FUNDS.forEach(function (f) {
         var raw = window['v_jj' + f.code];
         if (!raw) return;
         var p = raw.split('~');
+        // 字段: code~名称~估值~估算涨跌~~最新净值~累计净值~日涨跌%~净值日期~
         var est = parseFloat(p[2]);
         f.est = est > 0 ? est : null;
         var estPct = parseFloat(p[3]);
@@ -1366,11 +1473,11 @@
         f.accNav = parseFloat(p[6]) || null;
         f.dayPct = parseFloat(p[7]);
         f.navDate = p[8] || '';
-        try { delete window['v_jj' + f.code]; } catch (e) { window['v_jj' + f.code] = undefined; }
+        try { delete window['v_jj' + f.code]; } catch (e) {}
       });
       lastFundFetch = new Date();
-    } else {
-      console.warn('[fund] 行情两次尝试均失败');
+    } catch (e) {
+      console.warn('[fund] 行情: ' + e.message);
     }
     renderFunds();
   }
