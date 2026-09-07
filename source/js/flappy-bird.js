@@ -2182,36 +2182,35 @@
     hzEnvFX();
   }
 
-  // —— 角色：新角色参考图（hero-sheet.png 自动抠帧，三张地图统一主用；失败回退企鹅帧 → body.png） ——
+  // —— 角色：按地图分配 —— 杭州=新角色参考图(hero-sheet)；雪镇=企鹅帧(penguin-sheet)；街景=body.png 静态贴纸少女 ——
   var BIRD_SCALE = 0.72;
   var BIRD_DRAW_H = 46;        // 帧归一化身高（CSS px）
   var BIRD_FLIP = false;       // 侧面帧朝向：探针核对后如需镜像置 true
   var birdBody = null;
-  var birdFrames = null;       // 旧企鹅帧（hero 失败时兜底）
-  var birdHero = null;         // 新角色帧 { glide, flapUp, flapDown, hurt, idle }
+  var birdFrames = null;       // 企鹅帧（雪镇专用）
+  var birdHero = null;         // 新角色帧 { glide, flapUp, flapDown, hurt, idle }（杭州专用）
   (function () {
     var img = new Image();
     img.onload = function () { birdBody = img; };
     img.src = ABASE + '/img/flappy/body.png';
   })();
-  // 主用：新角色参考图；加载失败再回退企鹅 sheet
+  // 杭州：新角色参考图
   (function () {
     var img = new Image();
     img.onload = function () {
       try { birdHero = extractHeroFrames(img); } catch (e) { birdHero = null; }
-      if (!birdHero) loadPenguinSheet();
     };
-    img.onerror = loadPenguinSheet;
+    img.onerror = function () { birdHero = null; };
     img.src = ABASE + '/img/flappy/hero-sheet.png';
   })();
-  function loadPenguinSheet() {
-    if (birdFrames) return;
+  // 雪镇：企鹅帧（始终加载，与 hero 无关）
+  (function () {
     var img = new Image();
     img.onload = function () {
       try { birdFrames = extractBirdFrames(img); } catch (e) { birdFrames = null; }
     };
     img.src = ABASE + '/img/flappy/penguin-sheet.png';
-  }
+  })();
 
   // 从参考 sprite sheet 自动抠帧：去近白底 → 连通域 → 过滤 → 按行聚类
   // 行序（主区，排除右侧头像/表情面板与左侧大立绘）：待机/行走/奔跑/跳跃/攻击/受伤[/死亡]
@@ -2581,8 +2580,8 @@
 
   // 当前动作帧：over=眩晕；ready=慢速悬停振翅循环；play=拍翅触发短促三连振翅，其余滑翔
   function birdSprite() {
-    if (birdHero) {
-      // 新角色帧：三张地图统一使用
+    if (mapId === 'hangzhou' && birdHero) {
+      // 杭州：新角色帧
       if (state === 'over') return birdHero.hurt || birdHero.glide;
       if (state === 'ready') {
         var hc = frame % 26;
@@ -2594,18 +2593,20 @@
       if (bird.wing > 2) return birdHero.flapUp;
       return birdHero.glide;
     }
-    if (mapId !== 'snow') return null; // hero 缺失时：仅极光雪镇用企鹅帧；音乐街区保留 body.png
-    if (!birdFrames) return null;
-    if (state === 'over') return birdFrames.hurt || birdFrames.glide;
-    if (state === 'ready') {
-      var c = frame % 26;
-      if (c < 15) return birdFrames.glide;
-      if (c < 20) return birdFrames.flapUp;
-      return birdFrames.flapDown;
+    if (mapId === 'snow' && birdFrames) {
+      // 雪镇：企鹅帧
+      if (state === 'over') return birdFrames.hurt || birdFrames.glide;
+      if (state === 'ready') {
+        var c = frame % 26;
+        if (c < 15) return birdFrames.glide;
+        if (c < 20) return birdFrames.flapUp;
+        return birdFrames.flapDown;
+      }
+      if (bird.wing > 6) return birdFrames.flapDown;
+      if (bird.wing > 2) return birdFrames.flapUp;
+      return birdFrames.glide;
     }
-    if (bird.wing > 6) return birdFrames.flapDown;
-    if (bird.wing > 2) return birdFrames.flapUp;
-    return birdFrames.glide;
+    return null; // 街景：body.png 静态贴纸少女（drawBird 兜底）
   }
 
   function drawBird() {
