@@ -577,6 +577,25 @@
     };
   }
 
+  // 带重试的 fetch（东方财富接口间歇性 ERR_EMPTY_RESPONSE，最多重试3次）
+  async function fetchWithRetry(url, retries) {
+    retries = retries || 3;
+    var lastErr = null;
+    for (var i = 0; i < retries; i++) {
+      try {
+        var resp = await fetch(url);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        return await resp.json();
+      } catch (e) {
+        lastErr = e;
+        if (i < retries - 1) {
+          await new Promise(function (r) { setTimeout(r, 1000 * (i + 1)); });
+        }
+      }
+    }
+    throw lastErr;
+  }
+
   async function fetchChartData() {
     // 东方财富K线接口 (push2his.eastmoney.com，CORS 允许 github.io，免代理)
     // secid: 105.xxx 为美股; 贵金属/ETF 如不可用则降级
@@ -590,8 +609,7 @@
     var results = await Promise.all(chartReqs.map(function (item) {
       var url = 'https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=' + item.secid +
         '&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&klt=101&fqt=1&beg=20260601&end=20500101';
-      return fetch(url)
-        .then(function (resp) { return resp.json(); })
+      return fetchWithRetry(url, 3)
         .then(function (data) {
           var converted = convertEastMoneyKline(data);
           return { key: item.key, data: converted };

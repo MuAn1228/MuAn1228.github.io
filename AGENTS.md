@@ -88,7 +88,7 @@
   - `@media (max-width:1024px)`：页面关横向溢出（html/body `overflow-x:hidden`）、命令栏紧凑、隐藏 `.w-asof`/`.cmd-ver`。
   - `@media (max-width:768px)`：组件全宽纵向堆叠——`#grid` 改 static、`.widget` 用 `position:static;width:100%;left/top/right:auto!important` 覆盖 JS 内联绝对定位；**图/表类组件必须设显式高度**（heatmap 400 / breadth 240 / news 460 / sector 300 / aapl 320 / metal 280 / clock 380 / indices 440 / funds auto），否则会塌陷（news 的 `#news-list` 是 `absolute;inset:27px 0 0`、breadth/clock/indices 用 flex:1 或百分比高度，`height:auto` 时内容被裁、与相邻组件重叠）；sticky 命令栏/跑马灯/工具栏改 static 防止滚动时盖住内容。
   - **坑**：本环境浏览器无法真正模拟移动视口（CDP/device metrics override 无效，读到的还是桌面宽度），移动端布局只能靠 CSS 推理 + 用户在手机实测反馈。
-- **顶部背景图（2026-08-24，提交 1b7f1e9）**：`source/img/finance/header-bg.webp`（由原 header-bg.png 264KB 经 sharp 转出 ~25KB），原 png 已删，CSS 引用 `/img/finance/header-bg.webp`。改 finance.css / index.md 后记得把 `<link ...finance.css?` 版本号 `?v=N` +1；改 finance-tracker.js 后把 `<script src="/js/finance-tracker.js?v=N">` 的 `?v=N` +1（当前 ?v=9），否则浏览器缓存旧代码。
+- **顶部背景图（2026-08-24，提交 1b7f1e9）**：`source/img/finance/header-bg.webp`（由原 header-bg.png 264KB 经 sharp 转出 ~25KB），原 png 已删，CSS 引用 `/img/finance/header-bg.webp`。改 finance.css / index.md 后记得把 `<link ...finance.css?` 版本号 `?v=N` +1；改 finance-tracker.js 后把 `<script src="/js/finance-tracker.js?v=N">` 的 `?v=N` +1（当前 ?v=10），否则浏览器缓存旧代码。
 - **HTML 占位文本（2026-09-08 清理）**：index.md 里 6 处硬编码的 7 月 as-of 日期已全部改为「加载中…」，避免 JS 加载前用户看到 7 月旧日期。
 - 验证：项目有 jsdom，用 jsdom 冒烟测试（stub canvas/fetch 补 Origin 头）可端到端验证，见 `.workbuddy/skills/hexo-jsdom-smoke-test/`。Chrome 无头截图在本机环境失败，勿浪费时间。
 
