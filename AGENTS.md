@@ -102,6 +102,7 @@
 - **切页性能**：`source/js/pjax-prefetch.js`（注入在 music-playlist.js 之前）对悬停/聚焦的站内链接做低优先级 `<link rel=prefetch>`，把 pjax 的 fetch 提前到空闲时段，避免瞬时并发挤占音频缓冲。
 - **当前状态（2026-08-26 用户实测后，已搁置）**：50 首中 10 首走 CDN（稳定），40 首走网络源（Meting 限流时仅官方外链可用歌能播）。**用户实测反馈：所有歌切页仍然断流**（并非个别歌断，而是普遍切页中断），用户决定「暂时先不做」，音乐播放器模块整体搁置。彻底方案（下载缺的 mp3 上传到 music-assets 仓库 + 同步白名单）未执行，重启排查时优先怀疑 pjax 续播逻辑（pjax:send/complete + sessionStorage 恢复）在真实浏览器中未按预期生效，而不是音源 failover。**下次重启先别动代码，先讨论排查方向。**
 - 验证：jsdom 冒烟测试可以端到端验证解析逻辑（stub APlayer/Audio + mock Meting 拒绝，见 .workbuddy/skills/hexo-jsdom-smoke-test/）；浏览器沙箱无音频输出，切页续播只能验证状态（isPlaying）即可。
+- **不可播歌曲台账（2026-09-07 全量检测）**：389 首中 155 本地 CDN、185 直链、38 仅 Meting 可播、**11 首三路全灭**，清单/原因/替代候选与处理方式见 `docs/music-unplayable-songs.md`（其中「春娇与志明」1831482748 同时存在于迷你播放器硬编码歌单）。同日修复两张失效封面：Body 换同源封面、Kerosene 落地本地 `source/img/music/kerosene.jpg`。
 
 ## 自制游戏《第九层事故 BULLET DEPTHS》（小游戏页 iframe 接入，2026-09-06）
 - **游戏本体在独立仓库** `MuAn1228/bullet-depths`（源码在本机 `D:\game\tingjindilao`，SSH remote 已配好）。GitHub Pages 已开启（**master 分支根目录**），线上地址 `https://muan1228.github.io/bullet-depths/`。
