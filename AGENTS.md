@@ -77,8 +77,10 @@
 - 文件：`source/finance/index.md`（HTML 结构）+ `source/js/finance-tracker.js`（数据引擎+布局管理器+渲染，单文件 IIFE）+ `source/css/finance.css`。全屏暗色终端风格，URL `/finance/`，页面 title 与导航菜单均为「交易」（导航位于 展示 之后）。
 - **数据源（2026-08-24 定案，别再走弯路）**：
   - Yahoo **v7 quote 已死**（官方锁 crumb，返回 Unauthorized）。用 **v8 spark 批量接口**（`/v8/finance/spark?symbols=…&range=2d&interval=1d`）一次拉全部 60 标的；K线用 v8 chart。spark 无市值/盘态 → 市值用内置快照，盘态由 IANA 时区本地算。**坑：spark 的 `chartPreviousClose` 是 range 起点之前的收盘（range=2d 时是两天前），算日涨跌必须取 close 序列倒数第二个点。**
-  - CORS 走**代理池**（corsproxy.io → allorigins → codetabs，自动熔断记忆）。**注意：用 curl 探测代理必须带 `-H "Origin: …"`，否则 corsproxy 返回 403 会误判不可用。**
-  - 新闻：rss2json 公共 API 解析 Yahoo Finance RSS。Alpha Vantage / Stooq 均已弃用（额度 25 次/天；Stooq 服务端故障）。
+  - **CORS 代理池现状（2026-09-08，commit 5f8287d）**：`corsproxy.io` 已改为收费（返回需 API key），仅作末位兜底；`allorigins.win/raw` 已挂，改用 `/get` 端点（间歇性可用，返回 `{contents:"<json>"}` 格式，proxiedFetch 自动解包）；`codetabs` 间歇性超时。代理顺序：allorigins-get → allorigins-raw → codetabs → corsproxy；超时 12s。**用 curl 探测代理必须带 `-H "Origin: …"`，否则 corsproxy 返回 403 会误判不可用。**
+  - **chart 请求已并行化（2026-09-08）**：AAPL/XLK/XLE/XLF/黄金 5 个 K线请求从串行改为 `Promise.all` 并行（原串行超时累加，第一个失败后面全挂），单个失败不影响其他。
+  - **localStorage 缓存机制（2026-09-08，解决"刷新闪7月旧数据"）**：行情缓存 key `gmt-quote-cache`，图表缓存 key `gmt-chart-cache`。`init()` 先从缓存恢复渲染，再异步拉实时覆盖——不再先渲染硬编码 7 月 Demo。实时失败时显示缓存（状态栏标注「缓存·X分钟前」）。用户首次访问后即使代理全灭也能看到最近一次成功的数据。
+  - 新闻：rss2json 公共 API 解析 Yahoo Finance RSS。Alpha Vantage / Stooq 均已弃用（额度 25 次/天；Stooq 加了 JavaScript 浏览器验证反爬）。
   - **基金数据免代理**：天天基金 `pingzhongdata/<code>.js`（历史净值+syl_1y/3y/6y/1n，串行加载防全局变量覆盖）+ 腾讯 `qt.gtimg.cn/q=jjXXXX`（批量最新净值，GBK，字段 `code~name~估值~估涨~~净值~累计~日涨跌%~日期`）。script 标签加载天然无 CORS。`fundgz.1234567.com.cn` 已死勿用。
 - 布局：localStorage `gmt-layout-v2`；预设 4 套在 JS `PRESETS`；右列组件（如 09 基金）用 `right:8px` 锚定 + 预设 geo width=-1 表示。
 - 用户自选基金 4 只在 JS `FUNDS` 常量（017811/016370/019172/017641），用户本人是基金交易者。
@@ -86,7 +88,8 @@
   - `@media (max-width:1024px)`：页面关横向溢出（html/body `overflow-x:hidden`）、命令栏紧凑、隐藏 `.w-asof`/`.cmd-ver`。
   - `@media (max-width:768px)`：组件全宽纵向堆叠——`#grid` 改 static、`.widget` 用 `position:static;width:100%;left/top/right:auto!important` 覆盖 JS 内联绝对定位；**图/表类组件必须设显式高度**（heatmap 400 / breadth 240 / news 460 / sector 300 / aapl 320 / metal 280 / clock 380 / indices 440 / funds auto），否则会塌陷（news 的 `#news-list` 是 `absolute;inset:27px 0 0`、breadth/clock/indices 用 flex:1 或百分比高度，`height:auto` 时内容被裁、与相邻组件重叠）；sticky 命令栏/跑马灯/工具栏改 static 防止滚动时盖住内容。
   - **坑**：本环境浏览器无法真正模拟移动视口（CDP/device metrics override 无效，读到的还是桌面宽度），移动端布局只能靠 CSS 推理 + 用户在手机实测反馈。
-- **顶部背景图（2026-08-24，提交 1b7f1e9）**：`source/img/finance/header-bg.webp`（由原 header-bg.png 264KB 经 sharp 转出 ~25KB），原 png 已删，CSS 引用 `/img/finance/header-bg.webp`。改 finance.css / index.md 后记得把 `<link ...finance.css?` 版本号 `?v=N` +1，否则浏览器缓存旧样式。
+- **顶部背景图（2026-08-24，提交 1b7f1e9）**：`source/img/finance/header-bg.webp`（由原 header-bg.png 264KB 经 sharp 转出 ~25KB），原 png 已删，CSS 引用 `/img/finance/header-bg.webp`。改 finance.css / index.md 后记得把 `<link ...finance.css?` 版本号 `?v=N` +1；改 finance-tracker.js 后把 `<script src="/js/finance-tracker.js?v=N">` 的 `?v=N` +1（当前 ?v=3），否则浏览器缓存旧代码。
+- **HTML 占位文本（2026-09-08 清理）**：index.md 里 6 处硬编码的 7 月 as-of 日期已全部改为「加载中…」，避免 JS 加载前用户看到 7 月旧日期。
 - 验证：项目有 jsdom，用 jsdom 冒烟测试（stub canvas/fetch 补 Origin 头）可端到端验证，见 `.workbuddy/skills/hexo-jsdom-smoke-test/`。Chrome 无头截图在本机环境失败，勿浪费时间。
 
 ## 音乐播放器模块（全站常驻，重要）
@@ -146,6 +149,14 @@
 - **当前状态（2026-08-27 更新）**：ncat = `healthy`（approvedHost=`www.ncat21.com`，唯一 approved host，configVersion=14）；health.json = `healthy + MANUAL_VERIFIED + BLOCKED_BY_WAF`（DNS/TLS PASS，内容被 WAF 阻断、由人工许可承接）；`maintenancePermit` 已签发（TTL 12h，人工 renew，禁止 24h/自动续签/永久 permit）。**状态只能人工变更：permit 到期须人工续签；禁止自动续签、自动改状态、自动 candidate→approved。**
 - **watchdog 与部署**：watchdog 用 `GITHUB_TOKEN` push health.json 到 main **不会**触发 `update-contributions.yml`（GitHub 防递归规则），所以 watchdog 自己带部署步骤（Setup Pages + deploy-pages）。两者共用 `concurrency.group: pages` 防冲突。
 - 测试：`node test/watch-security.js`（177 个用例）+ `node test/fault-drill.js`（55）+ `node test/hash-crosscheck.js`（63）+ `python test/candidate-security.py`（52）+ `python test/dns-security.py`（55）+ `python test/domain-migrate-security.py`（77），全部 exit 0 才通过。
+
+## GitHub Actions 部署坑（重要，2026-09-07 新增）
+- 仓库有两个 workflow 都会部署到 GitHub Pages，且共用 `concurrency.group: pages`（后部署的覆盖先部署的）：
+  1. `update-contributions.yml`：每天 08:17（北京）+ 每次 push main 触发，**构建前会 fetch_contributions.py** 更新热力图数据。
+  2. `watchdog.yml`：每 6 小时触发，**构建前原来没有 fetch_contributions.py**（2026-09-07 已修复，commit 390dc5a）。
+- **坑**：watchdog 每 6 小时跑一次，如果它构建前不 fetch contributions，就会用仓库里旧的 `source/data/contributions.json` 构建并部署，覆盖掉 update-contributions 刚更新的最新热力图数据——表现为热力图贡献数停留在某个旧日期（曾停在 2026-08-15，totalContributions=96）。
+- **规则**：**任何会执行 `hexo generate` + `deploy-pages` 的 workflow，构建前都必须跑 `fetch_contributions.py`**（带 `GH_TOKEN` 环境变量）。新增部署 workflow 时务必检查这一点。
+- 同理，如果未来有其他需要定时更新的静态数据（如 finance 行情），也要注意所有部署 workflow 都必须在构建前更新该数据，否则会被覆盖回旧值。
 
 ## 后续工作方式
 1. 改代码 → 本地 `hexo s` 预览验证 → `git commit` → `git push origin source:main` → **自动部署（约 1-2 分钟），无需手动触发**。
