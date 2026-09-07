@@ -1,4 +1,4 @@
-# 项目交接说明（Handoff）
+﻿# 项目交接说明（Handoff）
 
 ## 项目概况
 - 这是一个 Hexo 博客项目（Hexo 8.x + Butterfly 5.7.0 主题）。
@@ -75,13 +75,7 @@
 
 ## 行情终端模块（/finance/，美股+基金仪表盘，导航名「交易」）
 - 文件：`source/finance/index.md`（HTML 结构）+ `source/js/finance-tracker.js`（数据引擎+布局管理器+渲染，单文件 IIFE）+ `source/css/finance.css`。全屏暗色终端风格，URL `/finance/`，页面 title 与导航菜单均为「交易」（导航位于 展示 之后）。
-- **数据源（2026-08-24 定案，别再走弯路）**：
-  - Yahoo **v7 quote 已死**（官方锁 crumb，返回 Unauthorized）。用 **v8 spark 批量接口**（`/v8/finance/spark?symbols=…&range=2d&interval=1d`）一次拉全部 60 标的；K线用 v8 chart。spark 无市值/盘态 → 市值用内置快照，盘态由 IANA 时区本地算。**坑：spark 的 `chartPreviousClose` 是 range 起点之前的收盘（range=2d 时是两天前），算日涨跌必须取 close 序列倒数第二个点。**
-  - **CORS 代理池现状（2026-09-08，commit 5f8287d）**：`corsproxy.io` 已改为收费（返回需 API key），仅作末位兜底；`allorigins.win/raw` 已挂，改用 `/get` 端点（间歇性可用，返回 `{contents:"<json>"}` 格式，proxiedFetch 自动解包）；`codetabs` 间歇性超时。代理顺序：allorigins-get → allorigins-raw → codetabs → corsproxy；超时 12s。**用 curl 探测代理必须带 `-H "Origin: …"`，否则 corsproxy 返回 403 会误判不可用。**
-  - **chart 请求已并行化（2026-09-08）**：AAPL/XLK/XLE/XLF/黄金 5 个 K线请求从串行改为 `Promise.all` 并行（原串行超时累加，第一个失败后面全挂），单个失败不影响其他。
-  - **localStorage 缓存机制（2026-09-08，解决"刷新闪7月旧数据"）**：行情缓存 key `gmt-quote-cache`，图表缓存 key `gmt-chart-cache`。`init()` 先从缓存恢复渲染，再异步拉实时覆盖——不再先渲染硬编码 7 月 Demo。实时失败时显示缓存（状态栏标注「缓存·X分钟前」）。用户首次访问后即使代理全灭也能看到最近一次成功的数据。
-  - 新闻：rss2json 公共 API 解析 Yahoo Finance RSS。Alpha Vantage / Stooq 均已弃用（额度 25 次/天；Stooq 加了 JavaScript 浏览器验证反爬）。
-  - **基金数据免代理**：天天基金 `pingzhongdata/<code>.js`（历史净值+syl_1y/3y/6y/1n，串行加载防全局变量覆盖）+ 腾讯 `qt.gtimg.cn/q=jjXXXX`（批量最新净值，GBK，字段 `code~name~估值~估涨~~净值~累计~日涨跌%~日期`）。script 标签加载天然无 CORS。`fundgz.1234567.com.cn` 已死勿用。
+- **数据源（2026-09-08 大迁移）**：所有公共 CORS 代理已全军覆没，Yahoo 直连也被 403。行情已整体迁移到**腾讯财经（实时行情，script 标签免代理）+ 东方财富（K线，CORS 直连）**。关键坑：①BRK.B 带点号会生成非法变量名 `v_usBRK.B` 导致整个 script 块语法失败，必须过滤；②贵金属 `p[7]` 才是昨收，`p[3]` 是开盘价；③腾讯 usfqkline 对美股只返回 2 天数据不可用，K线用东方财富；④东方财富间歇性 ERR_EMPTY_RESPONSE，已加 3 次重试，不要在 fetch headers 里设 Referer（forbidden header）。基金仍用天天基金+腾讯接口。
 - 布局：localStorage `gmt-layout-v2`；预设 4 套在 JS `PRESETS`；右列组件（如 09 基金）用 `right:8px` 锚定 + 预设 geo width=-1 表示。
 - 用户自选基金 4 只在 JS `FUNDS` 常量（017811/016370/019172/017641），用户本人是基金交易者。
 - **移动端适配（2026-08-24，提交 6b674ea）**：全部在 `finance.css` 的媒体查询里处理，JS 不用改。
