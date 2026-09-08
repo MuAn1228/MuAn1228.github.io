@@ -2394,8 +2394,9 @@
       { y0: 210, y1: 380 },  // 1 行走
       { y0: 380, y1: 540 },  // 2 奔跑
       { y0: 540, y1: 700 },  // 3 跳跃
-      { y0: 700, y1: 850 },  // 4 下落(左)+攻击(右)
-      { y0: 850, y1: 1024 }  // 5 受伤(左)+死亡(右)
+      { y0: 700, y1: 780 },  // 4 下落
+      { y0: 780, y1: 850 },  // 5 攻击
+      { y0: 850, y1: 1024 }  // 6 受伤(左)+死亡(右)
     ];
     var rows = [];
     bands.forEach(function (b) {
@@ -2404,7 +2405,7 @@
       rows.push(row);
     });
     // 4b) 拆分下落+攻击行(band4)和受伤+死亡行(band5)，从后往前拆避免索引偏移
-    [5, 4].forEach(function (bi) {
+    [6].forEach(function (bi) {
       var rw = rows[bi];
       if (rw && rw.length >= 6) {
         var lg = { i: 1, gap: 0 };
@@ -2422,7 +2423,28 @@
     function crop(c) {
       var cc = mkCanvas(c.w, c.h);
       cc.getContext('2d').drawImage(sheet, c.x, c.y, c.w, c.h, 0, 0, c.w, c.h);
-      return cc;
+      return trimCanvas(cc);
+    }
+    // 裁剪透明边框，避免待机帧高窄导致穿模
+    function trimCanvas(cv) {
+      var ctx = cv.getContext('2d');
+      var w = cv.width, h = cv.height;
+      try {
+        var d = ctx.getImageData(0, 0, w, h).data;
+        var top = 0, bottom = h - 1, left = 0, right = w - 1;
+        function rowEmpty(y) { for (var x = 0; x < w; x++) if (d[(y*w+x)*4+3] > 20) return false; return true; }
+        function colEmpty(x) { for (var y = 0; y < h; y++) if (d[(y*w+x)*4+3] > 20) return false; return true; }
+        while (top < h && rowEmpty(top)) top++;
+        while (bottom > top && rowEmpty(bottom)) bottom--;
+        while (left < w && colEmpty(left)) left++;
+        while (right > left && colEmpty(right)) right--;
+        if (top === 0 && bottom === h-1 && left === 0 && right === w-1) return cv;
+        var nw = right - left + 1, nh = bottom - top + 1;
+        if (nw < 2 || nh < 2) return cv;
+        var out = mkCanvas(nw, nh);
+        out.getContext('2d').drawImage(cv, left, top, nw, nh, 0, 0, nw, nh);
+        return out;
+      } catch (e) { return cv; }
     }
     function pick(row, idx) { return row ? crop(row[Math.min(idx, row.length - 1)]) : null; }
     // 行映射：待机/行走/奔跑/跳跃/下落/攻击/受伤/死亡
@@ -2447,7 +2469,7 @@
       dcc.getContext('2d').drawImage(sheet, dx0 + di * dw, dy0, dw, dh, 0, 0, dw, dh);
       deathManual.push(dcc);
     }
-    var deathSrc = (deathRow && deathRow.length >= 2) ? deathRow.map(function (c) { return crop(c); }) : deathManual;
+    var deathSrc = deathManual;
     return {
       glide: norm(glideC),
       flapUp: norm(pick(run, 1) || glideC),
@@ -2459,7 +2481,7 @@
         var hl = crop(hurt[hurt.length - 1]);
         var dp = deathSrc.length >= 2 ? deathSrc[deathSrc.length - 2] : hl;
         var df = deathSrc[deathSrc.length - 1];
-        return [norm(hl), norm(hl), norm(dp), norm(df)];
+        return [norm(hl), norm(hl), norm(hl), norm(hl), norm(dp), norm(df)];
       })(),
       _rows: rows.length, _comps: fr.length, _rowCounts: rows.map(function (r) { return r.length; })
     };
@@ -2641,7 +2663,7 @@
       if (mapId === 'hangzhou' && birdHero && birdHero.deathSeq) dseq = birdHero.deathSeq;
       else if (mapId === 'snow' && birdFrames && birdFrames.hurtSeq) dseq = birdFrames.hurtSeq;
       if (dseq && dseq.length) {
-        var didx = Math.min(dseq.length - 1, ((frame - overStartFrame) / 5) | 0);
+        var didx = Math.min(dseq.length - 1, ((frame - overStartFrame) / 8) | 0);
         return dseq[didx];
       }
       if (mapId === 'hangzhou' && birdHero) return birdHero.hurt || birdHero.glide;
