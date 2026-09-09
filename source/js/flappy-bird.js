@@ -2348,11 +2348,12 @@
     g.drawImage(img, 0, 0);
     var data = g.getImageData(0, 0, sw, sh);
     var px = data.data, N = sw * sh;
-    // 1) 颜色阈值去深灰背景（近 bg 色 rgb(40,43,48) 容差 13）
+    // 1) 颜色阈值去深灰背景（近 bg 色 rgb(40,43,48) 容差 8）
     // 用简单阈值而非 flood-fill，避免稀疏的死亡/粒子帧缝隙泄漏导致整帧被擦除
+    // 容差从 13 收紧到 8：原先会把衣服深灰阴影擦成 alpha=0 的"洞"，视觉上像半透明穿模
     for (var bi = 0; bi < N; bi++) {
       var bid = bi * 4, br = px[bid], bg2 = px[bid + 1], bb = px[bid + 2];
-      if (Math.max(Math.abs(br - 40), Math.abs(bg2 - 43), Math.abs(bb - 48)) <= 13) px[bid + 3] = 0;
+      if (Math.max(Math.abs(br - 40), Math.abs(bg2 - 43), Math.abs(bb - 48)) <= 8) px[bid + 3] = 0;
     }
     g.putImageData(data, 0, 0);
     // 2) 8 邻域连通域
@@ -2378,10 +2379,13 @@
       comps.push({ x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2, n: cnt });
     }
     // 3) 过滤：降低阈值以捕获较矮的受伤/死亡帧，排除右侧面板
+    // 新增 c.n >= 1500：容差从 13 收到 8 后，角色脚底原本连成片的阴影被切成孤立小组件
+    // （cy≈33/187/497/638/878 等位置，bbox 约 20×21~24×24），需要按绝对像素数剔除
     var fr = comps.filter(function (c) {
       return c.cx < sw * 0.78 &&
         c.h >= sh * 0.02 && c.w >= sw * 0.01 &&
-        c.n / (c.w * c.h) >= 0.04;
+        c.n / (c.w * c.h) >= 0.04 &&
+        c.n >= 1500;
     });
     if (fr.length < 20) return null;
     // 排除左侧大立绘（高度异常大的组件）
@@ -2426,14 +2430,16 @@
       return trimCanvas(cc);
     }
     // 裁剪透明边框，避免待机帧高窄导致穿模
+    // alpha 阈值从 >20 收紧到 >80：原先会把 RGB 去背景残留的"半透明边"算进 frame 包围盒，
+    // 导致 frame 实际渲染时比角色碰撞体大，视觉上像半透明穿模
     function trimCanvas(cv) {
       var ctx = cv.getContext('2d');
       var w = cv.width, h = cv.height;
       try {
         var d = ctx.getImageData(0, 0, w, h).data;
         var top = 0, bottom = h - 1, left = 0, right = w - 1;
-        function rowEmpty(y) { for (var x = 0; x < w; x++) if (d[(y*w+x)*4+3] > 20) return false; return true; }
-        function colEmpty(x) { for (var y = 0; y < h; y++) if (d[(y*w+x)*4+3] > 20) return false; return true; }
+        function rowEmpty(y) { for (var x = 0; x < w; x++) if (d[(y*w+x)*4+3] > 80) return false; return true; }
+        function colEmpty(x) { for (var y = 0; y < h; y++) if (d[(y*w+x)*4+3] > 80) return false; return true; }
         while (top < h && rowEmpty(top)) top++;
         while (bottom > top && rowEmpty(bottom)) bottom--;
         while (left < w && colEmpty(left)) left++;
@@ -2479,9 +2485,12 @@
       hurtSeq: hurt.map(function (c) { return norm(crop(c)); }),
       deathSeq: (function () {
         var hl = crop(hurt[hurt.length - 1]);
-        var dp = deathSrc.length >= 2 ? deathSrc[deathSrc.length - 2] : hl;
-        var df = deathSrc[deathSrc.length - 1];
-        return [norm(hl), norm(hl), norm(hl), norm(hl), norm(dp), norm(df)];
+        // 死亡倒下过程：用全部 5 帧连续展示（站立 → 弯腰 → 侧倒 → 倒地 → 消失），
+        // 末帧重复一次延长定格感。每帧 /8 步进，共 56 帧 ≈ 0.93s（比原来 0.8s 更完整）
+        var seq = [norm(hl)];
+        for (var di = 0; di < deathSrc.length; di++) seq.push(norm(deathSrc[di]));
+        seq.push(norm(deathSrc[deathSrc.length - 1]));
+        return seq;
       })(),
       _rows: rows.length, _comps: fr.length, _rowCounts: rows.map(function (r) { return r.length; })
     };
