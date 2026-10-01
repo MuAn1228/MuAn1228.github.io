@@ -309,127 +309,194 @@
   }
 ];
 
-  // 会话内共享的播放状态：{owner:'mini'|'big', index, src, name, artist, cover, time, playing}
-  // owner='big' 表示这首是大播放器（音乐页）交回的，index 指向大播放器歌单；其余为迷你列表自身
+  // 完整活动歌单由常驻 APlayer 持有；页面只负责选歌和显示，不参与 ended 切歌。
   var STATE_KEY = 'blog-music-state';
   var ap = null;
-  var focusMeta = null; // {owner, index, url}：最近一次由大播放器指定播放的曲目
+  var owner = 'mini';
+  var playlists = { mini: [], big: [] };
+  var changingPlaylist = false;
+  var restoreCancelled = false;
   var lastSaveTime = -1;
-  var userPaused = false;      // 用户显式暂停过（切页续播判断用）
+  var userPaused = false;
   var wasPlayingOnNav = false; // 进入本次 pjax 切换前是否正在播放
-  var LOCAL_IDS = null;        // music-assets 仓库白名单（加载后为 Set<String>）
-  var skipBound = false;       // error 自动跳歌是否已绑定
-  var skipCount = 0;           // 连续自动跳歌计数（防整目无法播放时死循环）
+  var LOCAL_IDS = null;
+  var skipCount = 0;
+  var mediaTrack = '';
 
   function readState() {
     try { return JSON.parse(sessionStorage.getItem(STATE_KEY)); }
     catch (e) { return null; }
   }
 
-  function saveState() {
-    if (!ap) return;
-    var audios = ap.list.audios || [];
-    var item = audios[ap.list.index] || audios[0];
-    if (!item || !item.url) return;
-    var url = item.url;
-    var meta = (focusMeta && focusMeta.url === url) ? focusMeta : null;
-    var state = {
-      owner: meta ? meta.owner : 'mini',
-      index: meta ? meta.index : ap.list.index,
-      src: url,
+  function getState() {
+    if (!ap) return null;
+    var item = ap.list.audios[ap.list.index];
+    if (!item) return null;
+    return {
+      owner: owner,
+      index: ap.list.index,
+      src: item.url,
       name: item.name,
       artist: item.artist,
       cover: item.cover,
       time: ap.audio.currentTime || 0,
-      playing: !ap.audio.paused
+      playing: !ap.audio.paused && !ap.audio.ended
     };
+  }
+
+  function saveState() {
+    if (changingPlaylist) return;
+    var state = getState();
+    if (!state) return;
     try { sessionStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch (e) {}
   }
 
-  function bindAp() {
-    ap.on('play', function () {
-      userPaused = false;
-      skipCount = 0; // 播放成功，重置失败计数
-      saveState();
-    });
-    ap.on('pause', function () {
-      userPaused = true;
-      saveState();
-    });
-    ap.audio.addEventListener('timeupdate', function () {
-      var t = ap.audio.currentTime;
-      // 节流：进度变化超过 1s 才写一次
-      if (t - lastSaveTime >= 1 || t - lastSaveTime < 0) {
-        lastSaveTime = t;
-        saveState();
+  function updateMediaSession() {
+    if (!('mediaSession' in navigator)) return;
+    var state = getState();
+    if (!state) return;
+    try {
+      if (mediaTrack !== state.src && window.MediaMetadata) {
+        mediaTrack = state.src;
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: state.name,
+          artist: state.artist,
+          album: owner === 'big' ? '我喜欢的音乐' : 'Mu An\'s Blog',
+          artwork: state.cover ? [{ src: new URL(state.cover, location.href).href }] : []
+        });
       }
-    });
-    // 一曲结束，等 APlayer 自动切到下一首后再保存
-    ap.audio.addEventListener('ended', function () {
-      setTimeout(saveState, 50);
-    });
-    // 音频源加载/解码失败（版权受限、防盗链、网络异常）：
-    // 当前是迷你列表连播（owner 非 big）时自动跳到下一首，避免卡死；
-    // 连续失败超过 2 次则停下（整单很可能都无法播放的情况）
-    ap.audio.addEventListener('error', function () {
-      var owner = (focusMeta && focusMeta.owner) || 'mini';
-      if (owner !== 'mini') return; // 大播放器曲目由音乐页自己处理（提示去网易云）
-      skipCount++;
-      if (skipCount > 2) { skipCount = 0; return; }
-      var audios = ap.list.audios || [];
-      var next = ap.list.index + 1;
-      if (next < audios.length) {
-        ap.list.switch(next, true);
-        var p = ap.play();
-        if (p && p.catch) p.catch(function () {});
+      navigator.mediaSession.playbackState = state.playing ? 'playing' : 'paused';
+      var duration = ap.audio.duration;
+      if (navigator.mediaSession.setPositionState && isFinite(duration) && duration > 0) {
+        navigator.mediaSession.setPositionState({
+          duration: duration,
+          playbackRate: ap.audio.playbackRate || 1,
+          position: Math.min(Math.max(state.time, 0), duration)
+        });
       }
-    });
+    } catch (e) {} // 不支持某个 Media Session 字段的浏览器仍可正常播放
   }
 
-  // 切到指定曲目；track 结构 {name,artist,cover,url}
-  function switchTo(track, autoplay) {
-    var audios = ap.list.audios || [];
-    var idx = -1;
-    for (var i = 0; i < audios.length; i++) {
-      if (audios[i].url === track.url) { idx = i; break; }
+  function publishState() {
+    if (changingPlaylist) return;
+    saveState();
+    updateMediaSession();
+    document.dispatchEvent(new CustomEvent('blog-music-statechange', { detail: getState() }));
+  }
+
+  function play() {
+    if (!ap) return;
+    restoreCancelled = true;
+    userPaused = false;
+    ap.play();
+  }
+
+  function pause() {
+    if (!ap) return;
+    restoreCancelled = true;
+    userPaused = true;
+    ap.pause();
+    publishState();
+  }
+
+  function step(direction) {
+    if (!ap || !ap.list.audios.length) return;
+    skipCount = 0;
+    ap.list.switch(direction < 0 ? ap.prevIndex() : ap.nextIndex());
+    play();
+  }
+
+  function select(queueOwner, index, autoplay) {
+    var queue = playlists[queueOwner];
+    if (!ap || !queue || !queue[index]) return false;
+    skipCount = 0;
+    changingPlaylist = true;
+    // clear/add 只发生在切换歌单时。自然播完由 APlayer 同步 switch + play，
+    // 不等待页面、fetch、setTimeout 或另一个 audio 元素。
+    if (owner !== queueOwner) {
+      ap.list.clear();
+      owner = queueOwner;
+      ap.list.add(queue);
     }
-    if (idx === -1) {
-      ap.list.add([track]);
-      idx = ap.list.audios.length - 1;
-    }
-    ap.list.switch(idx, !!autoplay);
-    if (autoplay !== false) {
-      var p = ap.play();
-      if (p && p.catch) p.catch(function () {});
-    }
+    if (autoplay === false) ap.pause();
+    if (ap.list.index !== index) ap.list.switch(index);
+    changingPlaylist = false;
+    if (autoplay !== false) play();
+    publishState();
+    return true;
   }
 
   function restoreSaved(saved) {
-    switchTo({ name: saved.name, artist: saved.artist, cover: saved.cover, url: saved.src },
-      saved.playing !== false);
-    if (saved.owner === 'big') {
-      focusMeta = { owner: 'big', index: saved.index, url: saved.src };
+    var queueOwner = saved.owner === 'big' ? 'big' : 'mini';
+    if (!select(queueOwner, saved.index, saved.playing !== false)) return;
+    // 使用本次会话的音源，避免复用 sessionStorage 中已过期的签名链接。
+    var restoredUrl = getState().src;
+    function seekSaved() {
+      ap.audio.removeEventListener('loadedmetadata', seekSaved);
+      if (getState().src === restoredUrl) ap.seek(saved.time || 0);
     }
-    // 恢复进度
-    var seeked = false;
-    function doSeek() {
-      if (seeked) return;
-      seeked = true;
-      try { ap.seek(saved.time || 0); } catch (e) {}
-    }
-    ap.audio.addEventListener('loadedmetadata', doSeek);
-    if (ap.audio.readyState >= 1) doSeek();
-    // 浏览器拦截自动播放时，给任意一次点击续播的机会
-    if (saved.playing !== false) {
-      var pending = true;
-      var p = ap.play();
-      if (p && p.catch) p.catch(function () {
-        document.addEventListener('click', function onAny() {
-          if (!pending) return;
-          pending = false;
-          var q = ap.play();
-          if (q && q.catch) q.catch(function () {});
-        }, { capture: true, once: true });
+    if (ap.audio.readyState >= 1) seekSaved();
+    else ap.audio.addEventListener('loadedmetadata', seekSaved);
+  }
+
+  function bindAp() {
+    // listswitch 在 APlayer 更新 index 之前触发，包装后在切换完成时同步通知界面。
+    var switchTrack = ap.list.switch.bind(ap.list);
+    ap.list.switch = function (index) {
+      switchTrack(index);
+      publishState();
+    };
+    ap.on('play', function () {
+      if (!ap.audio.paused) {
+        userPaused = false;
+        restoreCancelled = true;
+      }
+      publishState();
+    });
+    ap.on('playing', function () { skipCount = 0; publishState(); });
+    ap.on('pause', function () {
+      // 换源产生的旧 pause 事件不能覆盖新曲的播放意图。
+      if (ap.audio.paused && !ap.audio.ended && !changingPlaylist) userPaused = true;
+      publishState();
+    });
+    ap.on('loadedmetadata', publishState);
+    ap.on('ended', publishState); // APlayer 内建 ended 是唯一的自动切歌入口
+    ap.on('timeupdate', function () {
+      var t = ap.audio.currentTime;
+      if (t - lastSaveTime >= 1 || t - lastSaveTime < 0) {
+        lastSaveTime = t;
+        saveState();
+        updateMediaSession();
+      }
+    });
+    // 在捕获阶段接管 error，避免 APlayer 自带的 2 秒重试与本站逻辑重复跳歌。
+    ap.audio.addEventListener('error', function (event) {
+      event.stopImmediatePropagation();
+      if (changingPlaylist) return;
+      var failed = getState();
+      var shouldContinue = !ap.paused && !userPaused;
+      document.dispatchEvent(new CustomEvent('blog-music-error', { detail: failed }));
+      if (shouldContinue && ++skipCount <= 2 && ap.list.audios.length > 1) {
+        ap.list.switch(ap.nextIndex());
+        play();
+      } else {
+        skipCount = 0;
+        pause();
+        ap.notice('歌曲加载失败，请尝试其他歌曲', 0);
+      }
+    }, true);
+    if ('mediaSession' in navigator) {
+      var actions = {
+        play: play,
+        pause: pause,
+        previoustrack: function () { step(-1); },
+        nexttrack: function () { step(1); },
+        seekto: function (details) { ap.seek(details.seekTime); updateMediaSession(); },
+        seekbackward: function (details) { ap.seek(ap.audio.currentTime - (details.seekOffset || 10)); },
+        seekforward: function (details) { ap.seek(ap.audio.currentTime + (details.seekOffset || 10)); }
+      };
+      Object.keys(actions).forEach(function (action) {
+        try { navigator.mediaSession.setActionHandler(action, actions[action]); } catch (e) {}
       });
     }
   }
@@ -439,6 +506,7 @@
     loadLocalIds().then(function () {
       return Promise.all(songs.map(resolve));
     }).then(function (list) {
+      playlists.mini = list;
       var container = document.createElement('div');
       document.body.appendChild(container);
       ap = new APlayer({
@@ -451,6 +519,7 @@
         lrcType: 3,
         mutex: true,
         order: 'list',
+        loop: 'all',
         listFolded: true,
         listMaxHeight: '320px',
         audio: list
@@ -463,17 +532,34 @@
       });
       document.addEventListener('pjax:complete', function () {
         if (wasPlayingOnNav && ap && ap.audio.paused && !userPaused) {
-          var r = ap.play();
-          if (r && r.catch) r.catch(function () {});
+          play();
         }
       });
       var saved = readState();
-      if (saved && saved.src) restoreSaved(saved);
-      else saveState();
+      var ready = saved && saved.owner === 'big'
+        ? fetch('/data/music-playlist.json').then(function (r) { return r.json(); }).then(registerPlaylist)
+        : Promise.resolve();
+      ready.catch(function () {}).then(function () {
+        // 歌单请求较慢时，保留用户已经在迷你播放器中做出的新选择。
+        if (saved && !restoreCancelled && ap.audio.paused) restoreSaved(saved);
+        publishState();
+        document.dispatchEvent(new CustomEvent('blog-music-ready'));
+      });
     });
   }
 
   var CDN_BASE = 'https://cdn.jsdelivr.net/gh/MuAn1228/music-assets@master/';
+
+  function registerPlaylist(list) {
+    playlists.big = list.map(function (song) {
+      var id = String(song.id);
+      return {
+        name: song.name, artist: song.artist, cover: song.cover,
+        url: LOCAL_IDS && LOCAL_IDS.has(id) ? CDN_BASE + id + '.mp3'
+          : 'https://music.163.com/song/media/outer/url?id=' + id + '.mp3'
+      };
+    });
+  }
 
   // 加载仓库白名单（local-playlist-ids.json），失败时置空（全部走网络源）
   function loadLocalIds() {
@@ -514,14 +600,14 @@
   // 暴露给音乐页大播放器的公共接口（全站唯一音频引擎）
   window.__blogMusic = {
     ap: null, // 播放器初始化后回填
-    focus: function (track, meta, autoplay) {
-      focusMeta = meta ? { owner: meta.owner, index: meta.index, url: track.url } : null;
-      switchTo(track, autoplay);
-      saveState();
-    },
+    registerPlaylist: registerPlaylist,
+    select: function (index, autoplay) { return select('big', index, autoplay); },
+    getState: getState,
+    next: function () { step(1); },
+    previous: function () { step(-1); },
     toggle: function () { if (ap) ap.toggle(); },
-    pause: function () { if (ap) ap.pause(); },
-    play: function () { if (ap) { var p = ap.play(); if (p && p.catch) p.catch(function () {}); } },
+    pause: pause,
+    play: play,
     isPlaying: function () { return !!(ap && !ap.audio.paused); },
     currentUrl: function () {
       if (!ap) return '';
