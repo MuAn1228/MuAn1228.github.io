@@ -153,6 +153,7 @@
   2. `watchdog.yml`：每 6 小时触发，**构建前原来没有 fetch_contributions.py**（2026-09-07 已修复，commit 390dc5a）。
 - **坑**：watchdog 每 6 小时跑一次，如果它构建前不 fetch contributions，就会用仓库里旧的 `source/data/contributions.json` 构建并部署，覆盖掉 update-contributions 刚更新的最新热力图数据——表现为热力图贡献数停留在某个旧日期（曾停在 2026-08-15，totalContributions=96）。
 - **规则**：**任何会执行 `hexo generate` + `deploy-pages` 的 workflow，构建前都必须跑 `fetch_contributions.py`**（带 `GH_TOKEN` 环境变量）。新增部署 workflow 时务必检查这一点。
+- **凭据失效恢复（2026-10-01）**：两个部署 workflow 同时提供 `GH_FALLBACK_TOKEN: ${{ github.token }}`。`fetch_contributions.py` 仅在主凭据缺失或 HTTP 401 时用 Actions 自带凭据读取公开统计；其他错误及两路失败仍阻止构建，不能忽略抓取失败而发布旧数据。
 - 同理，如果未来有其他需要定时更新的静态数据（如 finance 行情），也要注意所有部署 workflow 都必须在构建前更新该数据，否则会被覆盖回旧值。
 
 ## 后续工作方式
