@@ -54,6 +54,7 @@ jobs:
       - name: Fetch GitHub contributions
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_FALLBACK_TOKEN: ${{ github.token }}
         run: python3 fetch_contributions.py
 
       - name: Build
