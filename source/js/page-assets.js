@@ -45,7 +45,7 @@
     if (musicQueued) return;
     musicQueued = true;
     loadScript('/lib/APlayer.min.js', function () {
-      loadScript('/js/music-playlist.js');
+      loadScript('/js/music-playlist.js?v=2');
     });
   }
 

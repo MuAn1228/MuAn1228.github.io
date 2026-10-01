@@ -88,6 +88,7 @@
 
 ## 音乐播放器模块（全站常驻，重要）
 - **架构**：`source/js/music-playlist.js` 是全站唯一音频引擎（迷你播放器，硬编码 49 首歌单，fixed mini APlayer），通过 `window.__blogMusic` 暴露接口；音乐页 `/fun/music/` 的大播放器 `music-playlist-grid.js`（读 `/data/music-playlist.json` 394 首）复用同一引擎。两者共用：切页声音不断、状态镜像。
+- **后台顺序播放（2026-10-01）**：常驻引擎持有完整活动歌单，同一个 APlayer/audio 在 `ended` 中同步切歌；音乐页用 `registerPlaylist/select/getState` 和 `blog-music-statechange` 镜像状态，离页时解除页面监听。**不要在音乐页再绑定 `ended` 切歌，也不要让下一首依赖页面 DOM 或定时器。** 已添加 Media Session 锁屏播放/暂停/上一首/下一首控制；安卓真机后台行为仍需用户实测。
 - **本地化机制**：本地 mp3 存 GitHub 仓库 `MuAn1228/music-assets`（默认分支 `master`），经 jsDelivr 分发（`https://cdn.jsdelivr.net/gh/MuAn1228/music-assets@master/<songId>.mp3`）。**仓库真实白名单以 `source/data/local-playlist-ids.json`（155 个 id）为唯一权威**，判定代码里一律读它，不要凭歌名/直觉硬编码。
 - **音源优先级（2026-08-26 提交 5862597 定案）**：① CDN 白名单（最稳）→ ② Meting API `api.injahow.cn/meting/?server=netease&type=song&id=xxx` → ③ 网易云官方外链 `https://music.163.com/song/media/outer/url?id=xxx.mp3` 兜底（仅约 40% 免费可外链的歌曲可用，版权受限返回 HTML）。
 - **必读坑（别再踩）**：
@@ -95,10 +96,11 @@
   - `api.i-meto.com` 已复活（元数据可用），但**音频 URL 必须带 `Referer: https://api.i-meto.com/` 才能 206**，浏览器播放自带本站 referer → 必然 404，勿用。
   - `api.injahow.cn` 存在全局限流（返回 `{"message":"请求次数已达上限"}`），别再为此折腾代码，限流是常态，failover 已兜住。
   - 网易云 CDN 直链带时效签名（`m801.music.126.net/20260826...`），只用作当前会话的 src，不能存 sessionStorage 跨页复用。
-- **切页续播/防卡死**：`pjax:send` 记录 `wasPlayingOnNav`，`pjax:complete` 时非用户主动暂停则 `ap.play()`；audio `error` 且当前为大播放器曲目时交给音乐页自己处理，迷你列表则自动跳下一首（`skipCount>2` 停止，防整单死循环）。
+- **切页续播/防卡死**：`pjax:send` 记录 `wasPlayingOnNav`，`pjax:complete` 时非用户主动暂停则 `ap.play()`。audio `error` 在捕获阶段由常驻引擎统一处理，阻止 APlayer 内置 2 秒重试；迷你/大歌单均最多连续跳过 2 首，之后停播，`playing` 才重置失败计数。
 - **切页性能**：`source/js/pjax-prefetch.js`（注入在 music-playlist.js 之前）对悬停/聚焦的站内链接做低优先级 `<link rel=prefetch>`，把 pjax 的 fetch 提前到空闲时段，避免瞬时并发挤占音频缓冲。
-- **当前状态（2026-08-26 用户实测后，已搁置）**：50 首中 10 首走 CDN（稳定），40 首走网络源（Meting 限流时仅官方外链可用歌能播）。**用户实测反馈：所有歌切页仍然断流**（并非个别歌断，而是普遍切页中断），用户决定「暂时先不做」，音乐播放器模块整体搁置。彻底方案（下载缺的 mp3 上传到 music-assets 仓库 + 同步白名单）未执行，重启排查时优先怀疑 pjax 续播逻辑（pjax:send/complete + sessionStorage 恢复）在真实浏览器中未按预期生效，而不是音源 failover。**下次重启先别动代码，先讨论排查方向。**
+- **历史状态（2026-08-26 用户实测后，曾搁置）**：50 首中 10 首走 CDN（稳定），40 首走网络源（Meting 限流时仅官方外链可用歌能播）。当时用户实测切页普遍断流，暂缓排查。下载缺失 mp3 上传 music-assets 并同步白名单的方案未执行。2026-10-01 本次修复范围为手机后台顺序切歌，切页音频是否流畅仍需真机验证。
 - 验证：jsdom 冒烟测试可以端到端验证解析逻辑（stub APlayer/Audio + mock Meting 拒绝，见 .workbuddy/skills/hexo-jsdom-smoke-test/）；浏览器沙箱无音频输出，切页续播只能验证状态（isPlaying）即可。
+- 后台连播回归：`node test/music-background.js`，使用实际 vendored APlayer、模拟媒体事件及 fetch，覆盖隐藏页面连续切歌、PJAX 重入、暂停、锁屏控制、失败上限和会话恢复。
 - **不可播歌曲台账（2026-09-07 全量检测）**：389 首中 155 本地 CDN、185 直链、38 仅 Meting 可播、**11 首三路全灭**，清单/原因/替代候选与处理方式见 `docs/music-unplayable-songs.md`（其中「春娇与志明」1831482748 同时存在于迷你播放器硬编码歌单）。同日修复两张失效封面：Body 换同源封面、Kerosene 落地本地 `source/img/music/kerosene.jpg`。
 
 ## 自制游戏《第九层事故 BULLET DEPTHS》（小游戏页 iframe 接入，2026-09-06）
