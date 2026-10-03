@@ -101,7 +101,7 @@
 - **历史状态（2026-08-26 用户实测后，曾搁置）**：50 首中 10 首走 CDN（稳定），40 首走网络源（Meting 限流时仅官方外链可用歌能播）。当时用户实测切页普遍断流，暂缓排查。下载缺失 mp3 上传 music-assets 并同步白名单的方案未执行。2026-10-01 本次修复范围为手机后台顺序切歌，切页音频是否流畅仍需真机验证。
 - 验证：jsdom 冒烟测试可以端到端验证解析逻辑（stub APlayer/Audio + mock Meting 拒绝，见 .workbuddy/skills/hexo-jsdom-smoke-test/）；浏览器沙箱无音频输出，切页续播只能验证状态（isPlaying）即可。
 - 后台连播回归：`node test/music-background.js`，使用实际 vendored APlayer、模拟媒体事件及 fetch，覆盖隐藏页面连续切歌、PJAX 重入、暂停、锁屏控制、失败上限和会话恢复。
-- **原厂浏览器排查（2026-10-03）**：一加 Ace 3 Pro 原厂浏览器仍在后台曲终停播，返回前台才切下一首；前台连播正常，未开省电模式且应用耗电管理中没有浏览器。新增独立诊断页 `/music-check/`，用 DOM 中的原生 audio 连播三段 12 秒提示音，记录媒体事件、播放 Promise 拒绝和页面生命周期；报告仅保存在当前标签页，不上传。代码 `source/js/music-background-check.js`，音频 `source/media/music-check/`（由 `tools/generate-music-check.py` 生成）；回归 `node test/music-background-check.js [--built]`。该页用于获取真机证据，不能据模拟测试宣称后台问题已解决。
+- **原厂浏览器排查（2026-10-03）**：一加 Ace 3 Pro 原厂浏览器仍在后台曲终停播，返回前台才切下一首；前台连播正常，未开省电模式且应用耗电管理中没有浏览器。新增独立诊断页 `/music-check/`，用 DOM 中的原生 audio 连播三段 12 秒提示音，记录媒体事件、播放 Promise 拒绝和页面生命周期；报告仅保存在当前标签页，不上传。音乐页歌单上方有新窗口打开入口，`/fun/music-check/` 也会跳转到检测页，避免地址混淆造成 404。代码 `source/js/music-background-check.js`，音频 `source/media/music-check/`（由 `tools/generate-music-check.py` 生成）；回归 `node test/music-background-check.js [--built]`。该页用于获取真机证据，不能据模拟测试宣称后台问题已解决。
 - **不可播歌曲台账（2026-09-07 全量检测）**：389 首中 155 本地 CDN、185 直链、38 仅 Meting 可播、**11 首三路全灭**，清单/原因/替代候选与处理方式见 `docs/music-unplayable-songs.md`（其中「春娇与志明」1831482748 同时存在于迷你播放器硬编码歌单）。同日修复两张失效封面：Body 换同源封面、Kerosene 落地本地 `source/img/music/kerosene.jpg`。
 
 ## 自制游戏《第九层事故 BULLET DEPTHS》（小游戏页 iframe 接入，2026-09-06）
