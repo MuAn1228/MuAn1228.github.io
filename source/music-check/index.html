@@ -1,0 +1,40 @@
+---
+title: 后台连播检测
+layout: false
+---
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>后台连播检测</title>
+  <link rel="stylesheet" href="/css/custom.css?v=music-check-1">
+</head>
+<body class="mcheck-page">
+<div id="mcheck" class="mcheck">
+  <h1>后台连播检测</h1>
+  <p class="mcheck-lead">用一段约 40 秒的检测，记录浏览器在后台切换音频时的状态。</p>
+  <ol class="mcheck-steps">
+    <li>点击「开始检测」，会依次播放 3 段短音频，每段 12 秒，总计 36 秒。</li>
+    <li>听到声音后，立即回到手机桌面或锁屏，等待约 40 秒。</li>
+    <li>回到此页面，点击「复制检测报告」，把报告发给我。</li>
+  </ol>
+  <p class="mcheck-note">检测音频是轻柔提示音，可以先调低音量。检测期间请保持此页面打开。</p>
+  <div class="mcheck-state" role="status" aria-live="polite">
+    <strong id="mcheck-status">等待开始</strong>
+    <span id="mcheck-track">尚未播放</span>
+  </div>
+  <audio id="mcheck-audio" controls preload="auto" aria-label="检测音频播放器"></audio>
+  <div class="mcheck-actions">
+    <button id="mcheck-start" class="mcheck-btn mcheck-primary" type="button">开始检测</button>
+    <button id="mcheck-stop" class="mcheck-btn" type="button">停止检测</button>
+    <button id="mcheck-copy" class="mcheck-btn" type="button">复制检测报告</button>
+  </div>
+  <label class="mcheck-report-label" for="mcheck-report">检测报告</label>
+  <textarea id="mcheck-report" class="mcheck-report" readonly spellcheck="false" placeholder="开始检测后，这里会记录播放过程。复制按钮不可用时，可以长按选中并复制。"></textarea>
+</div>
+
+<script src="/js/music-background-check.js?v=1"></script>
+</body>
+</html>
