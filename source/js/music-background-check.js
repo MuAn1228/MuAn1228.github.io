@@ -18,6 +18,15 @@
   var disposed = false;
   var index = 0;
   var attempt = 0;
+  var playbackGuard = window.__createBlogAudioGuard && window.__createBlogAudioGuard(audio, function (name, detail) {
+    if (!running || disposed) return;
+    record(name, detail);
+    if (name === 'ready-play-rejected') {
+      running = false;
+      message('浏览器未能继续播放。请复制报告发给我。');
+      clearMediaSession();
+    }
+  });
 
   function renderReport() {
     if (disposed || !report) return;
@@ -78,18 +87,21 @@
     record('play-request');
     try {
       var result = audio.play();
+      record('play-call-return');
       if (result && result.then) result.then(function () {
         if (thisAttempt === attempt && running && !disposed) record('play-resolved');
       }, function (error) {
         if (thisAttempt !== attempt || !running || disposed) return;
         record('play-rejected', { reason: error.name || 'Error' });
         running = false;
+        audio.pause();
         message('浏览器未能继续播放。请复制报告发给我。');
         clearMediaSession();
       });
     } catch (error) {
       record('play-rejected', { reason: error.name || 'Error' });
       running = false;
+      audio.pause();
       message('浏览器未能开始播放。请复制报告发给我。');
       clearMediaSession();
     }
@@ -108,7 +120,8 @@
     if (running || disposed) return;
     index = 0;
     report = {
-      version: 1,
+      version: 2,
+      compatibilityGuard: !!playbackGuard,
       userAgent: navigator.userAgent,
       startedAt: Date.now(),
       audioInDocument: audio.isConnected,
@@ -141,6 +154,7 @@
     } else {
       running = false;
       record('test-complete');
+      audio.pause();
       var endings = report.events.filter(function (item) { return item.event === 'ended'; });
       message(endings.every(function (item) { return item.hidden; })
         ? '三段均在后台完成连播。请复制报告发给我。'
@@ -148,7 +162,7 @@
       clearMediaSession();
     }
   });
-  ['play', 'playing', 'pause', 'loadedmetadata', 'waiting', 'stalled'].forEach(function (name) {
+  ['play', 'playing', 'pause', 'loadedmetadata', 'canplay', 'canplaythrough', 'waiting', 'stalled'].forEach(function (name) {
     audio.addEventListener(name, function () {
       if (!running) return;
       record(name);
@@ -159,6 +173,7 @@
     if (!running || disposed) return;
     record('media-error', { code: audio.error ? audio.error.code : 0 });
     running = false;
+    audio.pause();
     message('测试音频加载失败。请复制报告发给我。');
     clearMediaSession();
   });

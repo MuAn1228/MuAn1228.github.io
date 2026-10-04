@@ -10,6 +10,7 @@ const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const assetRoot = process.argv.includes('--built') ? 'public' : 'source';
 const aplayerSource = read(assetRoot + '/lib/APlayer.min.js');
+const guardSource = read(assetRoot + '/js/music-playback-guard.js');
 const engineSource = read(assetRoot + '/js/music-playlist.js');
 const gridSource = read(assetRoot + '/js/music-playlist-grid.js');
 const cdn = 'https://cdn.jsdelivr.net/gh/MuAn1228/music-assets@master/';
@@ -55,13 +56,16 @@ async function createBrowser(options = {}) {
   let readyEvents = 0;
   let hidden = false;
   let autoPlaying = true;
+  let holdReady = false;
+  const waitingReady = [];
+  const deferredReadyPlays = [];
   let releasePlaylist;
   const playlistResponse = options.deferPlaylistResponse
     ? new Promise(resolve => { releasePlaylist = resolve; }) : null;
   const mediaState = new WeakMap();
   const state = audio => {
     if (!mediaState.has(audio)) mediaState.set(audio, {
-      paused: true, ended: false, time: 0, src: '', readyState: 0, generation: 0
+      paused: true, ended: false, time: 0, src: '', readyState: 0, generation: 0, error: null
     });
     return mediaState.get(audio);
   };
@@ -71,6 +75,7 @@ async function createBrowser(options = {}) {
   Object.defineProperties(mediaProto, {
     paused: { configurable: true, get() { return state(this).paused; } },
     ended: { configurable: true, get() { return state(this).ended; } },
+    error: { configurable: true, get() { return state(this).error; } },
     currentTime: {
       configurable: true,
       get() { return state(this).time; },
@@ -91,6 +96,7 @@ async function createBrowser(options = {}) {
         data.paused = true;
         data.ended = false;
         data.readyState = 0;
+        data.error = null;
         const generation = ++data.generation;
         sourceChanges.push(data.src);
         queue(() => {
@@ -99,10 +105,15 @@ async function createBrowser(options = {}) {
           event(this, 'emptied');
           event(this, 'loadstart');
           if (!data.src) return;
-          data.readyState = 4;
-          event(this, 'loadedmetadata');
-          event(this, 'durationchange');
-          event(this, 'canplay');
+          const completeReady = () => {
+            if (data.generation !== generation) return;
+            data.readyState = 4;
+            event(this, 'loadedmetadata');
+            event(this, 'durationchange');
+            event(this, 'canplay');
+          };
+          if (holdReady) waitingReady.push(completeReady);
+          else completeReady();
         });
       }
     }
@@ -111,11 +122,22 @@ async function createBrowser(options = {}) {
   mediaProto.canPlayType = () => 'probably';
   mediaProto.play = function () {
     const data = state(this);
+    plays.push({ src: data.src, hidden, readyState: data.readyState, autoplay: this.autoplay });
+    if (options.hiddenPlayNeedsReady && hidden && (data.readyState < 3 || options.readyPlayStaysPending)) {
+      data.paused = true;
+      return new Promise(() => {}); // Device report: no play/playing and the promise never settles.
+    }
+    if (options.rejectReadyPlay && hidden && data.readyState >= 3) {
+      data.paused = true;
+      return Promise.reject(new window.DOMException('Ready playback rejected', 'NotAllowedError'));
+    }
+    if (options.deferReadyPlay && hidden && data.readyState >= 3) {
+      return new Promise((resolve, reject) => deferredReadyPlays.push({ resolve, reject }));
+    }
     const wasPaused = data.paused;
     data.paused = false;
     data.ended = false;
     const generation = data.generation;
-    plays.push({ src: data.src, hidden });
     return new Promise(resolve => queue(() => {
       if (data.generation !== generation || data.paused) { resolve(); return; }
       if (wasPaused) event(this, 'play');
@@ -162,6 +184,7 @@ async function createBrowser(options = {}) {
   document.addEventListener('blog-music-statechange', e => stateEvents.push(e.detail));
   if (options.saved) window.sessionStorage.setItem('blog-music-state', JSON.stringify(options.saved));
   window.eval(aplayerSource);
+  window.eval(guardSource);
   if (options.grid !== false && options.gridFirst) window.eval(gridSource);
   window.eval(engineSource);
   await until(() => window.__blogMusic && window.__blogMusic.ap, 'engine initializes');
@@ -177,6 +200,14 @@ async function createBrowser(options = {}) {
     readyCount: () => readyEvents,
     releasePlaylist() { if (releasePlaylist) releasePlaylist(); },
     setAutoPlaying(value) { autoPlaying = value; },
+    holdReady(value = true) { holdReady = value; },
+    releaseReady() { holdReady = false; waitingReady.splice(0).forEach(complete => complete()); },
+    mediaEvent(name) { event(engine.audio(), name); },
+    setMediaError(value) { state(engine.audio()).error = value; },
+    rejectDeferredReadyPlay(index, name = 'NotAllowedError') {
+      assert.ok(deferredReadyPlays[index], 'readiness retry promise exists');
+      deferredReadyPlays[index].reject(new window.DOMException('Late old-source failure', name));
+    },
     hide(value = true) {
       hidden = value;
       document.dispatchEvent(new window.Event('visibilitychange'));
@@ -510,6 +541,152 @@ async function test(name, options, run) {
     assertTrack(b, 'mini', 0);
     assert.equal(b.engine.getState().playing, false);
     assert.equal(b.plays.length, 0);
+  });
+
+  await test('same audio remains attached after PJAX and autoplay follows explicit play intent', {}, async b => {
+    const audio = b.engine.audio();
+    assert.equal(audio.isConnected, true);
+    assert.equal(audio.autoplay, false);
+    await b.clickTrack(0);
+    assert.equal(audio.autoplay, true);
+    await b.navigateAway();
+    assert.equal(b.engine.audio(), audio);
+    assert.equal(audio.isConnected, true);
+    b.engine.pause();
+    assert.equal(audio.autoplay, false);
+  });
+
+  await test('pending hidden play receives one readiness retry per track without skipping songs', {
+    hiddenPlayNeedsReady: true
+  }, async b => {
+    await b.clickTrack(0);
+    b.hide();
+    let switches = 0;
+    b.engine.ap.on('listswitch', () => switches++);
+    for (const index of [1, 2, 3]) {
+      const previous = b.plays.length;
+      const previousSources = b.sourceChanges.length;
+      await b.finish();
+      assertTrack(b, 'big', index);
+      assert.equal(b.engine.getState().playing, true);
+      assert.equal(switches, index);
+      assert.deepEqual(b.sourceChanges.slice(previousSources), [expectedUrl(index)]);
+      assert.deepEqual(b.plays.slice(previous).map(call => [call.src, call.readyState]),
+        [[expectedUrl(index), 0], [expectedUrl(index), 4]]);
+      assert.ok(b.plays.slice(previous).every(call => call.hidden && call.autoplay));
+      b.mediaEvent('canplay');
+      b.mediaEvent('canplaythrough');
+      assert.equal(b.plays.length, previous + 2);
+    }
+  });
+
+  await test('repeated readiness events cannot exceed one retry when second play also stays pending', {
+    hiddenPlayNeedsReady: true, readyPlayStaysPending: true
+  }, async b => {
+    await b.clickTrack(0);
+    b.hide();
+    const before = b.plays.length;
+    await b.finish();
+    assertTrack(b, 'big', 1);
+    assert.equal(b.engine.getState().playing, false);
+    for (let i = 0; i < 3; i++) {
+      b.mediaEvent('canplay');
+      b.mediaEvent('canplaythrough');
+    }
+    await delay(20);
+    assert.equal(b.plays.length, before + 2);
+    assertTrack(b, 'big', 1);
+  });
+
+  await test('explicit pause cancels pending readiness retry before loading completes', {
+    hiddenPlayNeedsReady: true
+  }, async b => {
+    await b.clickTrack(0);
+    b.hide();
+    b.holdReady();
+    await b.finish();
+    assert.equal(b.engine.audio().paused, true);
+    const before = b.plays.length;
+    b.engine.pause();
+    assert.equal(b.engine.audio().autoplay, false);
+    b.releaseReady();
+    b.mediaEvent('canplaythrough');
+    await delay(20);
+    assert.equal(b.plays.length, before);
+    assertTrack(b, 'big', 1);
+    assert.equal(b.engine.getState().playing, false);
+  });
+
+  await test('late canplay and playing events from a replaced source do not restart a paused selection', {
+    hiddenPlayNeedsReady: true
+  }, async b => {
+    await b.clickTrack(0);
+    b.hide();
+    b.holdReady();
+    await b.finish();
+    b.engine.select(3, false);
+    const before = b.plays.length;
+    b.mediaEvent('playing');
+    b.mediaEvent('canplay');
+    b.releaseReady();
+    await delay(20);
+    b.mediaEvent('canplaythrough');
+    assertTrack(b, 'big', 3);
+    assert.equal(b.engine.audio().autoplay, false);
+    assert.equal(b.engine.getState().playing, false);
+    assert.equal(b.plays.length, before);
+  });
+
+  await test('readiness does not retry a current source with a native media error', {
+    hiddenPlayNeedsReady: true
+  }, async b => {
+    await b.clickTrack(0);
+    b.hide();
+    b.holdReady();
+    await b.finish();
+    const before = b.plays.length;
+    b.setMediaError({ code: 4 });
+    b.releaseReady();
+    b.mediaEvent('canplaythrough');
+    await delay(20);
+    assert.equal(b.plays.length, before);
+    assertTrack(b, 'big', 1);
+    assert.equal(b.engine.getState().playing, false);
+  });
+
+  await test('rejected readiness retry stops current song without skipping or later retrying', {
+    hiddenPlayNeedsReady: true, rejectReadyPlay: true
+  }, async b => {
+    await b.clickTrack(0);
+    b.hide();
+    const before = b.plays.length;
+    await b.finish();
+    assertTrack(b, 'big', 1);
+    assert.equal(b.engine.getState().playing, false);
+    assert.equal(b.engine.audio().autoplay, false);
+    b.mediaEvent('canplay');
+    b.mediaEvent('canplaythrough');
+    assert.equal(b.plays.length, before + 2);
+  });
+
+  await test('late rejected readiness promise from an old source cannot stop a newer selection', {
+    hiddenPlayNeedsReady: true, deferReadyPlay: true
+  }, async b => {
+    await b.clickTrack(0);
+    b.hide();
+    await b.finish();
+    assertTrack(b, 'big', 1);
+    assert.equal(b.engine.getState().playing, false);
+    b.hide(false);
+    b.engine.select(2, true);
+    await delay(20);
+    assertTrack(b, 'big', 2);
+    assert.equal(b.engine.getState().playing, true);
+    b.rejectDeferredReadyPlay(0);
+    await delay(20);
+    assertTrack(b, 'big', 2);
+    assert.equal(b.engine.getState().playing, true);
+    assert.equal(b.engine.audio().autoplay, true);
   });
 
   console.log('RESULT: PASS_' + passed + '_F' + failed);
