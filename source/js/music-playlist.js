@@ -322,6 +322,7 @@
   var LOCAL_IDS = null;
   var skipCount = 0;
   var mediaTrack = '';
+  var playbackGuard = null;
 
   function readState() {
     try { return JSON.parse(sessionStorage.getItem(STATE_KEY)); }
@@ -456,7 +457,8 @@
     ap.on('playing', function () { skipCount = 0; publishState(); });
     ap.on('pause', function () {
       // 换源产生的旧 pause 事件不能覆盖新曲的播放意图。
-      if (ap.audio.paused && !ap.audio.ended && !changingPlaylist) userPaused = true;
+      if (ap.audio.paused && !ap.audio.ended && !changingPlaylist &&
+          !(playbackGuard && playbackGuard.isPending())) userPaused = true;
       publishState();
     });
     ap.on('loadedmetadata', publishState);
@@ -525,6 +527,11 @@
         audio: list
       });
       window.__blogMusic.ap = ap;
+      if (window.__createBlogAudioGuard) {
+        playbackGuard = window.__createBlogAudioGuard(ap.audio, function (name) {
+          if (name === 'ready-play-rejected') pause();
+        });
+      }
       bindAp();
       // 切页保护：pjax 切换期间若播放器被意外暂停（非用户主动点击暂停），切换完成后自动续播
       document.addEventListener('pjax:send', function () {

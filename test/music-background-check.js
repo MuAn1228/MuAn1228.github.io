@@ -11,10 +11,18 @@ const built = process.argv.includes('--built');
 const assetRoot = built ? 'public' : 'source';
 const read = file => fs.readFileSync(path.join(project, file), 'utf8');
 const script = read(assetRoot + '/js/music-background-check.js');
+const guardScript = read(assetRoot + '/js/music-playback-guard.js');
 const html = built ? read('public/music-check/index.html')
   : read('source/music-check/index.html').replace(/^---[\s\S]*?---\s*/, '');
 const storageKey = 'blog-music-check-report-v1';
 const wait = () => new Promise(resolve => setTimeout(resolve, 12));
+async function until(predicate, description) {
+  const deadline = Date.now() + 2000;
+  while (!predicate()) {
+    if (Date.now() >= deadline) throw new Error('Timed out: ' + description);
+    await wait();
+  }
+}
 
 function browser(options = {}) {
   const errors = [];
@@ -32,6 +40,8 @@ function browser(options = {}) {
   assert.ok(audio, 'actual page contains diagnostic audio element');
   const media = { paused: true, ended: false, time: 0, ready: 0, src: '', generation: 0, error: null };
   let hidden = false;
+  let holdReady = false;
+  const waitingReady = [];
   const calls = { play: [], pause: 0, sources: [], clipboard: [] };
   const pending = [];
   const handlers = {};
@@ -57,8 +67,16 @@ function browser(options = {}) {
         calls.sources.push(media.src);
         queue(() => {
           if (generation !== media.generation) return;
-          media.ready = 4;
-          dispatch(audio, 'loadedmetadata');
+          dispatch(audio, 'emptied');
+          const completeReady = () => {
+            if (generation !== media.generation) return;
+            media.ready = 4;
+            dispatch(audio, 'loadedmetadata');
+            dispatch(audio, 'canplay');
+            dispatch(audio, 'canplaythrough');
+          };
+          if (holdReady) waitingReady.push(completeReady);
+          else completeReady();
         });
       }
     }
@@ -66,11 +84,15 @@ function browser(options = {}) {
   audio.play = function () {
     const generation = media.generation;
     const number = calls.play.length + 1;
-    calls.play.push({ src: media.src, hidden, position: media.time, ended: media.ended });
+    calls.play.push({ src: media.src, hidden, position: media.time, ended: media.ended, readyState: media.ready });
     if (options.throwAt === number) throw new window.DOMException('Unsupported source', 'NotSupportedError');
     if (options.rejectAt === number) {
       media.paused = true;
       return Promise.reject(new window.DOMException('Autoplay rejected', 'NotAllowedError'));
+    }
+    if (options.hiddenPlayNeedsReady && hidden && (media.ready < 3 || options.readyPlayStaysPending)) {
+      media.paused = true;
+      return new Promise(() => {});
     }
     const wasPaused = media.paused;
     media.paused = false;
@@ -112,6 +134,7 @@ function browser(options = {}) {
   window.fetch = () => { throw new Error('Diagnostic page must not fetch external resources'); };
   if (options.saved !== undefined) window.sessionStorage.setItem(storageKey,
     typeof options.saved === 'string' ? options.saved : JSON.stringify(options.saved));
+  window.eval(guardScript);
   window.eval(script);
   return {
     window, document, audio, media, calls, handlers, errors,
@@ -123,6 +146,8 @@ function browser(options = {}) {
     windowEvent: name => dispatch(window, name),
     audioEvent: name => dispatch(audio, name),
     hide(value = true) { hidden = value; dispatch(document, 'visibilitychange'); },
+    holdReady(value = true) { holdReady = value; },
+    releaseReady() { holdReady = false; waitingReady.splice(0).forEach(complete => complete()); },
     finish() {
       assert.equal(media.paused, false, 'natural end requires active playback');
       media.time = 12;
@@ -160,7 +185,7 @@ async function test(name, options, run) {
 (async () => {
   await test('standalone page loads only local diagnostic script and no blog engine', {}, async b => {
     assert.deepEqual(Array.from(b.document.scripts, node => node.getAttribute('src')),
-      ['/js/music-background-check.js?v=1']);
+      ['/js/music-playback-guard.js?v=1', '/js/music-background-check.js?v=2']);
     assert.equal(b.document.querySelectorAll('audio').length, 1);
     assert.equal(b.window.__blogMusic, undefined);
     assert.doesNotMatch(html, /APlayer|music-playlist|page-assets/);
@@ -340,7 +365,7 @@ async function test(name, options, run) {
     assert.equal(b.calls.play.length, 0);
     b.click('start');
     await wait();
-    assert.equal(b.report().version, 1);
+    assert.equal(b.report().version, 2);
     assert.equal(b.calls.play.length, 1);
   });
 
@@ -401,6 +426,96 @@ async function test(name, options, run) {
     b.hide();
     for (let i = 0; i < 3; i++) { b.finish(); await wait(); }
     assert.equal(b.report().completedTracks, 3);
+  });
+
+  await test('background pending play recovers on readiness and logs each retry on the same segment', {
+    hiddenPlayNeedsReady: true
+  }, async b => {
+    b.click('start');
+    await wait();
+    b.hide();
+    for (let i = 0; i < 3; i++) {
+      b.finish();
+      if (i < 2) await until(() => b.report().events.some(item =>
+        item.event === 'ready-play-resolved' && item.track === i + 2), 'readiness retry settles before track ends');
+    }
+    const report = b.report();
+    assert.equal(report.version, 2);
+    assert.equal(report.compatibilityGuard, true);
+    assert.equal(report.completedTracks, 3);
+    assert.equal(b.calls.sources.length, 3);
+    assert.equal(b.calls.play.length, 5);
+    assert.deepEqual(report.events.filter(item => item.event === 'ready-play-retry').map(item => item.track), [2, 3]);
+    assert.deepEqual(report.events.filter(item => item.event === 'ready-play-resolved').map(item => item.track), [2, 3]);
+    const pendingReturns = report.events.filter(item => item.event === 'play-call-return' && item.track > 1);
+    assert.equal(pendingReturns.length, 2);
+    assert.ok(pendingReturns.every(item => item.paused && item.hidden));
+    assert.equal(b.calls.play[1].src, b.calls.play[2].src);
+    assert.equal(b.calls.play[3].src, b.calls.play[4].src);
+    assert.equal(b.audio.autoplay, false);
+  });
+
+  await test('readiness retry stays bounded when browser leaves both attempts pending', {
+    hiddenPlayNeedsReady: true, readyPlayStaysPending: true
+  }, async b => {
+    b.click('start');
+    await wait();
+    b.hide();
+    b.finish();
+    await wait();
+    assert.equal(b.audio.paused, true);
+    for (let i = 0; i < 4; i++) {
+      b.audioEvent('canplay');
+      b.audioEvent('canplaythrough');
+    }
+    assert.equal(b.calls.play.length, 3);
+    assert.equal(b.report().events.filter(item => item.event === 'ready-play-retry').length, 1);
+    assert.equal(b.report().completedTracks, 1);
+    b.click('stop');
+    assert.equal(b.audio.autoplay, false);
+  });
+
+  await test('lock-screen pause before canplay cancels retry and automatic playback', {
+    hiddenPlayNeedsReady: true
+  }, async b => {
+    b.click('start');
+    await wait();
+    b.hide();
+    b.holdReady();
+    b.finish();
+    await wait();
+    assert.equal(b.audio.paused, true);
+    b.handlers.pause();
+    assert.equal(b.audio.autoplay, false);
+    b.releaseReady();
+    b.audioEvent('canplaythrough');
+    await wait();
+    assert.equal(b.calls.play.length, 2);
+    assert.equal(b.report().events.some(item => item.event === 'ready-play-retry'), false);
+    assert.equal(b.report().completedTracks, 1);
+  });
+
+  await test('rejected readiness retry is reported and terminates diagnostic playback', {
+    hiddenPlayNeedsReady: true, rejectAt: 3
+  }, async b => {
+    b.click('start');
+    await wait();
+    b.hide();
+    b.finish();
+    await wait();
+    const rejected = b.report().events.find(item => item.event === 'ready-play-rejected');
+    assert.equal(rejected.reason, 'NotAllowedError');
+    assert.equal(rejected.track, 2);
+    assert.equal(rejected.hidden, true);
+    assert.equal(b.audio.autoplay, false);
+    assert.equal(b.audio.paused, true);
+    b.audioEvent('ended');
+    b.audioEvent('canplay');
+    b.audioEvent('canplaythrough');
+    assert.equal(b.calls.play.length, 3);
+    assert.equal(b.report().completedTracks, 1);
+    assert.equal(b.handlers.play, null);
+    assert.match(b.status(), /未能继续播放/);
   });
 
   console.log('RESULT: PASS_' + passed + '_F' + failed + (built ? ' (built)' : ' (source)'));
