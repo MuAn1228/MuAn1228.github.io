@@ -323,6 +323,9 @@
   var skipCount = 0;
   var mediaTrack = '';
   var playbackGuard = null;
+  var continuous = null;        // 连续流（MediaSource）引擎；不可用或已失效时为 null
+  var suppressJump = false;     // 连续流内同步界面时抑制流内跳转
+  var originalSetAudio = null;  // APlayer 原生换源实现
 
   function readState() {
     try { return JSON.parse(sessionStorage.getItem(STATE_KEY)); }
@@ -407,29 +410,54 @@
     play();
   }
 
-  function select(queueOwner, index, autoplay) {
+  function select(queueOwner, index, autoplay, offset) {
     var queue = playlists[queueOwner];
     if (!ap || !queue || !queue[index]) return false;
     skipCount = 0;
+    var stream = continuous && queueOwner === 'mini' && queue.length > 1 ? continuous : null;
+    var ownerChanged = owner !== queueOwner;
     changingPlaylist = true;
-    // clear/add 只发生在切换歌单时。自然播完由 APlayer 同步 switch + play，
-    // 不等待页面、fetch、setTimeout 或另一个 audio 元素。
-    if (owner !== queueOwner) {
+    // clear/add 只发生在切换歌单时。连续流会话只在迷你歌单存在，离开前先结束。
+    if (ownerChanged && continuous && continuous.isActive()) continuous.stop();
+    if (ownerChanged) {
       ap.list.clear();
       owner = queueOwner;
+      if (stream) stream.beginPending();
       ap.list.add(queue);
     }
-    if (autoplay === false) ap.pause();
-    if (ap.list.index !== index) ap.list.switch(index);
-    changingPlaylist = false;
-    if (autoplay !== false) play();
+    if (stream) {
+      // 会话建立/跳转期间不写 audio.src：APlayer 的换源逻辑由连续流接管。
+      if (!stream.isActive()) stream.beginPending();
+      suppressJump = true;
+      if (ap.list.index !== index) ap.list.switch(index);
+      suppressJump = false;
+      changingPlaylist = false;
+      if (autoplay === false) ap.pause();
+      if (stream.isActive()) {
+        stream.jump(index, offset || 0, autoplay !== false);
+      } else if (!stream.start(index, {
+        count: queue.length, offset: offset || 0, autoplay: autoplay !== false
+      })) {
+        continuous = null;                       // 连续流不可用：本次加载回到经典路径
+        originalSetAudio(ap.list.audios[index]);
+        if (autoplay !== false) play();
+      } else if (autoplay !== false) {
+        play();
+      }
+    } else {
+      if (autoplay === false) ap.pause();
+      if (ap.list.index !== index) ap.list.switch(index);
+      changingPlaylist = false;
+      if (autoplay !== false) play();
+    }
     publishState();
     return true;
   }
 
   function restoreSaved(saved) {
     var queueOwner = saved.owner === 'big' ? 'big' : 'mini';
-    if (!select(queueOwner, saved.index, saved.playing !== false)) return;
+    if (!select(queueOwner, saved.index, saved.playing !== false, saved.time || 0)) return;
+    if (continuous && continuous.isActive()) return; // 连续流已按保存位置恢复
     // 使用本次会话的音源，避免复用 sessionStorage 中已过期的签名链接。
     var restoredUrl = getState().src;
     function seekSaved() {
@@ -446,6 +474,34 @@
     ap.list.switch = function (index) {
       switchTrack(index);
       publishState();
+    };
+    // 连续流接管迷你歌单的换源：会话内只跳转，绝不写 audio.src / 重新 play()。
+    originalSetAudio = ap.setAudio.bind(ap);
+    ap.setAudio = function (track) {
+      if (continuous && owner === 'mini' && playlists.mini.length > 1) {
+        if (continuous.isPending()) return;              // select 正在接管这次切换
+        if (continuous.isActive()) {
+          if (!suppressJump) continuous.jump(ap.list.index, 0, !ap.paused);
+          return;
+        }
+        if (continuous.start(ap.list.index, {
+          count: playlists.mini.length, offset: 0, autoplay: !ap.paused
+        })) return;
+        continuous = null;                               // 启动失败退回经典路径
+      }
+      return originalSetAudio(track);
+    };
+    var originalPlay = ap.play.bind(ap);
+    ap.play = function () {
+      // 迷你播放器首次起播（播放键 / 点歌 / 恢复）也接入连续流，整个会话只保留一次 src。
+      if (continuous && owner === 'mini' && playlists.mini.length > 1 &&
+          !continuous.isActive() && !continuous.isPending()) {
+        var offset = ap.audio.currentTime > 0 ? ap.audio.currentTime : 0;
+        if (!continuous.start(ap.list.index, {
+          count: playlists.mini.length, offset: offset, autoplay: true
+        })) continuous = null;
+      }
+      return originalPlay();
     };
     ap.on('play', function () {
       if (!ap.audio.paused) {
@@ -533,6 +589,17 @@
         });
       }
       bindAp();
+      continuous = typeof window.__createBlogContinuousStream === 'function'
+        ? window.__createBlogContinuousStream(ap.audio, {
+            getUrl: streamUrl,
+            onAdvance: onContinuousAdvance,
+            onUnavailable: onStreamUnavailable,
+            onFatal: onStreamFatal,
+            onState: publishState,
+            play: play
+          })
+        : null;
+      if (continuous && !continuous.supported) continuous = null;
       // 切页保护：pjax 切换期间若播放器被意外暂停（非用户主动点击暂停），切换完成后自动续播
       document.addEventListener('pjax:send', function () {
         wasPlayingOnNav = !!(ap && !ap.audio.paused);
@@ -602,6 +669,67 @@
       .then(function (url) {
         return { name: s.name, artist: s.artist, url: url, cover: s.cover, lrc: '' };
       });
+  }
+
+  // ===== 连续流（MediaSource）接线 =====
+  // 只有迷你歌单（本文件内的 49 首）接入连续流；音乐页 394 首大歌单保持经典路径。
+  function streamUrl(index) {
+    var item = playlists.mini[index];
+    if (!item) return Promise.reject(new Error('no-track'));
+    // jsDelivr 本地文件与 Meting 直链都带 CORS 头，可以直接流式读取。
+    if (item.url.indexOf('music.163.com/song/media/outer/url') === -1) {
+      return Promise.resolve(item.url);
+    }
+    // 网易官方外链没有 CORS 头，fetch 读不了；再解析一次 Meting，失败即该曲不可流式。
+    var id = String(songs[index].id);
+    return fetch('https://api.injahow.cn/meting/?server=netease&type=song&id=' + id, { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var url = d && d[0] && d[0].url;
+        if (!url) throw new Error('external-source');
+        return url;
+      });
+  }
+
+  function onContinuousAdvance(index) {
+    // 背景播放时曲目边界推进：只同步界面与状态，不换源、不发起播放请求。
+    skipCount = 0;
+    if (!ap || ap.list.index === index) { publishState(); return; }
+    suppressJump = true;
+    changingPlaylist = true;
+    ap.list.switch(index);
+    changingPlaylist = false;
+    suppressJump = false;
+    publishState();
+  }
+
+  function onStreamUnavailable(index, reason) {
+    document.dispatchEvent(new CustomEvent('blog-music-error', {
+      detail: { owner: 'mini', index: index, reason: reason }
+    }));
+    var shouldContinue = !!(ap && !ap.paused && !userPaused);
+    if (shouldContinue && ++skipCount <= 2) return true;
+    skipCount = 0;
+    fallbackClassic(false);
+    if (ap) ap.notice('歌曲加载失败，请尝试其他歌曲', 0);
+    return false;
+  }
+
+  function onStreamFatal(reason, wasPlaying) {
+    fallbackClassic(wasPlaying, true);
+  }
+
+  function fallbackClassic(shouldPlay, permanent) {
+    if (continuous) {
+      continuous.stop();
+      if (permanent) continuous = null;   // MSE 结构性失败：本次加载不再尝试连续流
+    }
+    if (!ap) return;
+    if (!shouldPlay) ap.pause();          // 先落下暂停意图，避免换源时带出新的播放请求
+    var track = ap.list.audios[ap.list.index];
+    if (track && originalSetAudio) originalSetAudio(track);
+    if (shouldPlay) play();
+    else publishState();
   }
 
   // 暴露给音乐页大播放器的公共接口（全站唯一音频引擎）
