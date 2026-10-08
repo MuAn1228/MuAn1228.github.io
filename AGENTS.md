@@ -1,4 +1,4 @@
-﻿# 项目交接说明（Handoff）
+# 项目交接说明（Handoff）
 
 ## 项目概况
 - 这是一个 Hexo 博客项目（Hexo 8.x + Butterfly 5.7.0 主题）。
@@ -105,6 +105,15 @@
 - **不可播歌曲台账（2026-09-07 全量检测）**：389 首中 155 本地 CDN、185 直链、38 仅 Meting 可播、**11 首三路全灭**，清单/原因/替代候选与处理方式见 `docs/music-unplayable-songs.md`（其中「春娇与志明」1831482748 同时存在于迷你播放器硬编码歌单）。同日修复两张失效封面：Body 换同源封面、Kerosene 落地本地 `source/img/music/kerosene.jpg`。
 - **真机报告与兼容处理（2026-10-04）**：HeyTapBrowser 40.10.23.1 的报告显示，锁屏后第一段 `ended` 在 12.9 秒正常执行，13 秒已切换音源并请求播放第二段；第二段 `readyState=4` 仍 `paused=true`，播放 Promise 无成功或拒绝记录。这不是已证实的后台 JS 冻结。新增 `source/js/music-playback-guard.js`，由 page-assets 在 APlayer 后、引擎前按需加载，检测页复用同一代码：保留播放意图、仅在播放意图存在时开启原生 autoplay、在 canplay/canplaythrough 后仍暂停时每次换源最多补一次播放请求；暂停取消补播，音频元素保留在文档中。不依赖定时器，不另加 ended 切歌。真机兼容效果仍需再次确认；模拟测试不能证明原厂浏览器限制已被绕过。
 - **补播未解决、连续流对照（2026-10-04）**：第二份真机报告确认，12.8 秒已后台补播第二段，但直到返回前台后 118.1 秒才开始播放；`completedTracks=3` 不能据此认定后台连播成功。新增 `/music-check/continuous.html`（脚本 `music-continuous-check.js`），用一个 MediaSource/audio、`audio/mpeg` sequence 缓冲三段 MP3，缓冲完成后只调用一次 play；曲间不换 src、不再次 play。音乐页检测入口与 `/fun/music-check/` 指向该对照；原检测页保留。音频仍由 generate-music-check.py 用项目已有 ffmpeg 生成。本机原生 Chromium 已验证约 36.13 秒、一次 src/一次 play 播放到底；`node test/music-continuous-check.js [--built]` 验证真实编解码。不将本机结果当作一加锁屏成功；该路径仍等待真机证据，尚未接入正式歌单。
+- **MSE 连续流正式接入迷你播放器（2026-10-09，提交 8365181）**：真机报告显示 3 段提示音在锁屏后连续播完（`srcAssignments=1 / playRequests=1 / backgroundCompleted=true`），据此把 MediaSource 连续流接进全站音乐引擎。
+  - 文件与加载顺序：`source/js/music-continuous.js`（新，导出 `window.__createBlogContinuousStream(audio, hooks)`）；`page-assets.js` 的 loadMusic 链改为 APlayer → `music-playback-guard.js?v=1` → `music-continuous.js?v=1` → `music-playlist.js?v=4`。**再改这些文件要同步 bump `_config.butterfly.yml` 里 `page-assets.js?v=`（当前 v=4）与 page-assets 内部的子脚本版本号**。
+  - 机制：整个队列写进同一个 MediaSource（`audio/mpeg` + `mode='sequence'`），会话内只赋值一次 `blob:` src、只发起一次 `play()`；曲目边界只是时间轴分界点。对 APlayer 暴露虚拟时间轴（在 audio 实例上覆盖 `currentTime/duration/buffered`，内部用 `HTMLMediaElement.prototype` 描述符读写原生值），因此进度条/时长/Media Session 仍按单曲显示。
+  - 接线：引擎包装 `ap.setAudio`（会话内只 `jump`，绝不换源）、`ap.play`（未建会话时启动会话）；`select/restoreSaved` 支持带 `offset` 恢复进度；`suppressJump` 抑制 APlayer `switch()→setAudio→seek(0)` 的回跳。**只有迷你歌单（引擎内硬编码 50 首）接入；音乐页 394 首大歌单仍走经典路径。**
+  - 可流式判定：jsDelivr 本地文件与 Meting 直链可直接 `fetch` 流式读取；**网易官方外链没有 CORS 头，必须再解析一次 Meting**，解析失败即该曲不可流式（`api.injahow.cn` 限流是常态）。
+  - 失败与回退：单曲不可流式 → `onUnavailable` 跳过，连续跳过 ≤2 首（`playing`/`advance` 会重置计数）后暂停并提示；`start` 失败或 MSE 结构性错误（append-failed / source-buffer-error）→ `fallbackClassic()` 回退经典路径（fatal 时永久置空模块）。**经典路径行为与参数不得因此回退而改变。**
+  - 检测页：`/music-check/continuous.html` 新增「暂停 / 继续播放」按钮（锁屏播放控制也走同一路径），报告 `version: 4` 新增 `manualPauses/manualResumes` 与 `pause-request`/`resume-request` 事件，手动暂停不再计为 `interrupted`。用于验证「后台 play() 是否被系统挂起」。
+  - 验证：`node test/music-background.js [--built]`（34 用例，含 8 个连续流接线用例，用假模块断言 start/jump 参数与 src/play 不增长）；`node test/music-continuous-check.js [--built]`（真实 Chromium 约 36 秒，src=1/play=1/append=3/ended=true）。本机无头 Chromium 实测：真实 jsDelivr mp3 可进 MSE 播放（曲长 211.93s、blob src、单次 src/play）。
+  - **已知边界（真机复验时注意）**：①后台「上一首/下一首」若跳到未预取且未在缓冲里的曲目会重启会话 → 新的 `play()` 可能被系统挂起；②后台曲终续播依赖预取（`PREFETCH=2`）在后台完成 `fetch`，真机是否允许后台网络请求仍需实测；③外链不可流式的歌曲会被跳过（≤2 首后停播）。
 
 ## 自制游戏《第九层事故 BULLET DEPTHS》（小游戏页 iframe 接入，2026-09-06）
 - **游戏本体在独立仓库** `MuAn1228/bullet-depths`（源码在本机 `D:\game\tingjindilao`，SSH remote 已配好）。GitHub Pages 已开启（**master 分支根目录**），线上地址 `https://muan1228.github.io/bullet-depths/`。
