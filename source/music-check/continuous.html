@@ -1,0 +1,38 @@
+---
+layout: false
+---
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>连续音频后台检测</title>
+  <link rel="stylesheet" href="/css/custom.css?v=music-check-1">
+</head>
+<body class="mcheck-page">
+<div id="mcheck" class="mcheck">
+  <h1>连续音频后台检测</h1>
+  <p class="mcheck-lead">检测三段提示音能否在锁屏后连续播放，总计约 36 秒。</p>
+  <ol class="mcheck-steps">
+    <li>等待音频准备完成，点击「开始检测」。</li>
+    <li>听到声音后，立即锁屏或回到桌面，等待约 40 秒。</li>
+    <li>返回本页，点击「复制检测报告」，把报告发给我。</li>
+  </ol>
+  <p class="mcheck-note">每段约 12 秒，音调会变化。提示音比较轻柔，可以先调整音量。</p>
+  <div class="mcheck-state" role="status" aria-live="polite">
+    <strong id="mcheck-status">正在准备检测音频…</strong>
+    <span id="mcheck-track">尚未开始</span>
+  </div>
+  <audio id="mcheck-audio" controls preload="auto" aria-label="检测音频播放器"></audio>
+  <div class="mcheck-actions">
+    <button id="mcheck-start" class="mcheck-btn mcheck-primary" type="button" disabled>开始检测</button>
+    <button id="mcheck-stop" class="mcheck-btn" type="button">停止检测</button>
+    <button id="mcheck-copy" class="mcheck-btn" type="button">复制检测报告</button>
+  </div>
+  <label class="mcheck-report-label" for="mcheck-report">检测报告</label>
+  <textarea id="mcheck-report" class="mcheck-report" readonly spellcheck="false"></textarea>
+</div>
+<script src="/js/music-continuous-check.js?v=1"></script>
+</body>
+</html>
