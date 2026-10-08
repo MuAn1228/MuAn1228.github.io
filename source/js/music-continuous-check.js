@@ -6,6 +6,8 @@
   root.dataset.bound = 'true';
   var audio = document.getElementById('mcheck-audio');
   var startButton = document.getElementById('mcheck-start');
+  var pauseButton = document.getElementById('mcheck-pause');
+  var resumeButton = document.getElementById('mcheck-resume');
   var status = document.getElementById('mcheck-status');
   var track = document.getElementById('mcheck-track');
   var reportBox = document.getElementById('mcheck-report');
@@ -16,20 +18,22 @@
   var disposed = false;
   var prepared = false;
   var currentSegment = -1;
+  var manualPause = false;      // 手动暂停（页面按钮或锁屏控制）不算播放中断
   var mediaSource;
   var objectUrl;
   var controller = new AbortController();
   var previous = null;
   try {
     var saved = JSON.parse(sessionStorage.getItem(key));
-    if (saved && saved.version === 3 && saved.startedAt && Array.isArray(saved.events)) previous = saved;
+    if (saved && (saved.version === 3 || saved.version === 4) && saved.startedAt && Array.isArray(saved.events)) previous = saved;
   } catch (e) {}
   var report = {
-    version: 3, strategy: 'continuous-mse', userAgent: navigator.userAgent,
+    version: 4, strategy: 'continuous-mse', userAgent: navigator.userAgent,
     supported: !!(window.MediaSource && MediaSource.isTypeSupported('audio/mpeg')),
     prepared: false, startedAt: null, duration: 0, segmentEnds: [],
     completedTracks: 0, srcAssignments: 0, playRequests: 0, interrupted: false,
-    backgroundCompleted: false, backgroundEnteredAt: null, foregroundDuringPlayback: false, events: []
+    backgroundCompleted: false, backgroundEnteredAt: null, foregroundDuringPlayback: false,
+    manualPauses: 0, manualResumes: 0, events: []
   };
 
   function render() {
@@ -56,9 +60,11 @@
       });
       navigator.mediaSession.playbackState = audio.paused ? 'paused' : 'playing';
       navigator.mediaSession.setActionHandler('play', function () {
-        if (running) requestPlay();
+        if (running) requestResume('lock-screen');
       });
-      navigator.mediaSession.setActionHandler('pause', function () { if (running) audio.pause(); });
+      navigator.mediaSession.setActionHandler('pause', function () {
+        if (running) requestPause('lock-screen');
+      });
     } catch (e) {}
   }
   function clearSession() {
@@ -76,7 +82,10 @@
     record('failure', { reason: error.name || 'Error', detail: error.message || '' });
     running = false;
     prepared = false;
+    manualPause = false;
     startButton.disabled = true;
+    pauseButton.disabled = true;
+    resumeButton.disabled = true;
     attempt++;
     audio.pause();
     clearSession();
@@ -94,6 +103,24 @@
       }, function (error) { if (thisAttempt === attempt && running) failure(error); });
     } catch (error) { failure(error); }
   }
+  // 手动暂停：页面按钮与锁屏控制都走这里，不再算作「播放中断」
+  function requestPause(origin) {
+    if (!running || disposed) return;
+    manualPause = true;
+    report.manualPauses++;
+    record('pause-request', { origin: origin || 'page' });
+    audio.pause();
+    message('已暂停。点「继续播放」（或锁屏播放键）可发起一次后台播放请求。');
+  }
+  // 手动继续：与锁屏播放键同一路径，用于验证后台 play() 是否被系统挂起
+  function requestResume(origin) {
+    if (!running || disposed) return;
+    manualPause = false;
+    report.manualResumes++;
+    record('resume-request', { origin: origin || 'page' });
+    message('已发出播放请求，请观察是否恢复出声。');
+    requestPlay();
+  }
   function start() {
     if (!prepared || running || disposed) return;
     audio.currentTime = 0;
@@ -106,8 +133,13 @@
     report.backgroundCompleted = false;
     report.backgroundEnteredAt = null;
     report.foregroundDuringPlayback = false;
+    report.manualPauses = 0;
+    report.manualResumes = 0;
+    manualPause = false;
     currentSegment = -1;
     running = true;
+    pauseButton.disabled = false;
+    resumeButton.disabled = false;
     record('test-start');
     message('检测中：现在回到桌面或锁屏，约 40 秒后返回。');
     session();
@@ -117,11 +149,16 @@
     if (running) record(reason || 'user-stop');
     running = false;
     attempt++;
+    manualPause = false;
+    pauseButton.disabled = true;
+    resumeButton.disabled = true;
     audio.pause();
     clearSession();
     message('检测已停止，可以复制报告。');
   }
   startButton.addEventListener('click', start);
+  pauseButton.addEventListener('click', function () { requestPause('page'); });
+  resumeButton.addEventListener('click', function () { requestResume('page'); });
   document.getElementById('mcheck-stop').addEventListener('click', function () { stop('user-stop'); });
   document.getElementById('mcheck-copy').addEventListener('click', function () {
     var value = reportBox.value;
@@ -145,7 +182,7 @@
   ['play', 'playing', 'pause', 'waiting', 'stalled'].forEach(function (name) {
     audio.addEventListener(name, function () {
       if (!running) return;
-      if (name === 'pause' && !audio.ended) report.interrupted = true;
+      if (name === 'pause' && !audio.ended && !manualPause) report.interrupted = true;
       record(name);
       if (name === 'play' || name === 'pause') session();
     });
@@ -160,6 +197,8 @@
       elapsed >= report.duration - 3 && elapsed <= report.duration + 3;
     record('ended');
     running = false;
+    pauseButton.disabled = true;
+    resumeButton.disabled = true;
     clearSession();
     message(report.backgroundCompleted
       ? '三段已在后台连续播完。请复制报告发给我。'

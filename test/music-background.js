@@ -183,6 +183,36 @@ async function createBrowser(options = {}) {
   document.addEventListener('blog-music-ready', () => readyEvents++);
   document.addEventListener('blog-music-statechange', e => stateEvents.push(e.detail));
   if (options.saved) window.sessionStorage.setItem('blog-music-state', JSON.stringify(options.saved));
+  // 假连续流模块：只记录引擎的接线调用，媒体元素仍由上面的仿真实现驱动。
+  const stream = { calls: [], hooks: null, active: false, pending: false };
+  if (options.continuous) {
+    window.__createBlogContinuousStream = function (audio, hooks) {
+      stream.hooks = hooks;
+      stream.audio = audio;
+      return {
+        supported: true,
+        isActive() { return stream.active; },
+        isPending() { return stream.pending; },
+        beginPending() { stream.pending = true; stream.calls.push({ name: 'beginPending' }); },
+        start(index, settings) {
+          stream.calls.push({ name: 'start', index, options: settings });
+          if (options.continuousStartFails) return false;
+          stream.active = true;
+          stream.pending = false;
+          return true;
+        },
+        jump(index, offset, autoplay) {
+          stream.calls.push({ name: 'jump', index, offset, autoplay });
+          return true;
+        },
+        stop() {
+          stream.calls.push({ name: 'stop' });
+          stream.active = false;
+          stream.pending = false;
+        }
+      };
+    };
+  }
   window.eval(aplayerSource);
   window.eval(guardSource);
   if (options.grid !== false && options.gridFirst) window.eval(gridSource);
@@ -196,7 +226,7 @@ async function createBrowser(options = {}) {
   }
   const engine = window.__blogMusic;
   const browser = {
-    window, document, engine, actions, requests, plays, sourceChanges, stateEvents, pageErrors,
+    window, document, engine, actions, requests, plays, sourceChanges, stateEvents, pageErrors, stream,
     readyCount: () => readyEvents,
     releasePlaylist() { if (releasePlaylist) releasePlaylist(); },
     setAutoPlaying(value) { autoPlaying = value; },
@@ -687,6 +717,119 @@ async function test(name, options, run) {
     assertTrack(b, 'big', 2);
     assert.equal(b.engine.getState().playing, true);
     assert.equal(b.engine.audio().autoplay, true);
+  });
+
+  // ===== 连续流接线（假模块，媒体元素仍为仿真实现） =====
+  await test('continuous stream starts on first mini play without rewriting src', { continuous: true }, async b => {
+    assert.equal(b.sourceChanges.length, 1);            // APlayer 构造时写入过第一首
+    b.engine.ap.play();                                 // 相当于按下迷你播放器的播放键
+    await delay(20);
+    assert.deepEqual(b.stream.calls.map(call => call.name), ['start']);
+    assert.equal(b.stream.calls[0].index, 0);
+    const firstOptions = b.stream.calls[0].options;
+    assert.equal(firstOptions.count, b.engine.ap.list.audios.length);
+    assert.equal(firstOptions.offset, 0);
+    assert.equal(firstOptions.autoplay, true);
+    assert.equal(b.sourceChanges.length, 1, 'stream session must not rewrite src');
+    assert.equal(b.engine.getState().playing, true);
+  });
+
+  await test('mini track switch inside a session only jumps without src or play', { continuous: true }, async b => {
+    b.engine.ap.play();
+    await delay(20);
+    const playsBefore = b.plays.length;
+    b.engine.ap.list.switch(3);
+    await delay(20);
+    const jump = b.stream.calls.find(call => call.name === 'jump');
+    assert.equal(jump.index, 3);
+    assert.equal(jump.offset, 0);
+    assert.equal(jump.autoplay, true);
+    assert.equal(b.sourceChanges.length, 1);
+    assert.equal(b.plays.length, playsBefore, 'stream switch must not request a new play');
+    assertTrack(b, 'mini', 3);
+  });
+
+  await test('stream advance syncs mini list state without touching src', { continuous: true }, async b => {
+    b.engine.ap.play();
+    await delay(20);
+    const playsBefore = b.plays.length;
+    const eventsBefore = b.stateEvents.length;
+    b.stream.hooks.onAdvance(4);
+    await delay(20);
+    assert.equal(b.stream.calls.filter(call => call.name === 'jump').length, 0, 'UI sync must not seek');
+    assertTrack(b, 'mini', 4);
+    assert.ok(b.stateEvents.length > eventsBefore, 'advance publishes the new state');
+    assert.equal(b.sourceChanges.length, 1);
+    assert.equal(b.plays.length, playsBefore);
+  });
+
+  await test('stream failure budget pauses and falls back to a classic src', { continuous: true }, async b => {
+    b.engine.ap.play();
+    await delay(20);
+    assert.equal(b.stream.hooks.onUnavailable(1, 'http-404'), true);
+    assert.equal(b.stream.hooks.onUnavailable(2, 'http-404'), true);
+    const sourcesBefore = b.sourceChanges.length;
+    assert.equal(b.stream.hooks.onUnavailable(3, 'http-404'), false);
+    await delay(20);
+    assert.ok(b.stream.calls.some(call => call.name === 'stop'));
+    assert.equal(b.sourceChanges.length, sourcesBefore + 1, 'classic path rebinds the current track');
+    assert.equal(b.engine.audio().paused, true);
+    assert.equal(b.engine.getState().playing, false);
+    b.engine.ap.play();
+    await delay(20);
+    assert.equal(b.stream.calls.filter(call => call.name === 'start').length, 2, 'a later play may retry the stream');
+  });
+
+  await test('fatal stream error permanently falls back to the classic path', { continuous: true }, async b => {
+    b.engine.ap.play();
+    await delay(20);
+    const sourcesBefore = b.sourceChanges.length;
+    b.stream.hooks.onFatal('append-failed', true);
+    await delay(20);
+    assert.ok(b.stream.calls.some(call => call.name === 'stop'));
+    assert.equal(b.sourceChanges.length, sourcesBefore + 1);
+    assert.equal(b.engine.getState().playing, true, 'playback continues through the classic path');
+    b.engine.ap.play();
+    await delay(20);
+    assert.equal(b.stream.calls.filter(call => call.name === 'start').length, 1, 'no new session after fatal');
+  });
+
+  await test('failed stream start falls back to the classic path', {
+    continuous: true, continuousStartFails: true
+  }, async b => {
+    b.engine.ap.play();
+    await delay(20);
+    assert.equal(b.stream.calls.filter(call => call.name === 'start').length, 1);
+    assert.equal(b.engine.getState().playing, true);
+    b.engine.ap.play();
+    await delay(20);
+    assert.equal(b.stream.calls.filter(call => call.name === 'start').length, 1, 'broken module is dropped');
+  });
+
+  await test('switching to the big queue stops the stream and uses classic sources', { continuous: true }, async b => {
+    b.engine.ap.play();
+    await delay(20);
+    await b.clickTrack(1);
+    assert.ok(b.stream.calls.some(call => call.name === 'stop'));
+    assert.equal(b.stream.calls.filter(call => call.name === 'start').length, 1);
+    assertTrack(b, 'big', 1);
+    assert.equal(b.sourceChanges[b.sourceChanges.length - 1], expectedUrl(1));
+    assert.equal(b.engine.getState().playing, true);
+  });
+
+  await test('restored progress starts the stream at the saved offset', {
+    continuous: true,
+    saved: { owner: 'mini', index: 2, time: 42, playing: true, src: 'https://audio.example.test/stale.mp3' }
+  }, async b => {
+    const starts = b.stream.calls.filter(call => call.name === 'start');
+    assert.equal(starts.length, 1);
+    assert.equal(starts[0].index, 2);
+    const restoreOptions = starts[0].options;
+    assert.equal(restoreOptions.count, b.engine.ap.list.audios.length);
+    assert.equal(restoreOptions.offset, 42);
+    assert.equal(restoreOptions.autoplay, true);
+    assertTrack(b, 'mini', 2);
+    assert.equal(b.sourceChanges.length, 1, 'restore must not fall back to a classic src');
   });
 
   console.log('RESULT: PASS_' + passed + '_F' + failed);

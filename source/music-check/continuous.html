@@ -18,8 +18,10 @@ layout: false
     <li>等待音频准备完成，点击「开始检测」。</li>
     <li>听到声音后，立即锁屏或回到桌面，等待约 40 秒。</li>
     <li>返回本页，点击「复制检测报告」，把报告发给我。</li>
+    <li>（可选）想验证锁屏播放控制：锁屏后先在锁屏卡片上点「暂停」，再点「播放」，看是否继续出声。</li>
   </ol>
   <p class="mcheck-note">每段约 12 秒，音调会变化。提示音比较轻柔，可以先调整音量。</p>
+  <p class="mcheck-note">「暂停」「继续播放」按钮是本页前台自查用：点「继续播放」会像锁屏播放键一样再发起一次播放请求，报告里会记下这次请求在后台有没有被系统挂起。</p>
   <div class="mcheck-state" role="status" aria-live="polite">
     <strong id="mcheck-status">正在准备检测音频…</strong>
     <span id="mcheck-track">尚未开始</span>
@@ -27,12 +29,14 @@ layout: false
   <audio id="mcheck-audio" controls preload="auto" aria-label="检测音频播放器"></audio>
   <div class="mcheck-actions">
     <button id="mcheck-start" class="mcheck-btn mcheck-primary" type="button" disabled>开始检测</button>
+    <button id="mcheck-pause" class="mcheck-btn" type="button" disabled>暂停</button>
+    <button id="mcheck-resume" class="mcheck-btn" type="button" disabled>继续播放</button>
     <button id="mcheck-stop" class="mcheck-btn" type="button">停止检测</button>
     <button id="mcheck-copy" class="mcheck-btn" type="button">复制检测报告</button>
   </div>
   <label class="mcheck-report-label" for="mcheck-report">检测报告</label>
   <textarea id="mcheck-report" class="mcheck-report" readonly spellcheck="false"></textarea>
 </div>
-<script src="/js/music-continuous-check.js?v=1"></script>
+<script src="/js/music-continuous-check.js?v=2"></script>
 </body>
 </html>

@@ -46,7 +46,9 @@
     musicQueued = true;
     loadScript('/lib/APlayer.min.js', function () {
       loadScript('/js/music-playback-guard.js?v=1', function () {
-        loadScript('/js/music-playlist.js?v=3');
+        loadScript('/js/music-continuous.js?v=1', function () {
+          loadScript('/js/music-playlist.js?v=4');
+        });
       });
     });
   }
