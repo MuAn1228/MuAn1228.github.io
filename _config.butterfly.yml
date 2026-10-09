@@ -136,7 +136,7 @@ inject:
     - '<script src="/js/music-toggle.js"></script>'
     - '<script src="/js/reward-lightbox.js"></script>'
     - '<script src="/js/name-particles.js"></script>'
-    - '<script src="/js/page-assets.js?v=5"></script>'
+    - '<script src="/js/page-assets.js?v=6"></script>'
     
 
 # ---------- 评论系统（Giscus） ----------
