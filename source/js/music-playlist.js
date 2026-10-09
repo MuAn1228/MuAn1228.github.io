@@ -414,10 +414,10 @@
     var queue = playlists[queueOwner];
     if (!ap || !queue || !queue[index]) return false;
     skipCount = 0;
-    var stream = continuous && queueOwner === 'mini' && queue.length > 1 ? continuous : null;
+    var stream = streamFor(queueOwner);
     var ownerChanged = owner !== queueOwner;
     changingPlaylist = true;
-    // clear/add 只发生在切换歌单时。连续流会话只在迷你歌单存在，离开前先结束。
+    // clear/add 只发生在切换歌单时。离开当前歌单前先结束它的连续流会话。
     if (ownerChanged && continuous && continuous.isActive()) continuous.stop();
     if (ownerChanged) {
       ap.list.clear();
@@ -475,17 +475,18 @@
       switchTrack(index);
       publishState();
     };
-    // 连续流接管迷你歌单的换源：会话内只跳转，绝不写 audio.src / 重新 play()。
+    // 连续流接管当前歌单的换源：会话内只跳转，绝不写 audio.src / 重新 play()。
     originalSetAudio = ap.setAudio.bind(ap);
     ap.setAudio = function (track) {
-      if (continuous && owner === 'mini' && playlists.mini.length > 1) {
-        if (continuous.isPending()) return;              // select 正在接管这次切换
-        if (continuous.isActive()) {
-          if (!suppressJump) continuous.jump(ap.list.index, 0, !ap.paused);
+      var ownerStream = streamFor(owner);
+      if (ownerStream) {
+        if (ownerStream.isPending()) return;             // select 正在接管这次切换
+        if (ownerStream.isActive()) {
+          if (!suppressJump) ownerStream.jump(ap.list.index, 0, !ap.paused);
           return;
         }
-        if (continuous.start(ap.list.index, {
-          count: playlists.mini.length, offset: 0, autoplay: !ap.paused
+        if (ownerStream.start(ap.list.index, {
+          count: playlists[owner].length, offset: 0, autoplay: !ap.paused
         })) return;
         continuous = null;                               // 启动失败退回经典路径
       }
@@ -493,12 +494,12 @@
     };
     var originalPlay = ap.play.bind(ap);
     ap.play = function () {
-      // 迷你播放器首次起播（播放键 / 点歌 / 恢复）也接入连续流，整个会话只保留一次 src。
-      if (continuous && owner === 'mini' && playlists.mini.length > 1 &&
-          !continuous.isActive() && !continuous.isPending()) {
+      // 首次起播（播放键 / 点歌 / 恢复）也接入连续流，整个会话只保留一次 src。
+      var ownerStream = streamFor(owner);
+      if (ownerStream && !ownerStream.isActive() && !ownerStream.isPending()) {
         var offset = ap.audio.currentTime > 0 ? ap.audio.currentTime : 0;
-        if (!continuous.start(ap.list.index, {
-          count: playlists.mini.length, offset: offset, autoplay: true
+        if (!ownerStream.start(ap.list.index, {
+          count: playlists[owner].length, offset: offset, autoplay: true
         })) continuous = null;
       }
       return originalPlay();
@@ -628,7 +629,7 @@
     playlists.big = list.map(function (song) {
       var id = String(song.id);
       return {
-        name: song.name, artist: song.artist, cover: song.cover,
+        name: song.name, artist: song.artist, cover: song.cover, songId: id,
         url: LOCAL_IDS && LOCAL_IDS.has(id) ? CDN_BASE + id + '.mp3'
           : 'https://music.163.com/song/media/outer/url?id=' + id + '.mp3'
       };
@@ -652,7 +653,7 @@
       return Promise.resolve({
         name: s.name, artist: s.artist,
         url: CDN_BASE + id + '.mp3',
-        cover: s.cover, lrc: ''
+        cover: s.cover, lrc: '', songId: id
       });
     }
     // 2) Meting API（拿真实 CDN 直链）
@@ -667,28 +668,37 @@
       // 3) 网易云官方外链兜底（免费可外链的歌曲仍可用）
       .catch(function () { return fallback; })
       .then(function (url) {
-        return { name: s.name, artist: s.artist, url: url, cover: s.cover, lrc: '' };
+        return { name: s.name, artist: s.artist, url: url, cover: s.cover, lrc: '', songId: id };
       });
   }
 
   // ===== 连续流（MediaSource）接线 =====
-  // 只有迷你歌单（本文件内的 49 首）接入连续流；音乐页 394 首大歌单保持经典路径。
+  // 迷你歌单与音乐页大歌单都接入连续流：整个队列写进同一个 MediaSource，会话内只赋值一次 src。
+  // Meting 的 type=url 直链（302 → 网易 CDN 两跳都带 CORS 头）可以 fetch 流式读取。
+  var METING_STREAM = 'https://api.injahow.cn/meting/?server=netease&type=url&id=';
+
+  // 连续流条件：队列长度 > 1，且 APlayer 处于「顺序播放 + 列表循环」。
+  // 单曲循环 / 随机播放 / 播完即停由 APlayer 原生逻辑负责，连续时间轴无法表达，退回经典路径。
+  function streamFor(queueOwner) {
+    var queue = playlists[queueOwner];
+    var allowed = !!(continuous && queue && queue.length > 1 && ap &&
+      ap.options.order === 'list' && ap.options.loop === 'all');
+    if (!allowed && continuous && continuous.isActive()) continuous.stop();
+    return allowed ? continuous : null;
+  }
+
   function streamUrl(index) {
-    var item = playlists.mini[index];
+    var queue = playlists[owner];
+    var item = queue && queue[index];
     if (!item) return Promise.reject(new Error('no-track'));
     // jsDelivr 本地文件与 Meting 直链都带 CORS 头，可以直接流式读取。
     if (item.url.indexOf('music.163.com/song/media/outer/url') === -1) {
       return Promise.resolve(item.url);
     }
-    // 网易官方外链没有 CORS 头，fetch 读不了；再解析一次 Meting，失败即该曲不可流式。
-    var id = String(songs[index].id);
-    return fetch('https://api.injahow.cn/meting/?server=netease&type=song&id=' + id, { cache: 'no-store' })
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        var url = d && d[0] && d[0].url;
-        if (!url) throw new Error('external-source');
-        return url;
-      });
+    // 网易官方外链没有 CORS 头（浏览器 fetch 直接失败），改用 Meting 直链重新解析；
+    // 版权受限的歌曲只会返回 HTML，由 fetchTrack 的内容类型检查拦下，按不可用处理。
+    if (!item.songId) return Promise.reject(new Error('no-id'));
+    return Promise.resolve(METING_STREAM + item.songId);
   }
 
   function onContinuousAdvance(index) {
@@ -705,7 +715,7 @@
 
   function onStreamUnavailable(index, reason) {
     document.dispatchEvent(new CustomEvent('blog-music-error', {
-      detail: { owner: 'mini', index: index, reason: reason }
+      detail: { owner: owner, index: index, reason: reason }
     }));
     var shouldContinue = !!(ap && !ap.paused && !userPaused);
     if (shouldContinue && ++skipCount <= 2) return true;

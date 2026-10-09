@@ -806,15 +806,52 @@ async function test(name, options, run) {
     assert.equal(b.stream.calls.filter(call => call.name === 'start').length, 1, 'broken module is dropped');
   });
 
-  await test('switching to the big queue stops the stream and uses classic sources', { continuous: true }, async b => {
-    b.engine.ap.play();
+  await test('switching from mini to the big queue opens a new stream session without classic src', { continuous: true }, async b => {
+    b.engine.ap.play();                                 // 迷你歌单先建立连续流会话
     await delay(20);
+    const sourcesBefore = b.sourceChanges.length;
     await b.clickTrack(1);
+    const starts = b.stream.calls.filter(call => call.name === 'start');
+    assert.equal(starts.length, 2, '离开迷你歌单后再为大歌单开一个新会话');
     assert.ok(b.stream.calls.some(call => call.name === 'stop'));
-    assert.equal(b.stream.calls.filter(call => call.name === 'start').length, 1);
+    assert.equal(starts[1].index, 1);
+    assert.equal(starts[1].options.count, b.engine.ap.list.audios.length);
+    assert.equal(starts[1].options.autoplay, true);
+    // APlayer 的 List.clear() 会自己把 audio.src 清空（''），这是它的内部行为；
+    // 这里只要求引擎没有写回经典曲目地址。
+    const classicSources = b.sourceChanges.slice(sourcesBefore)
+      .filter(src => src && src.indexOf('blob:') !== 0);
+    assert.deepEqual(classicSources, [], '大歌单会话不得写经典曲目 src');
     assertTrack(b, 'big', 1);
-    assert.equal(b.sourceChanges[b.sourceChanges.length - 1], expectedUrl(1));
     assert.equal(b.engine.getState().playing, true);
+  });
+
+  await test('stream urls follow the active queue: local CDN direct, network tracks via Meting', { continuous: true }, async b => {
+    await b.engine.select(3, true);                     // 大歌单非本地曲目
+    await delay(20);
+    assert.equal(await b.stream.hooks.getUrl(4),
+      'https://api.injahow.cn/meting/?server=netease&type=url&id=' + playlist[4].id);
+    assert.equal(await b.stream.hooks.getUrl(0), expectedUrl(0), '白名单曲目仍直接走 CDN');
+    assert.equal(b.stream.calls.filter(call => call.name === 'start').length, 1);
+  });
+
+  await test('single-repeat and random modes fall back to the classic path', { continuous: true }, async b => {
+    await b.engine.select(2, true);                     // 先在大歌单建立连续流会话
+    await delay(20);
+    assert.equal(b.stream.calls.filter(call => call.name === 'start').length, 1);
+    b.engine.ap.options.loop = 'one';
+    const stopsBefore = b.stream.calls.filter(call => call.name === 'stop').length;
+    const sourcesBefore = b.sourceChanges.length;
+    await b.clickTrack(1);
+    assert.equal(b.stream.calls.filter(call => call.name === 'start').length, 1, '单曲循环不再建立会话');
+    assert.equal(b.stream.calls.filter(call => call.name === 'stop').length, stopsBefore + 1, '已有会话被结束');
+    assert.equal(b.sourceChanges.length, sourcesBefore + 1, '退回经典换源');
+    assertTrack(b, 'big', 1);
+    assert.equal(b.engine.getState().playing, true);
+    b.engine.ap.options.loop = 'all';
+    b.engine.ap.options.order = 'random';
+    await b.clickTrack(3);
+    assert.equal(b.stream.calls.filter(call => call.name === 'start').length, 1, '随机播放同样退回经典路径');
   });
 
   await test('restored progress starts the stream at the saved offset', {
