@@ -410,6 +410,18 @@
     play();
   }
 
+  // 蓝牙耳机媒体键（双击下一首 / 三击上一首）：Media Session 回调与页面 keydown 兜底
+  // 可能在几毫秒内先后到达（同一次按键、同一方向），用短窗口去重，避免一次按键跳两首。
+  var lastMediaKeyAt = 0;
+  var lastMediaKeyDir = 0;
+  function mediaKeyStep(direction) {
+    var now = Date.now();
+    if (direction === lastMediaKeyDir && now - lastMediaKeyAt < 150) return;
+    lastMediaKeyAt = now;
+    lastMediaKeyDir = direction;
+    step(direction);
+  }
+
   function select(queueOwner, index, autoplay, offset) {
     var queue = playlists[queueOwner];
     if (!ap || !queue || !queue[index]) return false;
@@ -548,8 +560,8 @@
       var actions = {
         play: play,
         pause: pause,
-        previoustrack: function () { step(-1); },
-        nexttrack: function () { step(1); },
+        previoustrack: function () { mediaKeyStep(-1); },
+        nexttrack: function () { mediaKeyStep(1); },
         seekto: function (details) { ap.seek(details.seekTime); updateMediaSession(); },
         seekbackward: function (details) { ap.seek(ap.audio.currentTime - (details.seekOffset || 10)); },
         seekforward: function (details) { ap.seek(ap.audio.currentTime + (details.seekOffset || 10)); }
@@ -601,6 +613,22 @@
           })
         : null;
       if (continuous && !continuous.supported) continuous = null;
+      // 蓝牙耳机媒体键兜底：部分浏览器把耳机按键作为 keydown 派发给页面
+      //（MediaTrackNext / MediaTrackPrevious，老内核用 keyCode 176/177）。
+      document.addEventListener('keydown', function (event) {
+        var key = event.key || '';
+        var code = event.keyCode || event.which || 0;
+        if (key === 'MediaTrackNext' || code === 176) mediaKeyStep(1);
+        else if (key === 'MediaTrackPrevious' || code === 177) mediaKeyStep(-1);
+        else return;
+        event.preventDefault();
+      });
+      // 转入后台/锁屏前把后续若干首并行取进连续流缓冲：
+      // 后台续播因此不依赖新的网络请求，锁屏也能连续播放。
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState !== 'hidden') return;
+        if (continuous && continuous.isActive() && continuous.prefetchBurst) continuous.prefetchBurst();
+      });
       // 切页保护：pjax 切换期间若播放器被意外暂停（非用户主动点击暂停），切换完成后自动续播
       document.addEventListener('pjax:send', function () {
         wasPlayingOnNav = !!(ap && !ap.audio.paused);

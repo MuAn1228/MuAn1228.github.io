@@ -209,6 +209,10 @@ async function createBrowser(options = {}) {
           stream.calls.push({ name: 'stop' });
           stream.active = false;
           stream.pending = false;
+        },
+        prefetchBurst() {
+          stream.calls.push({ name: 'prefetchBurst' });
+          return stream.active ? 1 : 0;
         }
       };
     };
@@ -241,6 +245,12 @@ async function createBrowser(options = {}) {
     hide(value = true) {
       hidden = value;
       document.dispatchEvent(new window.Event('visibilitychange'));
+    },
+    mediaKey(name, code) {
+      const event = new window.Event('keydown', { bubbles: true, cancelable: true });
+      event.key = name;
+      event.keyCode = code;
+      document.dispatchEvent(event);
     },
     async clickTrack(index) {
       document.querySelector('.mf-row[data-i="' + index + '"]').click();
@@ -867,6 +877,54 @@ async function test(name, options, run) {
     assert.equal(restoreOptions.autoplay, true);
     assertTrack(b, 'mini', 2);
     assert.equal(b.sourceChanges.length, 1, 'restore must not fall back to a classic src');
+  });
+
+  await test('page hidden deep-prefetches the active stream session', { continuous: true }, async b => {
+    b.engine.ap.play();
+    await delay(20);
+    const bursts = () => b.stream.calls.filter(call => call.name === 'prefetchBurst').length;
+    assert.equal(bursts(), 0, '可见时不需要强制预取');
+    b.hide();
+    assert.equal(bursts(), 1);
+    b.hide(false);
+    b.hide();
+    assert.equal(bursts(), 2, '每次转入后台都要补齐后台播放余量');
+    assert.equal(b.sourceChanges.length, 1, '预取不得改写真在播放的流');
+    assert.equal(b.engine.getState().playing, true);
+  });
+
+  await test('page hidden without an active stream session does not prefetch', { continuous: true }, async b => {
+    b.hide();
+    assert.equal(b.stream.calls.length, 0);
+    assert.equal(b.engine.getState().playing, false);
+  });
+
+  await test('earphone next key advances once and a duplicate callback is ignored', { continuous: true }, async b => {
+    b.engine.ap.play();
+    await delay(20);
+    const jumps = () => b.stream.calls.filter(call => call.name === 'jump').length;
+    const jumpsBefore = jumps();
+    b.mediaKey('MediaTrackNext', 176);
+    await delay(20);
+    assertTrack(b, 'mini', 1);
+    assert.equal(jumps(), jumpsBefore + 1);
+    b.actions.nexttrack();                       // 同一次按键再从 Media Session 到达
+    await delay(20);
+    assertTrack(b, 'mini', 1);
+  });
+
+  await test('earphone previous key goes back once and its duplicate callback is ignored', { continuous: true }, async b => {
+    b.engine.ap.play();
+    await delay(20);
+    b.actions.nexttrack();
+    await delay(200);                            // 越过去重窗口，模拟另一次按键
+    b.mediaKey('MediaTrackPrevious', 177);
+    await delay(20);
+    assertTrack(b, 'mini', 0);
+    b.actions.previoustrack();                   // 同方向的重复回调必须被丢弃
+    await delay(20);
+    assertTrack(b, 'mini', 0);
+    assert.equal(b.engine.getState().playing, true);
   });
 
   console.log('RESULT: PASS_' + passed + '_F' + failed);
