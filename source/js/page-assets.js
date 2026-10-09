@@ -47,7 +47,7 @@
     loadScript('/lib/APlayer.min.js', function () {
       loadScript('/js/music-playback-guard.js?v=1', function () {
         loadScript('/js/music-continuous.js?v=1', function () {
-          loadScript('/js/music-playlist.js?v=4');
+          loadScript('/js/music-playlist.js?v=5');
         });
       });
     });
