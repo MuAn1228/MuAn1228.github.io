@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 760" fill="none">
+  <defs>
+    <linearGradient id="br-floor" x1="480" y1="350" x2="480" y2="710" gradientUnits="userSpaceOnUse"><stop stop-color="#C49D86"/><stop offset="1" stop-color="#E6C5A4"/></linearGradient>
+    <linearGradient id="br-sky" x1="0" y1="0" x2="0" y2="130" gradientUnits="userSpaceOnUse"><stop stop-color="#A3CADA"/><stop offset="1" stop-color="#E9DCCD"/></linearGradient>
+    <linearGradient id="br-screen" x1="0" y1="0" x2="100" y2="75"><stop stop-color="#282C43"/><stop offset="1" stop-color="#171D30"/></linearGradient>
+    <radialGradient id="br-light"><stop stop-color="#FFDE9C" stop-opacity=".65"/><stop offset="1" stop-color="#FFDE9C" stop-opacity="0"/></radialGradient>
+    <clipPath id="br-window-clip"><rect x="0" y="0" width="176" height="115" rx="3"/></clipPath>
+    <pattern id="br-floorboards" width="72" height="30" patternUnits="userSpaceOnUse" patternTransform="matrix(1 .5 -1 .5 480 350)"><path d="M0 0H72M0 0V30M36 0V30" stroke="#967965" stroke-opacity=".22"/></pattern>
+  </defs>
+  <!-- Original dollhouse illustration. Coordinates share the 960 x 760 interaction frame. -->
+  <ellipse cx="480" cy="668" rx="370" ry="55" fill="#101525" opacity=".12"/>
+  <path d="M120 530L480 350L840 530L480 710Z" fill="url(#br-floor)"/>
+  <path d="M120 530L480 350L840 530L480 710Z" fill="url(#br-floorboards)"/>
+  <path d="M120 530V545L480 725V710Z" fill="#AF8670"/><path d="M480 710V725L840 545V530Z" fill="#987560"/>
+  <path class="br-wall-left" d="M120 290L480 110V350L120 530Z" fill="#D6C3B8"/>
+  <path class="br-wall-right" d="M480 110L840 290V530L480 350Z" fill="#E9D9C9"/>
+  <path d="M120 290L480 110L840 290" stroke="#F5EADD" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M120 517L480 337L840 517" stroke="#A68A7A" stroke-width="9"/>
+  <path d="M480 111V337" stroke="#BFA698" stroke-width="3"/>
+  <!-- A window looking out over a quiet city. -->
+  <g transform="translate(552 177) matrix(1 .5 0 1 0 0)">
+    <rect x="-10" y="-10" width="196" height="135" rx="4" fill="#B19683"/>
+    <g clip-path="url(#br-window-clip)">
+      <rect class="br-window-sky" width="176" height="115" fill="url(#br-sky)"/>
+      <circle class="br-sun" cx="132" cy="25" r="14" fill="#FFF4CD"/>
+      <g class="br-stars" fill="#F8E8C9" opacity="0"><circle cx="24" cy="20" r="1.4"/><circle cx="70" cy="13" r="1.5"/><circle cx="101" cy="30" r="1"/><circle cx="153" cy="49" r="1.4"/><circle cx="48" cy="44" r="1"/></g>
+      <path d="M0 82L24 68L54 80L88 58L122 80L155 61L176 73V115H0Z" fill="#8FA4AE"/>
+      <path d="M9 115V83H28V115M34 115V70H56V115M66 115V91H88V115M102 115V60H116V115M127 115V77H149V115M158 115V89H176V115" fill="#667E8C"/>
+      <g class="br-city-lights" stroke="#FFCF7C" stroke-width="3" opacity="0"><path d="M40 82H45M40 92H45M40 102H45M107 70H111M107 82H111M107 94H111M133 86H138M133 98H138M16 92H20"/></g>
+    </g>
+    <rect width="176" height="115" rx="3" stroke="#F7EBDC" stroke-width="7"/>
+    <path d="M88 0V115M0 57H176" stroke="#F7EBDC" stroke-width="5"/>
+    <path d="M-15 122H191V131H-15Z" fill="#E2C4A6"/>
+    <path d="M-23 -13H-10V131H-23Z" fill="#A18AA2"/><path d="M188 -13H201V131H188Z" fill="#A18AA2"/>
+    <path d="M-19 -8V123M196 -8V123" stroke="#C3AEC0" stroke-width="3"/>
+  </g>
+  <!-- Bookshelves; the visible spines are hand-drawn, without external assets. -->
+  <g transform="translate(154 331) matrix(1 -.5 0 1 0 0)">
+    <path d="M0 0H177V167H0Z" fill="#92705F"/><path d="M7 7H169V159H7Z" fill="#574852"/>
+    <g stroke-width="13"><path d="M24 13V57" stroke="#B9A7C7"/><path d="M40 17V57" stroke="#D8B999"/><path d="M56 11V57" stroke="#789594"/><path d="M73 19V57" stroke="#C9867C"/><path d="M89 14V57" stroke="#D9CCA9"/><path d="M110 12L124 57" stroke="#899AB7"/>
+    <path d="M24 68V105" stroke="#D9CAA5"/><path d="M41 64V105" stroke="#86A4A0"/><path d="M59 70V105" stroke="#9C89AF"/><path d="M77 65V105" stroke="#C6977F"/><path d="M98 72V105" stroke="#B2BEC5"/><path d="M132 66L143 105" stroke="#D5B39C"/></g>
+    <path d="M6 59H171M6 109H171" stroke="#C4A38A" stroke-width="7"/>
+    <rect x="22" y="126" width="48" height="24" rx="3" fill="#B19AA9"/><path d="M34 135H58" stroke="#E2CCD5" stroke-width="3"/>
+    <rect x="89" y="141" width="64" height="8" fill="#DCC9A9"/><rect x="96" y="132" width="57" height="8" fill="#90A8A0"/>
+    <path d="M0 165V175M177 165V175" stroke="#795D52" stroke-width="7"/>
+  </g>
+  <!-- Two little photographs: mountains and a sunset over water. -->
+  <g transform="translate(357 245) matrix(1 -.5 0 1 0 0)">
+    <rect x="-6" y="-6" width="86" height="78" rx="2" fill="#8F7568"/><rect width="74" height="66" fill="#F1E5D7"/>
+    <rect x="6" y="6" width="62" height="48" fill="#A7BEC3"/><circle cx="52" cy="18" r="7" fill="#F9E1B3"/><path d="M6 50L27 21L43 43L54 31L68 50V54H6Z" fill="#688786"/>
+    <path d="M24 58H52" stroke="#BEA899" stroke-width="2"/>
+    <g transform="translate(19 94)"><rect x="-5" y="-5" width="70" height="64" fill="#92796B"/><rect width="60" height="54" fill="#F1E5D7"/><rect x="5" y="5" width="50" height="39" fill="#D5AFB1"/><circle cx="35" cy="18" r="8" fill="#FFD8A0"/><path d="M5 28H55V44H5Z" fill="#7E99AB"/><path d="M18 34H40M25 39H46" stroke="#DCD5C3" stroke-width="2"/></g>
+  </g>
+  <!-- A woven rug on the open floor. -->
+  <g transform="translate(452 510) matrix(1 .5 -1 .5 0 0)"><rect x="-82" y="-20" width="194" height="140" rx="8" fill="#9A88A3"/><rect x="-70" y="-8" width="170" height="116" rx="5" stroke="#C5B4BC" stroke-width="3"/><path d="M-57 12H85M-57 90H85" stroke="#B4A0B1" stroke-width="2"/><path d="M-30 45L10 18L50 45L10 72Z" stroke="#C5B4BC" stroke-width="3"/></g>
+  <!-- Desk, screen, notebook, mug and evening lamp. -->
+  <path d="M505 406V505M689 498V571M770 457V539" stroke="#8D7365" stroke-width="12"/>
+  <path d="M494 395L589 348L783 445L689 492Z" fill="#C5A080"/><path d="M494 395V411L689 508V492Z" fill="#AF8A70"/><path d="M689 492V508L783 461V445Z" fill="#967763"/>
+  <g transform="translate(570 340) matrix(1 .5 0 1 0 0)">
+    <rect width="113" height="79" rx="5" fill="#565563"/><rect x="6" y="6" width="101" height="64" rx="2" fill="url(#br-screen)"/>
+    <g stroke-width="3" stroke-linecap="round"><path d="M17 19H36M22 29H50M22 39H65M22 49H43M17 59H35" stroke="#B6A0D5"/><path d="M42 19H67M57 29H84M72 39H91M50 49H81" stroke="#91B9B0"/></g>
+    <path d="M52 79V94M34 94H78" stroke="#565563" stroke-width="6"/>
+  </g>
+  <g transform="translate(564 426) matrix(1 .5 -1 .5 0 0)"><rect width="104" height="32" rx="3" fill="#ECE1D7"/><path d="M7 8H96M7 15H96M7 22H96" stroke="#BDB0AB" stroke-width="3"/><path d="M19 5V25M33 5V25M47 5V25M61 5V25M75 5V25M89 5V25" stroke="#C9BBB4" stroke-width="2"/></g>
+  <g transform="translate(702 452)"><ellipse rx="16" ry="8" fill="#917B72" opacity=".3"/><path d="M-10 -24V-4Q0 6 10 -4V-24" fill="#E9D6C1"/><ellipse cy="-24" rx="10" ry="5" fill="#967B67"/><path d="M10 -20Q25 -20 22 -11Q20 -4 10 -10" stroke="#E9D6C1" stroke-width="5"/></g>
+  <g transform="translate(731 404)"><ellipse class="br-lamp-glow" cy="10" rx="82" ry="46" fill="url(#br-light)" opacity="0"/><ellipse rx="19" ry="9" fill="#686B71"/><path d="M0 0V-67L-25 -87" stroke="#686B71" stroke-width="5"/><path d="M-43 -105L-12 -89L-18 -66L-52 -83Z" fill="#A7ADA0"/><path class="br-lamp-bulb" d="M-51 -82L-18 -66" stroke="#DCD4AD" stroke-width="4"/></g>
+  <!-- Record cabinet and a turntable on its top. -->
+  <path d="M219 508L295 470L401 523L325 561Z" fill="#C7A288"/><path d="M219 508V586L325 639V561Z" fill="#B18A74"/><path d="M325 561V639L401 601V523Z" fill="#977562"/>
+  <path d="M228 525V573L315 616V568Z" fill="#675562"/><g stroke-width="7"><path d="M240 537V574" stroke="#B2A1C0"/><path d="M251 543V580" stroke="#D2B98D"/><path d="M262 548V586" stroke="#8AA7A2"/><path d="M274 554V592" stroke="#C28E80"/><path d="M286 560V598" stroke="#A4ADC1"/><path d="M298 566V604" stroke="#D0BCAA"/></g>
+  <g transform="translate(244 504) matrix(1 .5 -1 .5 0 0)"><rect width="96" height="58" rx="4" fill="#5B565F"/><rect x="4" y="4" width="88" height="50" rx="3" fill="#79717B"/>
+    <g transform="translate(36 28)"><g class="br-disc"><circle r="22" fill="#292A36"/><circle r="17" stroke="#44414E"/><circle r="13" stroke="#44414E"/><circle r="8" fill="#BA93B4"/><path d="M0 -20A20 20 0 0 1 20 0" stroke="#69616D" stroke-width="2"/><circle r="2" fill="#E8D9C3"/></g></g>
+    <path d="M78 10L65 37L51 40" stroke="#E9DCCC" stroke-width="3" stroke-linecap="round"/><circle cx="78" cy="10" r="4" fill="#D3BCA4"/>
+  </g>
+  <path d="M225 586V600M325 639V650M396 601V613" stroke="#795F56" stroke-width="6"/>
+  <!-- A low game console and a small controller. -->
+  <path d="M641 545L703 514L765 545L703 576Z" fill="#B29B91"/><path d="M641 545V591L703 622V576Z" fill="#98827D"/><path d="M703 576V622L765 591V545Z" fill="#806F72"/>
+  <g transform="translate(669 472) matrix(1 .5 0 1 0 0)"><rect width="76" height="64" rx="9" fill="#D1C2B5"/><rect x="7" y="7" width="62" height="43" rx="6" fill="#3C4657"/><path d="M12 42L28 24L41 36L56 17L65 33" stroke="#8FB7A5" stroke-width="3"/><rect x="23" y="53" width="29" height="4" rx="2" fill="#A59694"/></g>
+  <g transform="translate(671 552) matrix(1 .5 -1 .5 0 0)"><path d="M0 0H35Q44 1 48 17Q48 25 39 23L29 16H9L-1 23Q-11 25 -10 17Q-6 1 0 0Z" fill="#DDD0C7"/><path d="M3 5V15M-2 10H8" stroke="#655C69" stroke-width="3"/><circle cx="35" cy="7" r="2.5" fill="#B795B7"/><circle cx="40" cy="12" r="2.5" fill="#94AB9F"/></g>
+  <!-- Chair and a plant make the room lived-in. -->
+  <path d="M549 511V574M583 528V591M610 514V579" stroke="#746776" stroke-width="6"/><path d="M535 504L570 486L620 511L584 529Z" fill="#ACA1B5"/><path d="M548 493V449Q551 434 562 439L602 459Q612 465 608 480V514" fill="#BCAFC2" stroke="#9B8EA7" stroke-width="4"/>
+  <g transform="translate(778 498)"><ellipse cy="26" rx="30" ry="15" fill="#3E424B" opacity=".12"/><path d="M-23 -7L-17 26Q0 36 17 26L23 -7Z" fill="#B99180"/><ellipse cy="-7" rx="23" ry="11" fill="#967765"/><path d="M0 -7V-75M0 -39L-27 -56M0 -48L24 -70" stroke="#788B72" stroke-width="4"/><path d="M0 -70Q-24 -97 -25 -69Q-22 -52 0 -54M1 -61Q28 -98 32 -77Q39 -56 1 -45M-17 -49Q-42 -74 -39 -52Q-38 -34 -5 -32M2 -32Q34 -62 38 -40Q40 -24 2 -16" fill="#8FA287"/></g>
+</svg>
