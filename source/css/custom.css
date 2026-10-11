@@ -381,6 +381,75 @@ body.music-collapsed .music-toggle {
   color: #6b5b95 !important;
 }
 
+/* ===== 首页无封面文章卡片：紧凑排版与交互反馈 ===== */
+#recent-posts .recent-post-item:has(> .recent-post-info.no-cover) {
+  height: auto;
+  border: 1px solid rgba(142, 107, 181, 0.18);
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(26, 26, 46, 0.10);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+#recent-posts .recent-post-item > .recent-post-info.no-cover {
+  min-width: 0;
+  padding: 24px 28px;
+}
+
+#recent-posts .recent-post-info.no-cover > .article-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  transition: color 0.18s ease;
+}
+
+#recent-posts .recent-post-info.no-cover > .article-meta-wrap {
+  margin: 8px 0 12px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+#recent-posts .recent-post-info.no-cover > .content {
+  line-height: 1.75;
+}
+
+#recent-posts .recent-post-info.no-cover a:focus-visible {
+  outline: 2px solid #8e6bb5;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+[data-theme='dark'] #recent-posts .recent-post-item:has(> .recent-post-info.no-cover) {
+  border-color: rgba(183, 154, 214, 0.20);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme='dark'] #recent-posts .recent-post-info.no-cover a:focus-visible {
+  outline-color: #b79ad6;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #recent-posts .recent-post-item:has(> .recent-post-info.no-cover):hover {
+    border-color: #8e6bb5;
+    box-shadow: 0 6px 20px rgba(107, 91, 149, 0.16);
+  }
+}
+
+#recent-posts .recent-post-item:has(> .recent-post-info.no-cover):has(a:focus-visible) {
+  border-color: #8e6bb5;
+}
+
+@media (max-width: 768px) {
+  #recent-posts .recent-post-item > .recent-post-info.no-cover {
+    padding: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #recent-posts .recent-post-item:has(> .recent-post-info.no-cover),
+  #recent-posts .recent-post-info.no-cover > .article-title {
+    transition: none;
+  }
+}
+
 /* ===== 夜间模式：左侧侧边栏卡片 & GitHub 热力图卡片换深色毛玻璃 ===== */
 [data-theme='dark'] .card-widget,
 [data-theme='dark'] .github-heatmap-wrap {
