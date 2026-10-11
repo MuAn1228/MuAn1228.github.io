@@ -16,6 +16,7 @@ menu:
     游戏: /fun/games/ || fas fa-gamepad
     阅读: /fun/books/ || fas fa-book
     小游戏: /fun/arcade/ || fas fa-puzzle-piece
+    博客小屋: /room/ || fas fa-house-user
   展示: /showcase/ || fas fa-id-card
   交易: /finance/ || fas fa-chart-line
   分类: /categories/ || fas fa-folder-open
