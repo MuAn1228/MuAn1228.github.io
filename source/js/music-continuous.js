@@ -2,7 +2,7 @@
 // 背景：普通 APlayer 每切一首歌都会重设 src 并重新调用 play()，一加等机型在后台会挂起
 // 这类新的播放请求，导致锁屏后曲终不再续播。本模块把整个队列连续写入同一个 MediaSource：
 // 会话期间只赋值一次 src、只发起一次 play()，曲目边界只是时间轴上的分界点。
-// 桌面与不支持 MSE 的浏览器返回 supported=false，由引擎走 APlayer 经典路径。
+// 不支持 MSE 的浏览器返回 supported=false，由引擎走 APlayer 经典路径。
 // 对外接口：window.__createBlogContinuousStream(audio, hooks)
 //   hooks.getUrl(index) -> Promise<string>   按需解析可流式 URL（失败即该曲不可用）
 //   hooks.onAdvance(index)                   逻辑曲目变化（跨越边界或跳转）时同步界面
@@ -14,14 +14,11 @@
   'use strict';
   if (window.__createBlogContinuousStream) return;
 
-  var PREFETCH = 2;                    // 串行流式取流的提前量（最近的一首用它，起播最快）
-  var BURST_AHEAD = 6;                 // 突发预取目标：当前曲目之后保持排队的曲目数（锁屏后的播放余量）
-  var BURST_TIMEOUT = 45000;           // 单首突发取流的最长等待（毫秒），超时按取流失败处理
-  var BURST_COOLDOWN = 30000;          // 一次突发失败后的冷却时间，避免网络异常时反复重试
-  var STALL_MS = 20000;                // 串行取流多久没有新数据就认为被系统挂起
-  var MAX_ATTEMPTS = 3;                // 同一曲目最多重新取流（含被挂起后重启）的次数
+  var BURST_AHEAD = 6;                 // 当前曲目之后最多预取六首，锁屏余量不依赖后台定时器
+  var FETCH_CONCURRENCY = 2;           // 首曲完整下载后才并行预取，避免抢占首曲带宽
+  var FETCH_TIMEOUT = 45000;
+  var MAX_ATTEMPTS = 3;
   var HISTORY_KEEP = 600;              // 为「上一首」保留的已解码时长（秒）
-  var READY_SECONDS = 0.4;             // 起播前需要的最少缓冲
   var MAX_TRACK_BYTES = 32 * 1024 * 1024;
   var KEEPALIVE_MS = 4000;             // 播放期间的深缓冲巡检间隔（后台被节流也足够）
 
@@ -40,6 +37,7 @@
     );
 
     var prevPlay = audio.play;
+    var prevPause = audio.pause;
     var pendingPlay = null;
     var playWrapped = false;
     var active = false;
@@ -88,7 +86,7 @@
       for (var j = segments.length - 1; j >= 0; j--) {
         if (segments[j].state !== 'failed' && segments[j].start != null) return segments[j];
       }
-      return segments.length ? segments[segments.length - 1] : null;
+      return segments.length ? segments[0] : null;
     }
     function virtualTime() {
       var segment = segmentAt(nativeTime());
@@ -107,18 +105,30 @@
     }
     function virtualBuffered() {
       var segment = segmentAt(nativeTime());
+      var ranges = dBuffered.get.call(audio);
       var end = nativeBufferedEnd();
       if (!segment) {
         return { length: end > 0 ? 1 : 0, start: function () { return 0; }, end: function () { return end; } };
       }
-      var local = Math.min(end - segment.start, segmentLimit(segment));
-      if (local < 0) local = 0;
-      return { length: 1, start: function () { return 0; }, end: function () { return local; } };
+      var localRanges = [];
+      for (var i = 0; i < ranges.length; i++) {
+        var from = Math.max(ranges.start(i), segment.start);
+        var to = Math.min(ranges.end(i), segment.start + segmentLimit(segment));
+        if (to > from) localRanges.push([from - segment.start, to - segment.start]);
+      }
+      return { length: localRanges.length,
+        start: function (i) { return localRanges[i][0]; },
+        end: function (i) { return localRanges[i][1]; } };
     }
     function virtualSeek(value) {
       var segment = segmentAt(nativeTime());
       if (!segment) { setNativeTime(Math.max(0, value || 0)); return; }
       var offset = Math.max(0, Math.min(value || 0, segmentLimit(segment)));
+      // 配额回收可能删掉本曲的前半段。重新排队同一曲，不能 seek 到已删除的洞里。
+      if (session && segment.start + offset < session.trimmedTo) {
+        jump(segment.qi, offset, !audio.paused);
+        return;
+      }
       setNativeTime(segment.start + offset);
     }
     function installVirtual() {
@@ -144,6 +154,12 @@
       if (playWrapped) return;
       playWrapped = true;
       audio.play = function () {
+        var s = session;
+        if (active && s) {
+          s.autoplay = true;
+          // 用户点击时立即把播放意图交给原生 audio，保留手势授权。
+          // 第一首完整下载前不 append，浏览器的待决 play 会在整首落位后自然起播。
+        }
         if (active && session && !audio.paused) {
           audio.autoplay = true;      // 记录播放意图，但不产生新的 play 请求
           return Promise.resolve();
@@ -153,15 +169,28 @@
         var result = prevPlay.call(audio);
         if (active && session && result && result.then) {
           pendingPlay = result;
-          result.then(function () { pendingPlay = null; }, function () { pendingPlay = null; });
+          var settled = function () {
+            if (alive(s) && pendingPlay === result) pendingPlay = null;
+          };
+          result.then(settled, settled);
         }
         return result;
+      };
+      audio.pause = function () {
+        if (session) {
+          session.autoplay = false;
+          audio.autoplay = false;
+          // pause() 取消旧请求；紧接着的用户 play() 必须能够发出新请求。
+          pendingPlay = null;
+        }
+        return prevPause.call(audio);
       };
     }
     function unwrapPlay() {
       if (!playWrapped) return;
       playWrapped = false;
       audio.play = prevPlay;
+      audio.pause = prevPause;
     }
 
     /* ---------- SourceBuffer 串行操作队列 ---------- */
@@ -191,109 +220,180 @@
         op.segment.appended = true;
         if (op.last) { calibrate(s, op.segment, op.failure); }
         else { maybeStart(s); }
+      } else if (op.kind === 'remove') {
+        if (op.tail) {
+          // sequence 模式删除数据不会倒退追加位置，必须明确重设下一段起点。
+          try { s.buffer.timestampOffset = op.from; } catch (e) { fatal('append-failed'); return; }
+          s.trimmingTail = false;
+          drain(s);
+        } else s.trimmedTo = Math.max(s.trimmedTo, op.to);
       }
       pumpOps();
     }
     function opFailed(op, error) {
       var s = session;
       if (!s) return;
-      if (op.kind === 'append' && error && error.name === 'QuotaExceededError' && !op.retried) {
-        op.retried = true;
-        var segment = segmentAt(nativeTime());
-        var target = segment ? Math.max(0, segment.start - 1) : 0;
-        if (target > 0) {
-          if (target > s.trimmedTo) s.trimmedTo = target;   // 已回收的历史不能再当作可跳转区间
-          ops.unshift(op);
-          ops.unshift({ kind: 'remove', from: 0, to: target });
-          return;
-        }
+      if (op.kind === 'append' && error && error.name === 'QuotaExceededError' && s.started) {
+        // 手机音频缓冲配额可能放不下六首。保留未来曲目的字节，当前音频继续播放。
+        // 后续播放进度腾出空间再重试；绝不因为未来的预取满额而回退/重写当前 src。
+        s.quotaOp = op;
+        prioritizeQuota(s);
+        return;
       }
       if (op.kind === 'append') fatal('append-failed');
     }
-
-    /* ---------- 曲目边界标定与预取 ---------- */
-    function calibrate(s, segment, failure) {
-      if (!alive(s)) return;
-      var end = nativeBufferedEnd();
-      segment.end = end;
-      segment.duration = end - segment.start;
-      if (!(segment.duration > 0.05)) {
-        segment.duration = 0;
-        segment.end = segment.start;      // 零长段不占时间轴，等同于跳过
-        segment.state = 'failed';
-      } else {
-        segment.state = 'ready';
-      }
-      if (failure && s.segments[0] === segment && !s.started) {
-        s.offset = 0;
-        setNativeTime(0);                 // 首曲不可用：撤销早先写入的默认起播位置
-      }
-      if (failure) {
-        var keep = hooks.onUnavailable ? hooks.onUnavailable(segment.qi, failure) !== false : true;
-        if (!alive(s)) return;
-        if (!keep) return;
-      }
-      var wanted = s.pendingJump;
-      if (wanted && wanted.qi === segment.qi) {
-        // 等这一段落位后再定位：整个等待过程只有一次播放请求，后台也不会被系统挂起
-        s.pendingJump = null;
-        if (segment.state !== 'failed') {
-          lastNotified = segment.qi;
-          setNativeTime(segment.start + Math.max(0, Math.min(wanted.offset || 0, segmentLimit(segment))));
-        }
-      }
-      drainBurst(s);
-      fillBurst(s, false);
-      maybeFetch(s);
-      maybeStart(s);                      // 时长标定后才有依据把定位夹进曲目内
-      if (segmentAt(nativeTime()) === segment) {
-        dispatchDurationChange();
-        report();
-      }
+    function retryQuota(s) {
+      if (!s.quotaOp || !s.buffer || s.buffer.updating || runningOp) return;
+      if (prioritizeQuota(s)) return;
+      var target = Math.max(0, nativeTime() - 5);
+      if (target <= s.trimmedTo + 5) return;
+      var op = s.quotaOp;
+      s.quotaOp = null;
+      ops.push({ kind: 'remove', from: 0, to: target });
+      ops.push(op);
+      pumpOps();
     }
+    function prioritizeQuota(s) {
+      // 显式切到未缓冲曲目时，未使用的未来歌曲不能占满配额、让用户等待数分钟。
+      // 仅撤掉当前完整曲之后的缓存；保留正在播放的曲目和目标下载，不重设 src/play。
+      var wanted = s.pendingJump && s.pendingJump.segment;
+      var current = segmentAt(nativeTime());
+      if (!s.quotaOp || !wanted || !current || typeof current.end !== 'number' ||
+          !s.buffer || s.buffer.updating || runningOp || nativeBufferedEnd() <= current.end + 0.05) return false;
+      var blocked = s.quotaOp;
+      s.quotaOp = null;
+      blocked.segment.fetched = blocked.bytes;
+      blocked.segment.state = 'downloaded';
+      blocked.segment.start = null;
+      var retained = [];
+      s.segments.forEach(function (item) {
+        if (typeof item.end === 'number' && item.end <= current.end) retained.push(item);
+        else if (item !== wanted) {
+          item.dropped = true;
+          if (item.cancel) item.cancel();
+          item.fetched = null;
+        }
+      });
+      wanted.start = null;
+      s.segments = retained.concat([wanted]);
+      s.nextQi = (wanted.qi + 1) % s.count;
+      ops = ops.filter(function (op) { return !op.segment || !op.segment.dropped; });
+      // 下载可在 remove 期间完成；drain 必须等到 timestampOffset 重设后才标定 start。
+      s.trimmingTail = true;
+      pushOp({ kind: 'remove', from: current.end, to: nativeBufferedEnd(), tail: true });
+      return true;
+    }
+
+    /* ---------- 完整曲目下载、按队列顺序追加 ---------- */
+    // appended 仅表示一次 append 成功；只有 end 已标定才表示整首完成。
+    // 下载可以并行，时间轴只能串行，未来曲目的失败不能截断正在播放的曲目。
     function currentIndex(s) {
       var segment = segmentAt(nativeTime());
       var index = segment ? s.segments.indexOf(segment) : -1;
       return index < 0 ? 0 : index;
     }
-    function maybeFetch(s) {
-      if (!alive(s) || s.fetching || s.burst) return;
-      var segments = s.segments;
-      var last = segments.length ? segments[segments.length - 1] : null;
-      // 上一首尚未标定边界时先等待（追加顺序 = 时间轴顺序）
-      if (last && typeof last.end !== 'number') return;
-      if (segments.length - currentIndex(s) > PREFETCH + 1) return;
-      fetchNext(s);
+    function createSegment(qi) {
+      return { qi: qi, start: null, end: null, duration: null,
+        state: 'queued', appended: false, attempts: 0, fetched: null,
+        failure: null, failureReported: false, cancel: null, dropped: false };
     }
-    function fetchNext(s) {
-      var qi = s.nextQi;
-      var last = s.segments.length ? s.segments[s.segments.length - 1] : null;
-      var segment = {
-        qi: qi,
-        start: last && typeof last.end === 'number' ? last.end : 0,
-        end: null,
-        duration: null,
-        state: 'fetching',
-        appended: false,
-        pushed: 0,
-        fetched: null,
-        attempts: 1
-      };
-      s.segments.push(segment);
-      s.nextQi = (qi + 1) % s.count;
-      s.fetching = true;
-      resolveUrl(qi).then(function (url) {
-        if (!alive(s)) return;
-        return fetchTrack(s, segment, url, 0);
-      }).catch(function (error) {
-        if (!alive(s) || segment.cancelled) return;    // 已被突发预取接管，失败交给它处理
-        s.fetching = false;
-        pushOp({ kind: 'calibrate', segment: segment, failure: (error && error.message) || 'fetch-failed' });
-      });
+    function firstPending(s) {
+      for (var i = 0; i < s.segments.length; i++) {
+        if (typeof s.segments[i].end !== 'number') return s.segments[i];
+      }
+      return null;
+    }
+    function calibrate(s, segment, failure) {
+      if (!alive(s) || segment.dropped) return;
+      segment.end = nativeBufferedEnd();
+      segment.duration = Math.max(0, segment.end - segment.start);
+      segment.state = segment.duration > 0.05 ? 'ready' : 'failed';
+      segment.failure = failure || (segment.state === 'failed' ? 'empty' : null);
+      if (segment.failure && !s.started) {
+        s.offset = 0;
+        setNativeTime(0);
+      }
+      if (!reportFailures(s)) return;
+      var wanted = s.pendingJump;
+      if (wanted && wanted.segment === segment) {
+        if (segment.state !== 'failed') {
+          s.pendingJump = null;
+          ignoreFailuresBefore(s, segment);
+          lastNotified = segment.qi;
+          setNativeTime(segment.start + Math.min(wanted.offset, Math.max(0, segment.duration - 0.05)));
+          if (hooks.onAdvance) hooks.onAdvance(segment.qi);
+        } else {
+          // 切歌目标失败时继续寻找后续曲目，失败次数仍由正常边界规则控制。
+          var following = s.segments[s.segments.indexOf(segment) + 1];
+          if (!following) {
+            following = createSegment((segment.qi + 1) % s.count);
+            s.segments.push(following);
+            s.nextQi = (following.qi + 1) % s.count;
+          }
+          s.pendingJump = { segment: following, offset: 0 };
+          if (!s.started) { s.startTarget = following; s.offset = 0; }
+        }
+      }
+      maybeStart(s);
+      drain(s);
+      fillBurst(s);
+      dispatchDurationChange();
+      report();
+    }
+    function reportFailures(s) {
+      if (s.blocked) return false;
+      var time = nativeTime();
+      for (var i = 0; i < s.segments.length; i++) {
+        var segment = s.segments[i];
+        if (!segment.failure || segment.failureReported || segment.start == null) continue;
+        // 预取失败只记录，等播到边界/用户点到该曲时才通知上层。不能提前暂停当前歌。
+        if (segment.start > time + 0.05 && !(s.pendingJump && s.pendingJump.segment === segment)) continue;
+        segment.failureReported = true;
+        var keep = !hooks.onUnavailable || hooks.onUnavailable(segment.qi, segment.failure) !== false;
+        if (!alive(s)) return false;
+        if (!keep) { s.blocked = true; return false; }
+      }
+      return true;
+    }
+    function ignoreFailuresBefore(s, target) {
+      var index = s.segments.indexOf(target);
+      for (var i = 0; i < index; i++) s.segments[i].failureReported = true;
+    }
+    function drain(s) {
+      if (!alive(s) || s.blocked || s.trimmingTail) return;
+      var segment = firstPending(s);
+      if (!segment || (segment.state !== 'downloaded' && segment.state !== 'unavailable')) return;
+      segment.start = nativeBufferedEnd();
+      segment.state = 'appending';
+      if (segment.failure) {
+        pushOp({ kind: 'calibrate', segment: segment, failure: segment.failure });
+      } else {
+        var bytes = segment.fetched;
+        segment.fetched = null;
+        pushOp({ kind: 'append', bytes: bytes, segment: segment, last: true });
+      }
+    }
+    function fillBurst(s) {
+      if (!alive(s) || s.blocked) return 0;
+      var queued = 0;
+      var room = BURST_AHEAD - (s.segments.length - currentIndex(s) - 1);
+      while (room-- > 0) {
+        s.segments.push(createSegment(s.nextQi));
+        s.nextQi = (s.nextQi + 1) % s.count;
+        queued++;
+      }
+      // 首曲下载期间只用一条连接；之后最多两条连接填满六首余量。
+      var limit = s.started ? FETCH_CONCURRENCY : 1;
+      for (var i = 0; i < s.segments.length && s.downloads < limit; i++) {
+        if (s.segments[i].state === 'queued') loadSegment(s, s.segments[i]);
+      }
+      return queued;
     }
     function resolveUrl(qi) {
-      if (!hooks.getUrl) return Promise.reject(new Error('no-resolver'));
-      return Promise.resolve(hooks.getUrl(qi)).then(function (url) {
+      return Promise.resolve().then(function () {
+        if (!hooks.getUrl) throw new Error('no-resolver');
+        return hooks.getUrl(qi);
+      }).then(function (url) {
         if (!url) throw new Error('no-url');
         return url;
       });
@@ -302,254 +402,129 @@
       for (var i = 0; i < bytes.length && i < 64; i++) {
         var code = bytes[i];
         if (code === 32 || code === 9 || code === 10 || code === 13) continue;
-        return code === 60 || code === 123 || code === 91;   // < { [
+        return code === 60 || code === 123 || code === 91;
       }
       return false;
     }
-    function pushAppend(segment, bytes, last) {
-      segment.pushed += bytes.length;
-      pushOp({ kind: 'append', bytes: bytes, segment: segment, last: last });
-    }
-    // 流式取流：边下边追加，只给「马上要播的那一首」用，起播最快。
-    function fetchTrack(s, segment, url, skip) {
-      var skipLeft = skip > 0 ? skip : 0;
-      var controller = null;
-      var init = null;
-      try {
-        if (typeof AbortController === 'function') {
-          controller = new AbortController();
-          init = { signal: controller.signal };
+    function loadSegment(s, segment) {
+      segment.state = 'loading';
+      segment.attempts++;
+      s.downloads++;
+      fetchBuffer(s, segment).then(function (bytes) {
+        if (!alive(s) || segment.dropped) return;
+        segment.fetched = bytes;
+        segment.state = 'downloaded';
+      }, function (error) {
+        if (!alive(s) || segment.dropped) return;
+        var reason = (error && error.message) || 'fetch-failed';
+        // 网络短暂中断可以重试；版权 HTML、空响应等确定不可播的结果不反复请求。
+        if (segment.attempts < MAX_ATTEMPTS &&
+            !/^(content-type|not-audio|empty|too-large|http-4)/.test(reason)) {
+          segment.state = 'queued';
+        } else {
+          segment.failure = reason;
+          segment.state = 'unavailable';
         }
-      } catch (e) {}
-      s.inflight = {
-        segment: segment,
-        progressAt: Date.now(),
-        cancel: function () {
-          segment.cancelled = true;
-          if (s.inflight && s.inflight.segment === segment) s.inflight = null;
-          try { if (controller) controller.abort(); } catch (e) {}
-        }
-      };
-      return fetch(url, init).then(function (response) {
+      }).then(function () {
+        s.downloads--;
         if (!alive(s)) return;
+        drain(s);
+        fillBurst(s);
+      });
+    }
+    function fetchBuffer(s, segment) {
+      var controller = typeof AbortController === 'function' ? new AbortController() : null;
+      var reader = null;
+      var timer;
+      var cancelReject;
+      var cancelled = false;
+      var cancellation = new Promise(function (resolve, reject) { cancelReject = reject; });
+      segment.cancel = function () {
+        if (cancelled) return;
+        cancelled = true;
+        try { if (controller) controller.abort(); } catch (e) {}
+        try { if (reader) Promise.resolve(reader.cancel()).catch(function () {}); } catch (e) {}
+        cancelReject(new Error('cancelled'));
+      };
+      // 超时覆盖 URL 解析和响应体，离开会话会同步清理计时器与连接。
+      timer = setTimeout(function () {
+        cancelReject(new Error('timeout'));
+        segment.cancel();
+      }, FETCH_TIMEOUT);
+      var reading = resolveUrl(segment.qi).then(function (url) {
+        if (cancelled || !alive(s)) throw new Error('gone');
+        return fetch(url, controller ? { signal: controller.signal } : undefined);
+      }).then(function (response) {
+        if (cancelled || !alive(s)) throw new Error('gone');
         if (!response.ok) throw new Error('http-' + response.status);
         var type = (response.headers.get('content-type') || '').toLowerCase();
         if (type && type.indexOf('audio') === -1 && type.indexOf('octet-stream') === -1 && type.indexOf('mpeg') === -1) {
           throw new Error('content-type');
         }
-        var reader = response.body && response.body.getReader ? response.body.getReader() : null;
-        if (!reader) throw new Error('no-stream');
-        var held = null;
-        var received = 0;
-        var sniffed = false;
-        function finish() {
-          if (!alive(s) || segment.cancelled) return;
-          if (s.inflight && s.inflight.segment === segment) s.inflight = null;
-          s.fetching = false;
-          if (held) pushAppend(segment, held, true);
-          else pushOp({ kind: 'calibrate', segment: segment, failure: 'empty' });
+        if (Number(response.headers.get('content-length')) > MAX_TRACK_BYTES) throw new Error('too-large');
+        reader = response.body && response.body.getReader ? response.body.getReader() : null;
+        if (!reader) {
+          if (response.arrayBuffer) return response.arrayBuffer();
+          throw new Error('no-stream');
         }
+        var chunks = [];
+        var size = 0;
         function readMore() {
           return reader.read().then(function (result) {
-            if (!alive(s) || segment.cancelled) { try { reader.cancel(); } catch (e) {} return; }
-            if (s.inflight && s.inflight.segment === segment) s.inflight.progressAt = Date.now();
-            if (result.done) { finish(); return; }
-            var bytes = result.value;
-            received += bytes.length;
-            if (received > MAX_TRACK_BYTES) throw new Error('too-large');
-            if (!sniffed) {
-              sniffed = true;
-              if (skipLeft === 0 && looksLikeErrorPage(bytes)) throw new Error('not-audio');
+            if (cancelled || !alive(s)) throw new Error('gone');
+            if (result.done) {
+              var joined = new Uint8Array(size);
+              var offset = 0;
+              for (var i = 0; i < chunks.length; i++) {
+                joined.set(chunks[i], offset);
+                offset += chunks[i].byteLength;
+              }
+              return joined.buffer;
             }
-            if (skipLeft > 0) {
-              // 重新取流时跳过已经追加过的前缀，时间轴里不会出现重复数据
-              if (bytes.length <= skipLeft) { skipLeft -= bytes.length; return readMore(); }
-              bytes = bytes.slice(skipLeft);
-              skipLeft = 0;
-            }
-            if (held) pushAppend(segment, held, false);
-            held = bytes;
+            size += result.value.byteLength;
+            if (size > MAX_TRACK_BYTES) throw new Error('too-large');
+            chunks.push(result.value);
             return readMore();
           });
         }
         return readMore();
-      });
-    }
-
-    /* ---------- 突发预取：并行取整首、按时间轴顺序整段追加 ---------- */
-    // 手机在后台/锁屏时会挂起新发起的取流，串行预取只能保住一两首。这里把后续若干首
-    // 并行取到内存，等前一段追加落位后按顺序整段写入，让锁屏后仍有足够长的可播缓冲。
-    function pendingAppendIndex(s) {
-      for (var i = 0; i < s.segments.length; i++) {
-        var segment = s.segments[i];
-        if (!segment.appended && segment.state !== 'failed') return i;
-      }
-      return s.segments.length;
-    }
-    function drainBurst(s) {
-      if (!alive(s)) return;
-      var segment = s.segments[pendingAppendIndex(s)];
-      if (!segment || !segment.fetched) return;
-      var bytes = segment.fetched;
-      segment.fetched = null;
-      var skip = segment.pushed || 0;
-      if (skip > 0) {
-        if (skip >= bytes.byteLength) { pushOp({ kind: 'calibrate', segment: segment }); return; }
-        bytes = bytes.slice(skip);
-      }
-      if (segment.start == null) segment.start = nativeBufferedEnd();  // 前一段已落位，缓冲末尾就是本段起点
-      pushAppend(segment, bytes, true);
-    }
-    function finishBurst(s) {
-      var burst = s.burst;
-      if (!burst || burst.aborted || burst.outstanding > 0) return;
-      s.burst = null;
-      drainBurst(s);
-      maybeFetch(s);
-    }
-    function abortBurst(s, failedSegment) {
-      var burst = s.burst;
-      if (!burst || burst.aborted) return;
-      burst.aborted = true;
-      s.burst = null;
-      var resumeAt = null;
-      for (var i = s.segments.length - 1; i >= 0; i--) {
-        var segment = s.segments[i];
-        // 已经追加过部分数据的段不能撤销（数据已占用时间轴）：按当前缓冲末尾收尾，避免时间轴卡死
-        if (segment.appended && typeof segment.end !== 'number' && segment.state !== 'failed') {
-          pushOp({ kind: 'calibrate', segment: segment });
-          continue;
-        }
-        if (segment.appended || segment === (s.inflight && s.inflight.segment)) continue;
-        segment.dropped = true;
-        resumeAt = segment;
-        s.segments.splice(i, 1);
-      }
-      s.burstCooldownUntil = Date.now() + BURST_COOLDOWN;
-      if (resumeAt) s.nextQi = resumeAt.qi;     // 未追加的段全部撤销，交回串行取流按顺序重取
-      s.fetching = !!s.inflight;
-      maybeFetch(s);
-    }
-    function loadBurstSegment(s, segment) {
-      var burst = s.burst;
-      resolveUrl(segment.qi).then(function (url) {
-        if (!alive(s) || !burst || burst.aborted || segment.dropped) return null;
-        return fetchBuffer(s, segment, url);
-      }).then(function (bytes) {
-        if (!alive(s) || !burst || burst.aborted || segment.dropped) return;
-        burst.outstanding--;
-        segment.fetched = bytes;
-        drainBurst(s);
-        finishBurst(s);
-      }).catch(function () {
-        if (!alive(s) || !burst || burst.aborted || segment.dropped) return;
-        burst.outstanding--;
-        abortBurst(s, segment);
-      });
-    }
-    function fetchBuffer(s, segment, url) {
-      var controller = null;
-      var init = null;
-      try {
-        if (typeof AbortController === 'function') {
-          controller = new AbortController();
-          init = { signal: controller.signal };
-        }
-      } catch (e) {}
-      var timer = null;
-      var timeout = new Promise(function (resolve, reject) {
-        timer = setTimeout(function () {
-          segment.cancelled = true;
-          try { if (controller) controller.abort(); } catch (e) {}
-          reject(new Error('timeout'));
-        }, BURST_TIMEOUT);
-      });
-      var reading = fetch(url, init).then(function (response) {
-        if (!alive(s)) throw new Error('gone');
-        if (!response.ok) throw new Error('http-' + response.status);
-        var type = (response.headers.get('content-type') || '').toLowerCase();
-        if (type && type.indexOf('audio') === -1 && type.indexOf('octet-stream') === -1 && type.indexOf('mpeg') === -1) {
-          throw new Error('content-type');
-        }
-        if (response.arrayBuffer) return response.arrayBuffer();
-        throw new Error('no-stream');
       }).then(function (bytes) {
         if (!bytes || !bytes.byteLength) throw new Error('empty');
         if (bytes.byteLength > MAX_TRACK_BYTES) throw new Error('too-large');
         if (looksLikeErrorPage(new Uint8Array(bytes, 0, Math.min(64, bytes.byteLength)))) throw new Error('not-audio');
         return bytes;
       });
-      return Promise.race([reading, timeout]).then(function (bytes) {
+      return Promise.race([reading, cancellation]).then(function (bytes) {
         clearTimeout(timer);
+        segment.cancel = null;
         return bytes;
       }, function (error) {
         clearTimeout(timer);
-        try { if (controller) controller.abort(); } catch (e) {}
+        if (segment.cancel) segment.cancel();
+        segment.cancel = null;
         throw error;
       });
-    }
-    // 串行取流被系统挂起（长时间没有新数据）时，改成整段重取：跳过已追加的前缀，时间轴不重复。
-    function promoteInflight(s) {
-      var inflight = s.inflight;
-      if (!inflight || !alive(s)) return false;
-      var segment = inflight.segment;
-      if ((segment.attempts || 0) >= MAX_ATTEMPTS) return false;
-      segment.attempts = (segment.attempts || 0) + 1;
-      inflight.cancel();
-      s.fetching = false;
-      if (!s.burst) s.burst = { outstanding: 0, aborted: false };
-      s.burst.outstanding++;
-      loadBurstSegment(s, segment);
-      return true;
-    }
-    // force=true：页面即将转入后台等关键时刻，不等空闲、允许把正在流式取流的那首升级成整段取流
-    function fillBurst(s, force) {
-      if (!alive(s)) return 0;
-      if (!force && Date.now() < s.burstCooldownUntil) return 0;
-      var promoted = force && s.inflight ? promoteInflight(s) : false;
-      if (!promoted && pendingAppendIndex(s) !== s.segments.length) return 0;   // 还有段没追加落位
-      var room = BURST_AHEAD - (s.segments.length - currentIndex(s) - 1);
-      if (room <= 0) return 0;
-      if (!s.burst) s.burst = { outstanding: 0, aborted: false };
-      var queued = 0;
-      while (queued < room) {
-        var qi = s.nextQi;
-        var segment = {
-          qi: qi,
-          start: null,
-          end: null,
-          duration: null,
-          state: 'fetching',
-          appended: false,
-          pushed: 0,
-          fetched: null,
-          attempts: 1
-        };
-        s.segments.push(segment);
-        s.nextQi = (qi + 1) % s.count;
-        s.burst.outstanding++;
-        queued++;
-        loadBurstSegment(s, segment);
-      }
-      return queued;
     }
 
     /* ---------- 起播与历史裁剪 ---------- */
     function maybeStart(s) {
-      if (!alive(s) || s.started) return;
-      var first = s.segments[0];
-      var target = s.offset;
-      if (first && typeof first.duration === 'number' && isFinite(first.duration)) {
-        if (first.duration <= 0.05) target = 0;
-        else if (target > first.duration - 0.2) target = Math.max(0, first.duration - 0.2);
-        s.offset = target;
+      if (!alive(s) || s.started || s.blocked) return;
+      var first = s.startTarget;
+      var startIndex = first ? s.segments.indexOf(first) : 0;
+      if (first && first.state === 'failed') { first = null; s.offset = 0; }
+      if (first && first.state !== 'ready') return;
+      for (var i = Math.max(0, startIndex); !first && i < s.segments.length; i++) {
+        if (s.segments[i].state === 'ready') { first = s.segments[i]; break; }
+        if (s.segments[i].state !== 'failed') return;
       }
-      var available = nativeBufferedEnd();
-      if (available < Math.max(READY_SECONDS, target + 0.05)) return;
+      if (!first) return;
+      var target = first.start + Math.min(s.offset, Math.max(0, first.duration - 0.2));
       s.started = true;
       if (target > 0) setNativeTime(target);
-      if (s.autoplay && hooks.play) hooks.play();
-      else report();
+      if (s.autoplay) {
+        if (hooks.play) hooks.play();
+        else audio.play();
+      } else report();
     }
     function trim(s) {
       if (!alive(s) || !s.buffer || s.buffer.updating) return;
@@ -557,7 +532,6 @@
       if (!segment) return;
       var target = segment.start - HISTORY_KEEP;
       if (target <= s.trimmedTo + 1) return;
-      s.trimmedTo = target;
       pushOp({ kind: 'remove', from: 0, to: target });
     }
     function dispatchDurationChange() {
@@ -575,11 +549,12 @@
       trim(s);
       if (hooks.onAdvance) hooks.onAdvance(segment.qi);
     }
-    // 播放期间持续保持深缓冲：串行取流被挂起就改成整段重取，离线/低余量时补足突发队列。
+    // 巡检仅补齐有限队列；曲目续播本身由已经追加的连续媒体时间轴驱动。
     function keepAlive(s) {
-      if (s.inflight && Date.now() - s.inflight.progressAt > STALL_MS) promoteInflight(s);
-      fillBurst(s, false);
-      maybeFetch(s);
+      if (!alive(s) || !reportFailures(s)) return;
+      retryQuota(s);
+      drain(s);
+      fillBurst(s);
     }
 
     /* ---------- 会话生命周期 ---------- */
@@ -594,8 +569,10 @@
       try { buffer = s.source.addSourceBuffer('audio/mpeg'); } catch (e) { fatal('add-source-buffer'); return; }
       s.buffer = buffer;
       try { buffer.mode = 'sequence'; } catch (e) {}
-      buffer.addEventListener('updateend', onUpdateEnd);
-      buffer.addEventListener('error', function () { fatal('source-buffer-error'); });
+      s.onUpdateEnd = function () { if (alive(s)) onUpdateEnd(); };
+      s.onBufferError = function () { if (alive(s)) fatal('source-buffer-error'); };
+      buffer.addEventListener('updateend', s.onUpdateEnd);
+      buffer.addEventListener('error', s.onBufferError);
       pumpOps();
       maybeStart(s);
     }
@@ -612,7 +589,16 @@
       unwrapPlay();
       if (s) {
         try { if (s.timer) clearInterval(s.timer); } catch (e) {}
-        try { if (s.inflight) s.inflight.cancel(); } catch (e) {}
+        if (s.buffer) {
+          s.buffer.removeEventListener('updateend', s.onUpdateEnd);
+          s.buffer.removeEventListener('error', s.onBufferError);
+        }
+        s.quotaOp = null;
+        s.segments.forEach(function (segment) {
+          segment.dropped = true;
+          if (segment.cancel) segment.cancel();
+          segment.fetched = null;
+        });
         try { if (s.buffer && s.buffer.updating) s.buffer.abort(); } catch (e) {}
         try { if (s.objectUrl) window.URL.revokeObjectURL(s.objectUrl); } catch (e) {}
       }
@@ -629,17 +615,19 @@
         offset: options.offset > 0 ? options.offset : 0,
         autoplay: options.autoplay !== false,
         started: false,
-        fetching: false,
+        downloads: 0,
+        blocked: false,
         trimmedTo: 0,
+        quotaOp: null,
         source: null,
         buffer: null,
         objectUrl: '',
-        burst: null,
-        burstCooldownUntil: 0,
-        inflight: null,
+
         pendingJump: null,
         timer: null
       };
+      s.segments.push(createSegment(qi));
+      s.nextQi = (qi + 1) % count;
       session = s;
       pending = false;
       lastNotified = qi;
@@ -652,49 +640,71 @@
       try { audio.src = s.objectUrl; } catch (e) { teardown(); return false; }
       // HAVE_NOTHING 阶段写入定位＝默认起播位置：恢复进度时数据一到位就从该处播放
       if (s.offset > 0) setNativeTime(s.offset);
-      maybeFetch(s);
-      // 播放期间（含后台，音频播放本身不会被隐藏限制）定期补齐深缓冲，
-      // 让续播既不依赖界面事件、也不依赖用户回到前台。
+      fillBurst(s);
+      // 浏览器允许执行时继续补齐；已经缓冲的曲目不依赖后台计时器或网络。
       s.timer = setInterval(function () { keepAlive(s); }, KEEPALIVE_MS);
       return true;
-    }
-    function restart(index, offset, autoplay) {
-      var count = session ? session.count : 1;
-      return start(index, { count: count, offset: offset || 0, autoplay: autoplay !== false });
     }
     function jump(index, offset, autoplay) {
       var s = session;
       if (!active || !s) return false;
+      s.blocked = false;
       s.pendingJump = null;
       var wanted = offset > 0 ? offset : 0;
       var segment = null;
+      var current = currentIndex(s);
+      // 优先选距当前最近的可用段；小歌单循环后旧同名段可能已被回收。
+      var distance = Infinity;
       for (var i = 0; i < s.segments.length; i++) {
-        if (s.segments[i].qi === index && s.segments[i].state !== 'failed') { segment = s.segments[i]; break; }
+        var candidate = s.segments[i];
+        if (candidate.qi !== index || candidate.state === 'failed' ||
+            (candidate.start != null && candidate.start < s.trimmedTo)) continue;
+        if (Math.abs(i - current) < distance) { segment = candidate; distance = Math.abs(i - current); }
       }
-      // 目标曲目已由突发预取排队、但还没追加落位：先停在已缓冲的末尾，等它落位后再做纯 seek。
-      // 整个等待过程不产生新的播放请求，锁屏/后台切换下一首也有效。
-      var segmentIndex = segment ? s.segments.indexOf(segment) : -1;
-      if (segment && typeof segment.end !== 'number' && segmentIndex > currentIndex(s)) {
-        s.pendingJump = { qi: index, offset: wanted };
+      if (!segment) {
+        // 未缓冲的上一首/任意曲：保留正在写入和已播放的段，追加目标，仍使用同一个 src。
+        // 只取消尚未追加的未来下载，不中断当前可播放缓冲，也不把播放头提前移到缓冲末尾。
+        if (s.quotaOp) {
+          // 配额拒绝的 append 尚未写入任何字节，可以安全撤销未选择的未来段。
+          s.quotaOp.segment.fetched = s.quotaOp.bytes;
+          s.quotaOp.segment.state = 'downloaded';
+          s.quotaOp.segment.start = null;
+          s.quotaOp = null;
+        }
+        var retained = [];
+        s.segments.forEach(function (item) {
+          if (typeof item.end === 'number' || item.state === 'appending') retained.push(item);
+          else {
+            item.dropped = true;
+            if (item.cancel) item.cancel();
+            item.fetched = null;
+          }
+        });
+        s.segments = retained;
+        segment = createSegment(index);
+        s.segments.push(segment);
+        s.nextQi = (index + 1) % s.count;
+      }
+      s.autoplay = autoplay !== false;
+      if (!s.started) { s.startTarget = segment; s.offset = wanted; }
+      if (s.autoplay) audio.autoplay = true;
+      if (typeof segment.end !== 'number') {
+        ignoreFailuresBefore(s, segment);
+        s.pendingJump = { segment: segment, offset: wanted };
         lastNotified = index;
-        if (autoplay !== false) audio.autoplay = true;
-        setNativeTime(Math.max(0, nativeBufferedEnd() - 0.2));
-        fillBurst(s, false);
+        prioritizeQuota(s);
+        fillBurst(s);
+        if (s.autoplay && audio.paused && hooks.play) hooks.play();
         if (hooks.onAdvance) hooks.onAdvance(index);
         report();
         return true;
       }
-      if (!segment || typeof segment.end !== 'number' || segment.start < s.trimmedTo) {
-        var count = s.count;
-        restart(index, wanted, autoplay);
-        return count > 0;
-      }
       lastNotified = index;
-      var position = segment.start + Math.max(0, Math.min(wanted, segmentLimit(segment)));
-      s.offset = position;                 // 未起播的会话也要跳到这个位置
-      setNativeTime(position);
-      if (autoplay !== false && audio.paused && hooks.play) hooks.play();
+      ignoreFailuresBefore(s, segment);
+      setNativeTime(segment.start + Math.min(wanted, Math.max(0, segment.duration - 0.05)));
+      if (s.autoplay && audio.paused && hooks.play) hooks.play();
       maybeStart(s);
+      fillBurst(s);
       if (hooks.onAdvance) hooks.onAdvance(index);
       report();
       return true;
@@ -713,7 +723,7 @@
       jump: jump,
       stop: stop,
       // 页面即将转入后台时调用：立刻把后续若干首并行取到缓冲，锁屏后不依赖网络继续播
-      prefetchBurst: function () { return session ? fillBurst(session, true) : 0; }
+      prefetchBurst: function () { return session ? fillBurst(session) : 0; }
     };
   };
 })();

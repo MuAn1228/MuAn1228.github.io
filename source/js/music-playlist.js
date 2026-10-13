@@ -326,6 +326,8 @@
   var continuous = null;        // 连续流（MediaSource）引擎；不可用或已失效时为 null
   var suppressJump = false;     // 连续流内同步界面时抑制流内跳转
   var originalSetAudio = null;  // APlayer 原生换源实现
+  var diagnostics = null;
+  var mediaActions = null;
 
   function readState() {
     try { return JSON.parse(sessionStorage.getItem(STATE_KEY)); }
@@ -359,17 +361,22 @@
     if (!('mediaSession' in navigator)) return;
     var state = getState();
     if (!state) return;
+    var trackKey = state.owner + ':' + state.index;
     try {
-      if (mediaTrack !== state.src && window.MediaMetadata) {
-        mediaTrack = state.src;
+      if (mediaTrack !== trackKey && window.MediaMetadata) {
         navigator.mediaSession.metadata = new MediaMetadata({
           title: state.name,
           artist: state.artist,
           album: owner === 'big' ? '我喜欢的音乐' : 'Mu An\'s Blog',
           artwork: state.cover ? [{ src: new URL(state.cover, location.href).href }] : []
         });
+        mediaTrack = trackKey;
       }
+    } catch (e) {} // 封面/元数据失败不能阻断播放状态和媒体键。
+    try {
       navigator.mediaSession.playbackState = state.playing ? 'playing' : 'paused';
+    } catch (e) {}
+    try {
       var duration = ap.audio.duration;
       if (navigator.mediaSession.setPositionState && isFinite(duration) && duration > 0) {
         navigator.mediaSession.setPositionState({
@@ -377,6 +384,8 @@
           playbackRate: ap.audio.playbackRate || 1,
           position: Math.min(Math.max(state.time, 0), duration)
         });
+      } else if (navigator.mediaSession.setPositionState) {
+        navigator.mediaSession.setPositionState(); // 新曲尚未就绪，清除上一首的进度。
       }
     } catch (e) {} // 不支持某个 Media Session 字段的浏览器仍可正常播放
   }
@@ -414,12 +423,27 @@
   // 可能在几毫秒内先后到达（同一次按键、同一方向），用短窗口去重，避免一次按键跳两首。
   var lastMediaKeyAt = 0;
   var lastMediaKeyDir = 0;
-  function mediaKeyStep(direction) {
+  var lastMediaKeySource = '';
+  function mediaKeyStep(direction, source) {
     var now = Date.now();
-    if (direction === lastMediaKeyDir && now - lastMediaKeyAt < 150) return;
+    var duplicate = direction === lastMediaKeyDir && source !== lastMediaKeySource && now - lastMediaKeyAt < 150;
+    if (diagnostics) diagnostics.record('media-key', {
+      direction: direction, source: source, duplicate: duplicate,
+      target: direction < 0 ? ap.prevIndex() : ap.nextIndex()
+    });
+    if (duplicate) return;
     lastMediaKeyAt = now;
     lastMediaKeyDir = direction;
+    lastMediaKeySource = source;
     step(direction);
+  }
+
+  function bindMediaActions() {
+    if (!mediaActions || !('mediaSession' in navigator)) return;
+    Object.keys(mediaActions).forEach(function (action) {
+      try { navigator.mediaSession.setActionHandler(action, mediaActions[action]); }
+      catch (e) { if (diagnostics) diagnostics.record('media-action-unsupported', { action: action }); }
+    });
   }
 
   function select(queueOwner, index, autoplay, offset) {
@@ -523,7 +547,7 @@
       }
       publishState();
     });
-    ap.on('playing', function () { skipCount = 0; publishState(); });
+    ap.on('playing', function () { skipCount = 0; bindMediaActions(); publishState(); });
     ap.on('pause', function () {
       // 换源产生的旧 pause 事件不能覆盖新曲的播放意图。
       if (ap.audio.paused && !ap.audio.ended && !changingPlaylist &&
@@ -557,18 +581,16 @@
       }
     }, true);
     if ('mediaSession' in navigator) {
-      var actions = {
-        play: play,
-        pause: pause,
-        previoustrack: function () { mediaKeyStep(-1); },
-        nexttrack: function () { mediaKeyStep(1); },
+      mediaActions = {
+        play: function () { if (diagnostics) diagnostics.record('media-play'); play(); },
+        pause: function () { if (diagnostics) diagnostics.record('media-pause'); pause(); },
+        previoustrack: function () { mediaKeyStep(-1, 'media-session'); },
+        nexttrack: function () { mediaKeyStep(1, 'media-session'); },
         seekto: function (details) { ap.seek(details.seekTime); updateMediaSession(); },
         seekbackward: function (details) { ap.seek(ap.audio.currentTime - (details.seekOffset || 10)); },
         seekforward: function (details) { ap.seek(ap.audio.currentTime + (details.seekOffset || 10)); }
       };
-      Object.keys(actions).forEach(function (action) {
-        try { navigator.mediaSession.setActionHandler(action, actions[action]); } catch (e) {}
-      });
+      bindMediaActions();
     }
   }
 
@@ -596,8 +618,10 @@
         audio: list
       });
       window.__blogMusic.ap = ap;
+      if (window.__createBlogMusicDiagnostics) diagnostics = window.__createBlogMusicDiagnostics(ap.audio, getState);
       if (window.__createBlogAudioGuard) {
-        playbackGuard = window.__createBlogAudioGuard(ap.audio, function (name) {
+        playbackGuard = window.__createBlogAudioGuard(ap.audio, function (name, detail) {
+          if (diagnostics) diagnostics.record('guard-' + name, detail);
           if (name === 'ready-play-rejected') pause();
         });
       }
@@ -616,15 +640,17 @@
       // 蓝牙耳机媒体键兜底：部分浏览器把耳机按键作为 keydown 派发给页面
       //（MediaTrackNext / MediaTrackPrevious，老内核用 keyCode 176/177）。
       document.addEventListener('keydown', function (event) {
-        var key = event.key || '';
+        var key = event.key || event.code || '';
         var code = event.keyCode || event.which || 0;
-        if (key === 'MediaTrackNext' || code === 176) mediaKeyStep(1);
-        else if (key === 'MediaTrackPrevious' || code === 177) mediaKeyStep(-1);
+        var direction;
+        if (key === 'MediaTrackNext' || key === 'MediaNextTrack' || event.code === 'MediaTrackNext' || code === 176) direction = 1;
+        else if (key === 'MediaTrackPrevious' || key === 'MediaPreviousTrack' || event.code === 'MediaTrackPrevious' || code === 177) direction = -1;
         else return;
         event.preventDefault();
+        if (!event.repeat) mediaKeyStep(direction, 'keydown');
       });
-      // 转入后台/锁屏前把后续若干首并行取进连续流缓冲：
-      // 后台续播因此不依赖新的网络请求，锁屏也能连续播放。
+      // 转入后台时补齐有限预取队列；不取消正在下载的歌。
+      // 已完成的缓冲可继续播放，尚未完成的下载仍受浏览器后台网络策略影响。
       document.addEventListener('visibilitychange', function () {
         if (document.visibilityState !== 'hidden') return;
         if (continuous && continuous.isActive() && continuous.prefetchBurst) continuous.prefetchBurst();
@@ -742,8 +768,10 @@
   }
 
   function onStreamUnavailable(index, reason) {
+    if (diagnostics) diagnostics.record('stream-unavailable', { index: index, reason: reason });
+    var item = playlists[owner] && playlists[owner][index];
     document.dispatchEvent(new CustomEvent('blog-music-error', {
-      detail: { owner: owner, index: index, reason: reason }
+      detail: { owner: owner, index: index, name: item && item.name, reason: reason }
     }));
     var shouldContinue = !!(ap && !ap.paused && !userPaused);
     if (shouldContinue && ++skipCount <= 2) return true;
@@ -754,6 +782,7 @@
   }
 
   function onStreamFatal(reason, wasPlaying) {
+    if (diagnostics) diagnostics.record('stream-fatal', { reason: reason, wasPlaying: wasPlaying });
     fallbackClassic(wasPlaying, true);
   }
 
