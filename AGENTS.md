@@ -120,6 +120,16 @@
   - 蓝牙耳机媒体键：Media Session 的 `previoustrack`/`nexttrack` 改走 `mediaKeyStep`（**同方向 150ms 内去重**：Media Session 回调与 keydown 兜底可能对同一次按键双触发，去重后不会跳两首；不同方向不去重），并新增 `keydown` 兜底（`MediaTrackNext`/`MediaTrackPrevious`，老内核 keyCode 176/177，`preventDefault`）。
   - 代价：深预取会增加流量（6 首≈20–40MB，且会 append 进 SourceBuffer；配额不足时按 `QuotaExceededError` 回收历史并把 `trimmedTo` 同步推进）。
 
+## 音乐后台播放修复（2026-10-12，替代上述 Phase 3 取流实现）
+- 用户反馈：一加 Ace 3 Pro 原厂浏览器 + OPPO Enco Free4，息屏后首曲中途停播、耳机切歌无效。已定位旧代码缺陷：hidden 主动取消正常下载；用 `appended` 判断整首完成会混入后续歌曲；未来取流失败可能截短当前曲；未缓存的上一首重建 src。
+- `music-continuous.js` 改为整首下载完成后按顺序追加，首曲优先、后续最多两路并发和六首余量。点击时立即调用原生 play 保留手势授权，首曲完整下载前不追加音频；开始出声可能稍慢。hidden 只补队列，不取消正常下载，不假设后台网络/定时器必然运行。
+- 未缓存的切歌目标追加到同一个 MediaSource，等待期间保留原播放位置；已缓冲目标纯 seek。未来曲目失败延迟至播放边界处理，不提前打断当前歌。缓冲满额时保留待追加数据，随进度回收历史后重试；首曲本身无法容纳或 MSE 结构错误才走原有经典回退。
+- 媒体键保留 Media Session + keydown，跨来源重复事件去重，同来源连续按键正常处理；封面元数据错误不阻断播放状态更新。
+- 新增 `source/js/music-diagnostics.js`，音乐页「导出本次播放诊断」记录正式播放器的原生缓冲、生命周期、收到的媒体键和失败原因，最多 160 条，仅当前标签页内存，手动下载，不上传、不记录签名音源地址。出现真机问题时优先使用此报告，独立提示音检测不能替代正式歌单证据。
+- 缓存版本：`page-assets.js?v=7` → guard v1 → continuous v3 → diagnostics v1 → playlist v7。再次修改要同步 bump 对应版本。
+- 回归：`node test/music-background.js [--built]`、`node test/music-continuous.js [--built]`、`node test/music-engine-browser.js [--built]`、`node test/music-diagnostics.js`。真实 Chromium 测试保留默认手势授权限制，通过 CDP 点击开始，音频解码真实，隐藏状态为模拟。
+- **真机状态仍待复验**：本地测试不能证明 HeyTap 的锁屏/蓝牙行为已完全修复；无后台网络时续播仍受已完成缓冲余量限制，不得称为「无限续播」。
+
 ## 自制游戏《第九层事故 BULLET DEPTHS》（小游戏页 iframe 接入，2026-09-06）
 - **游戏本体在独立仓库** `MuAn1228/bullet-depths`（源码在本机 `D:\game\tingjindilao`，SSH remote 已配好）。GitHub Pages 已开启（**master 分支根目录**），线上地址 `https://muan1228.github.io/bullet-depths/`。
 - 游戏技术栈：纯原生 JS（27 个文件）+ 本地 vendored `lib/three.min.js`，零外部依赖、全相对路径、无构建步骤。**更新游戏 = 在 `D:\game\tingjindilao` 里 `git push`，Pages 约 1 分钟自动更新，博客侧无需任何改动**。

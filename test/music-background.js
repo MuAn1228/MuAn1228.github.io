@@ -162,7 +162,10 @@ async function createBrowser(options = {}) {
       setActionHandler(name, handler) { actions[name] = handler; },
       setPositionState(value) { this.positionState = value; }
     } });
-    window.MediaMetadata = class MediaMetadata { constructor(value) { Object.assign(this, value); } };
+    window.MediaMetadata = class MediaMetadata { constructor(value) {
+      if (options.metadataFails) throw new Error('Artwork rejected');
+      Object.assign(this, value);
+    } };
   }
   window.fetch = async url => {
     requests.push(String(url));
@@ -925,6 +928,44 @@ async function test(name, options, run) {
     await delay(20);
     assertTrack(b, 'mini', 0);
     assert.equal(b.engine.getState().playing, true);
+  });
+
+  await test('two deliberate next actions from the same media source are both handled', { continuous: true }, async b => {
+    b.engine.play();
+    b.hide();
+    b.actions.nexttrack();
+    b.actions.nexttrack();
+    assertTrack(b, 'mini', 2);
+    assert.equal(b.stream.calls.filter(call => call.name === 'jump').length, 2);
+  });
+
+  await test('media key aliases and code-only events work, held-key repeats do not skip', { continuous: true }, async b => {
+    b.engine.play();
+    b.mediaKey('MediaNextTrack', 0);
+    assertTrack(b, 'mini', 1);
+    const repeat = new b.window.KeyboardEvent('keydown', { key: 'MediaTrackNext', repeat: true, cancelable: true });
+    b.document.dispatchEvent(repeat);
+    assertTrack(b, 'mini', 1);
+    b.document.dispatchEvent(new b.window.KeyboardEvent('keydown', { code: 'MediaTrackPrevious', cancelable: true }));
+    assertTrack(b, 'mini', 0);
+  });
+
+  await test('metadata rejection cannot prevent active media state or headphone controls', { metadataFails: true }, async b => {
+    await b.clickTrack(0);
+    assert.equal(b.window.navigator.mediaSession.playbackState, 'playing');
+    b.actions.nexttrack();
+    await delay(20);
+    assertTrack(b, 'big', 1);
+    b.actions.pause();
+    assert.equal(b.window.navigator.mediaSession.playbackState, 'paused');
+  });
+
+  await test('playing reclaims media actions after another media session replaces them', {}, async b => {
+    await b.clickTrack(0);
+    b.actions.nexttrack = () => { throw new Error('stale handler'); };
+    b.mediaEvent('playing');
+    b.actions.nexttrack();
+    assertTrack(b, 'big', 1);
   });
 
   console.log('RESULT: PASS_' + passed + '_F' + failed);

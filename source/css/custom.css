@@ -2241,6 +2241,23 @@ html:has(#showcase) #showcase .showcase-avatar {
   transition: opacity 0.25s, transform 0.25s;
   z-index: 10005;
 }
+#music-export-diagnostics {
+  padding: 7px 14px;
+  margin: 0 8px 8px 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #72539b;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+#music-export-diagnostics:hover { background: #604186; }
+#music-export-diagnostics:focus-visible {
+  outline: 2px solid #a18cd1;
+  outline-offset: 3px;
+}
+#music-diagnostics-status { font-size: 0.9em; }
+
 .mf-toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
