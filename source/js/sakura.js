@@ -58,5 +58,25 @@
 
   // 每 300ms 生成一片（移动端 600ms，密度减半降低功耗与卡顿）
   var isTouchMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints || 0) > 0;
-  setInterval(createPetal, isTouchMobile ? 600 : 300);
+  var gap = isTouchMobile ? 600 : 300;
+  var spawnTimer = null;
+
+  // 页面隐藏时停止生成：后台定时器仍会走，长时间挂机后堆积的花瓣会在返回时一起落下造成卡顿
+  function startSpawning() {
+    if (spawnTimer === null) spawnTimer = setInterval(createPetal, gap);
+  }
+
+  function stopSpawning() {
+    if (spawnTimer !== null) {
+      clearInterval(spawnTimer);
+      spawnTimer = null;
+    }
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') stopSpawning();
+    else startSpawning();
+  });
+
+  if (document.visibilityState !== 'hidden') startSpawning();
 })();

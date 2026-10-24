@@ -102,7 +102,7 @@
   #blog-room .br-close:hover { background: var(--br-border); }
 }
 @media (max-width: 600px) {
-  html:has(#blog-room) #waifu { display: none !important; }
+  html:has(#blog-room) #whale-widget { display: none !important; }
   #blog-room .br-heading-row { align-items: flex-start; gap: 12px; }
   #blog-room .br-intro { font-size: 13px; }
   #blog-room .br-clock { max-width: 92px; font-size: 10px; }
@@ -146,15 +146,6 @@
 }
 #post-comment .comment-head .comment-switch #switch-btn {
   background-color: #8e6bb5 !important;
-}
-
-/* 看板娘移到右下角，与左下角音乐播放器分开；缩小到 55% */
-#waifu {
-  left: auto !important;
-  right: 60px !important;
-  bottom: 0 !important;
-  scale: 0.4;
-  transform-origin: bottom right;
 }
 
 /* 音乐播放器：缩小 + 毛玻璃融合 + 给折叠按钮让位 */

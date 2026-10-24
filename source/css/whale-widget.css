@@ -1,0 +1,417 @@
+/* ===== 博客版小鲸鱼看板娘（视觉参考 DeepSeek-Balance-Whale-Widget） ===== */
+
+#whale-widget.whale-root {
+  position: fixed;
+  right: 60px;
+  bottom: 0;
+  --whale-scale: 0.9;
+  --whale-base: clamp(122px, calc(min(250px, min(100vw, 100vh) * 0.28) * var(--whale-scale)), 625px);
+  width: var(--whale-base);
+  height: var(--whale-base);
+  z-index: 9990;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  font-family: inherit;
+  transition: left .18s ease, top .18s ease, transform .3s ease;
+}
+
+/* 拖拽中取消过渡，保证 1:1 跟手 */
+#whale-widget.whale-dragging {
+  cursor: grabbing;
+  transition: none;
+}
+
+/* 贴左时整体水平镜像（文字在下面单独镜像回来） */
+#whale-widget.whale-left {
+  transform: scaleX(-1);
+}
+
+.whale-body {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+  transition: transform .22s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+/* 按压 Q 弹：底边中心为原点，底部坐标不变 */
+#whale-widget.whale-pressed .whale-body {
+  transform: scaleY(.88) scaleX(1.05);
+}
+
+.whale-img {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 59.45%;
+  height: 59.45%;
+  display: block;
+  object-fit: contain;
+  object-position: right bottom;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* ---------- 气泡 ---------- */
+.whale-bubble {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  aspect-ratio: 1026 / 700;
+  z-index: 1;
+  pointer-events: none;
+  --whale-u: calc(var(--whale-base) / 1026);
+}
+
+.whale-bubble svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.whale-bubble svg * {
+  pointer-events: none;
+  cursor: pointer;
+}
+
+.whale-bubble.whale-bubble-open svg * {
+  pointer-events: visiblePainted;
+}
+
+.whale-bubble .whale-shape {
+  opacity: 0;
+  transform: scale(.7);
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.whale-bubble.whale-bubble-open .whale-shape {
+  opacity: 1;
+  transform: none;
+}
+
+.whale-bubble .whale-shape-1 { transition-delay: .2s; }
+.whale-bubble .whale-shape-2 { transition-delay: .3s; }
+.whale-bubble.whale-bubble-open .whale-shape-1 { transition-delay: .13s; }
+.whale-bubble.whale-bubble-open .whale-shape-2 { transition-delay: 0s; }
+
+/* 文字层：与气泡大椭圆同中心，开合时晚于形状淡入 */
+.whale-copy {
+  position: absolute;
+  left: 44.25%;
+  top: 38%;
+  width: 66%;
+  height: 64%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.15;
+  color: #536ba9;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .16s ease, transform .3s ease;
+  box-sizing: border-box;
+}
+
+.whale-bubble.whale-bubble-open .whale-copy {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity .16s ease .34s, transform .3s ease;
+}
+
+#whale-widget.whale-left .whale-copy {
+  transform: translate(-50%, -50%) scaleX(-1);
+}
+
+.whale-copy > * {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+
+.whale-label {
+  font-size: clamp(9px, calc(var(--whale-u) * 62), 38px);
+  font-weight: 600;
+  letter-spacing: .05em;
+  margin: calc(var(--whale-u) * 2) 0;
+}
+
+.whale-amount {
+  font-size: clamp(17px, calc(var(--whale-u) * 120), 74px);
+  font-weight: 800;
+  line-height: 1.05;
+  color: #203170;
+  font-variant-numeric: tabular-nums;
+  margin: calc(var(--whale-u) * 2) 0;
+}
+
+.whale-quote {
+  font-size: clamp(11px, calc(var(--whale-u) * 72), 44px);
+  font-weight: 700;
+  line-height: 1.3;
+  color: #203170;
+  white-space: normal;
+  margin: calc(var(--whale-u) * 4) 0;
+}
+
+.whale-hint {
+  font-size: clamp(8px, calc(var(--whale-u) * 48), 30px);
+  font-weight: 400;
+  color: #9fb0d9;
+  letter-spacing: .02em;
+  line-height: 1.25;
+  white-space: normal;
+  margin-top: calc(var(--whale-u) * 8);
+}
+
+/* 站内快捷入口 */
+.whale-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--whale-u) * 7);
+  margin: calc(var(--whale-u) * 12) 0 calc(var(--whale-u) * 4);
+  max-width: 100%;
+  pointer-events: auto;
+}
+
+.whale-links a {
+  display: inline-block;
+  padding: calc(var(--whale-u) * 7) calc(var(--whale-u) * 13);
+  border-radius: 999px;
+  background: #203170;
+  color: #fff;
+  font-size: clamp(9px, calc(var(--whale-u) * 46), 26px);
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .15s ease, transform .15s ease;
+}
+
+.whale-links a:hover {
+  background: #2f4488;
+  transform: translateY(-1px);
+  color: #fff;
+}
+
+/* ---------- 菜单按钮 ---------- */
+.whale-menu-btn {
+  position: absolute;
+  top: calc(40.55% + 4px);
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: rgba(32, 49, 112, .85);
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity .15s ease, background .15s ease;
+}
+
+.whale-menu-btn span {
+  display: block;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+  background: #fff;
+}
+
+#whale-widget:hover .whale-menu-btn,
+#whale-widget.whale-menu-visible .whale-menu-btn,
+.whale-menu-btn:focus-visible {
+  opacity: 1;
+}
+
+.whale-menu-btn:hover {
+  background: #203170;
+}
+
+@media (hover: none) {
+  .whale-menu-btn {
+    opacity: .92;
+  }
+}
+
+/* ---------- 设置菜单 ---------- */
+.whale-menu {
+  position: fixed;
+  z-index: 10000;
+  box-sizing: border-box;
+  min-width: 200px;
+  max-width: min(320px, calc(100vw - 20px));
+  padding: 10px 12px 8px;
+  border: 1px solid rgba(32, 49, 112, .35);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 8px 22px rgba(15, 25, 60, .22);
+  color: #203170;
+  font-size: 12px;
+  color-scheme: light;
+  opacity: 0;
+  transform: scale(.96) translateY(8px);
+  transform-origin: top right;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s cubic-bezier(.34, 1.3, .6, 1);
+}
+
+.whale-menu.whale-menu-open {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.whale-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+  white-space: nowrap;
+}
+
+.whale-menu-row > span:first-child {
+  flex: 0 0 auto;
+}
+
+.whale-range {
+  flex: 1;
+  min-width: 0;
+  accent-color: #203170;
+}
+
+.whale-pct {
+  width: 38px;
+  flex: 0 0 auto;
+  text-align: right;
+  font-size: 11px;
+  opacity: .8;
+}
+
+.whale-check {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  flex: 0 0 auto;
+  accent-color: #203170;
+  cursor: pointer;
+}
+
+label.whale-menu-row {
+  cursor: pointer;
+}
+
+.whale-menu-sep {
+  height: 1px;
+  margin: 7px 0;
+  background: rgba(32, 49, 112, .22);
+}
+
+.whale-act {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 5px 0;
+  padding: 5px 8px;
+  border: 1px solid rgba(32, 49, 112, .35);
+  border-radius: 7px;
+  background: rgba(32, 49, 112, .06);
+  color: #203170;
+  font-size: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: background .12s ease;
+}
+
+.whale-act:hover {
+  background: rgba(32, 49, 112, .14);
+}
+
+.whale-credit {
+  margin-top: 7px;
+  font-size: 9.5px;
+  line-height: 1.45;
+  color: #8b97bb;
+  text-align: center;
+  white-space: normal;
+}
+
+.whale-credit a {
+  color: #536ba9;
+  text-decoration: none;
+}
+
+.whale-credit a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 提示条 ---------- */
+.whale-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 42px;
+  z-index: 10001;
+  max-width: calc(100vw - 32px);
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(32, 49, 112, .94);
+  box-shadow: 0 8px 22px rgba(15, 25, 60, .25);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.whale-toast.whale-toast-on {
+  opacity: 1;
+  transform: translateX(-50%);
+}
+
+/* ---------- 页面适配 ---------- */
+/* 交易页是全屏终端，不显示挂件 */
+html:has(.gmt-term) #whale-widget {
+  display: none !important;
+}
+
+/* 博客房间页：手机端隐藏，避免遮挡场景 */
+@media (max-width: 600px) {
+  html:has(#blog-room) #whale-widget {
+    display: none !important;
+  }
+}
+
+/* 尊重系统无声偏好：挂件本身不自动发声，这里只降低动画 */
+@media (prefers-reduced-motion: reduce) {
+  #whale-widget,
+  .whale-body,
+  .whale-bubble .whale-shape,
+  .whale-copy,
+  .whale-menu,
+  .whale-links a {
+    transition-duration: .01ms !important;
+  }
+}

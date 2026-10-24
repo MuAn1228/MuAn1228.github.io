@@ -387,8 +387,8 @@ html:has(.gmt-term) #nav span.site-page:hover,
 html:has(.gmt-term) #nav #toggle-menu:hover {
   color: #333 !important;
 }
-/* 隐藏live2d等装饰 */
-html:has(.gmt-term) #live2d-widget { display: none !important; }
+/* 隐藏看板娘等装饰 */
+html:has(.gmt-term) #whale-widget { display: none !important; }
 /* 调整body顶部margin */
 html:has(.gmt-term) body { padding-top: 0 !important; }
 /* 隐藏评论区 */

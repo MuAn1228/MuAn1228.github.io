@@ -31,6 +31,18 @@
 | `source/js/cursor.js` | 鼠标指针：RGB Cursor Dark 动画（不再有紫色光点） |
 | `source/js/blackhole.js` | 展示页(`/showcase/`)顶部：Three.js 黑洞 hero（吸积盘+引力透镜+缩放运镜，左键旋转/右键平移/滚轮缩放） |
 
+## 看板娘：博客版小鲸鱼（2026-10-24，替换 Live2D）
+- 参考 `https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget`，但**不是照搬**：原项目是 1.14MB 的 DSH 宿主插件（依赖 `/dsh-whale/*`、DeepSeek 余额与记账接口）。博客版是重写，去掉了余额/记账/DSH 接口与资源管理，只保留小鲸鱼角色、气泡、拖拽吸附、左贴镜像、按压 Q 弹、按压音效，并把气泡改成博客场景：①问候（时段问候 + 当前时间 + 日期/页面语境）②随机台词 ③站内导航（展示/旅行/音乐/游戏/关于本站/交易）。
+- 文件：`source/js/whale-widget.js`（IIFE，逻辑）、`source/css/whale-widget.css`（样式，注入 `inject.head`）、角色图 `source/img/whale/whale-maid.webp`（610×610，37KB，由原项目 PNG 转 WebP）、音效 `source/media/whale/press.mp3` / `release.mp3`（合计 9KB，首次按压时才创建 Audio，不预加载）。
+- 主题注入：`_config.butterfly.yml` 的 `inject.head` 引入 CSS、`inject.bottom` 引入 JS（`?v=N`，改文件必须 bump）。**不要移回 `inject.head` 的 preload 写法，也不要重新引入 Live2D。**
+- 几何：根节点正方形，尺寸 `clamp(122px, calc(min(250px, min(100vw,100vh)*0.28) * scale), 625px)`，默认 `scale=0.9`；气泡 SVG `viewBox 0 0 1026 700`，鲸鱼图在根节点右下 `59.45%`；文字块 `left:44.25%; top:38%; width:66%; height:64%`。贴右时留 `RIGHT_GAP=60px` 给 Butterfly `#rightside` 工具栏让位；其他边 `MARGIN=8px`。四边 1/4 区吸附，贴左整体 `scaleX(-1)`、文字单独镜像回来。
+- **透明区域点穿**：`.whale-img` 是 `pointer-events:none`，脚本在图片 load 后用 canvas 生成 alpha 命中图，文档级 `pointerdown` 只有命中不透明像素才拦截/拖拽；否则点击穿透到页面。不要改成直接给图片 `pointer-events:auto`，会挡住右下角工具栏。
+- 状态：`localStorage` 键 `blog-whale-v1`（scale/sound/h/v/x/y），`sessionStorage` 键 `blog-whale-hidden`（本次浏览隐藏，关标签页恢复）。右键鲸鱼也能打开设置菜单（大小 60–200%、按压音效、回到右下角、隐藏）。
+- 页面适配：交易页 `html:has(.gmt-term) #whale-widget` 始终隐藏；博客房间页 `@media (max-width:600px)` 下 `html:has(#blog-room) #whale-widget` 隐藏。暗色模式用白底蓝描边气泡 + 白色菜单，不依赖主题变量。
+- 已删除 Live2D：`source/js/live2d.js`、`source/lib/live2d/`、`source/live2d_api/`（74 个文件，约 2.17MB）。`custom.css` 的 `#waifu` 定位块已移除，`finance.css` 的隐藏选择器已改为 `#whale-widget`。
+- 验证：`tmp_test/whale-standalone.html`（验证时复制到 `public/` 再经本地服务器运行）无头 Chrome 独立探针（桌面 1280×800 / 移动 390×844）全部 PASS（尺寸/位置、透明角落点穿、悬停菜单按钮、三页气泡、拖拽吸附与左贴镜像、菜单缩放与归位、隐藏、`gmt-term` / `#blog-room` 隐藏）；真实首页 dump-dom 也确认 `#whale-widget` 已注入。**注意无头 Chrome 的虚拟时间下 CSS 过渡不会推进，探针里临时关闭了 transition，否则吸附/镜像会读到补间中间值。**
+- 拖拽实现坑：`endDrag` 必须**先**读取 `getBoundingClientRect()`，再移除 `whale-dragging`（恢复 transition），否则吸附判定读到的是补间起点（曾导致每次拖拽都往反方向吸附）。量完再移除，并把 rect 传给 `settleAfterDrag`。
+
 ## 当前状态 & 重要决策（务必记住）
 - 游戏页顶部横幅的球池（`game-ballpit.js`）用 `/data/games.json` 里的游戏封面作为球体贴图，这是**最终采用方案**。
 - 曾尝试把球改成程序化绘制的运动球（篮球/足球/乒乓球/台球/排球/网球/高尔夫），但用户反馈「效果还不如之前的游戏球」并已回退。**不要再改成运动球，除非用户主动要求。**
