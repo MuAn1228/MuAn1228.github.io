@@ -200,6 +200,13 @@
 2. 尽量只改需要改的地方，不引入无关变更。
 3. 提交前先 `git status` 检查是否有历史遗留的本地未提交改动——用户说"线上没生效"时，多半是改动没推送，先查 diff 再动手。
 
+## 私密文章加密（/private/）与历史重写（2026-10-25，重要）
+- 链路：明文只存在本机 Obsidian（`D:\obsidian\Obsidian Vault\博客文章\我的爱情观.md`、`我的世界观.md`、`我的前半生.md`；《我的前半生》图片在 `D:\photo\wodeqianbansheng\`）→ `node tools/private-encrypt.js`（交互输入口令，PBKDF2-SHA256 600000 次 + AES-256-GCM，全局单 salt）→ 写出 `source/data/private/essays.json`（**只含密文**）→ 浏览器 `source/js/private-essays.js` 用 `crypto.subtle` 解密，派生密钥按 salt 缓存在 `localStorage['private-key-v1']`。
+- **绝对规则：不要把 `--demo` 生成的密文提交进仓库。** `--demo` 的固定口令明文写在脚本里，等于公开密码。换口令只需重跑脚本（salt 会变，旧的缓存密钥自动失效），不需要改前端。
+- **历史重写记录（2026-10-25）**：首版提交 `a1d02ed` 曾用 `--demo` 口令加密并公开推送，等于内容可公开解密。已用 `git filter-repo --force --invert-paths --path source/data/private/essays.json` 从全部历史移除该路径（完整备份 `D:\blog-mirror-backup-20261025.git`），再以新口令密文重新提交一次（新历史中该文件只有 1 个提交），并 `git push --force origin source:main` / `source:source` 覆盖远端。
+- 若要再次重跑 filter-repo：先删 `.git/filter-repo/already_ran`，否则它会要求交互确认而卡住；filter-repo 会移除 `origin`，记得重新 `git remote add origin git@github.com:MuAn1228/MuAn1228.github.io.git`。重写后本地 `main` 与远端已分叉，日常仍用 `source` 分支推送，不要误推旧 `main`。
+- **残留暴露面（git 无法修改）**：`refs/pull/2/head`、`refs/pull/3/head` 是 GitHub 内部 ref，其历史仍含 `a1d02ed`；只能删除对应分支（已删 dependabot three-0.186.1 并关闭 PR #3），彻底清除缓存提交需要 GitHub Support。不要以为重写历史就等于全网不可见。
+
 ## ncat maintenancePermit 续签
 - 当前 permit 有效期至北京时间 **2026-08-28 06:33**（expiresAt=2026-08-27T22:33:39Z），configVersion=14，approvedHost=www.ncat21.com。
 - 到期后手动执行：`powershell -ExecutionPolicy Bypass -File d:\blog\tools\renew-permit.ps1`
