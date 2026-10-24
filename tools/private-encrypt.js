@@ -4,6 +4,7 @@
  *
  * 用法：
  *   node tools/private-encrypt.js                 # 交互输入口令（隐藏显示）
+ *   node tools/private-encrypt.js --dry-run       # 只验证明文与图片可读，不写密文
  *   node tools/private-encrypt.js --demo         # 固定测试口令（仅用于本地联调，切勿用于真实内容）
  *
  * 输出：source/data/private/essays.json（AES-256-GCM 密文，公开仓库中不含任何明文）
@@ -12,9 +13,10 @@
  *
  * 明文来源约定：
  *   - 前两篇（我的爱情观 / 我的世界观）无图，从本地 Obsidian 备份读取。
- *   - 《我的前半生》含 25 张图，明文取自博客源文件（图文一一对应），
- *     图片从 D:\photo\wodeqianbansheng\ 读取原图，用 sharp 压缩为 720w WebP，
- *     再以 data:image 内联进正文后整体加密（仓库中不存在任何公开图片文件）。
+ *   - 《我的前半生》含 25 张图，明文取自 Obsidian 备份（公开仓库里的博客源文件已永久删除）。
+ *     Obsidian 用 ![[<md5>.jpg]] 内嵌图片，脚本先转成 <img> 再逐张内联为 data:image；
+ *     原图优先读 D:\photo\wodeqianbansheng\，缺失时回退 Obsidian attachments。
+ *     图片用 sharp 压缩为 720w WebP 后整体加密（仓库中不存在任何公开图片文件）。
  */
 'use strict';
 
@@ -33,6 +35,7 @@ const OUT_FILE = path.join(OUT_DIR, 'essays.json');
 
 // 需要加密的文章
 const DEFAULT_DIR = 'D:\\obsidian\\Obsidian Vault\\博客文章';
+const ATTACH_DIR = 'D:\\obsidian\\Obsidian Vault\\attachments';
 const ITEMS = [
   { id: 'love',      title: '我的爱情观', date: '2026-08-16' },
   { id: 'worldview', title: '我的世界观', date: '2026-08-21' },
@@ -40,10 +43,11 @@ const ITEMS = [
     id: 'first-half',
     title: '我的前半生',
     date: '2026-08-21',
-    // 《我的前半生》以博客源文件为明文（含图文引用），图从本地原图备份内联
-    srcFile: path.join(__dirname, '..', 'source', '_posts', 'my-first-half-life.md'),
+    // 明文取自 Obsidian 备份，图片引用是 ![[<md5>.jpg]]，需要先转换再内联
+    srcFile: path.join(DEFAULT_DIR, '我的前半生.md'),
     imgDir: 'D:\\photo\\wodeqianbansheng',
     imgRef: '/img/wodeqianbansheng/',
+    wikiEmbeds: true,
   },
 ];
 
@@ -67,20 +71,45 @@ function askPassHidden(prompt) {
   });
 }
 
-// 读取《我的前半生》网页源正文：剥掉 front matter，图片替换为 base64 内联
+function escapeRe(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Obsidian 附件可能带重名副本后缀（"xxxx 1.jpg"），统一回 md5 原名
+function normalizeImgName(name) {
+  return name.trim().replace(/\s+\d+(?=\.\w+$)/, '');
+}
+
+// 原图优先取本地备份，缺失时回退 Obsidian attachments
+function resolveImg(it, name) {
+  const primary = path.join(it.imgDir, name);
+  if (fs.existsSync(primary)) return primary;
+  const fallback = path.join(ATTACH_DIR, name);
+  if (fs.existsSync(fallback)) return fallback;
+  return null;
+}
+
+// 读取《我的前半生》正文：剥掉 front matter，图片替换为 base64 内联
 async function loadFileItem(it) {
   check(fs.existsSync(it.srcFile), `找不到明文文件：${it.srcFile}`);
   let md = fs.readFileSync(it.srcFile, 'utf8');
   md = md.replace(/^---[\s\S]*?---\s*/, ''); // 去掉 front matter
 
-  const re = new RegExp('<img\\s+src="' + it.imgRef.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '([a-f0-9]+)\\.jpg"\\s+loading="lazy">', 'g');
+  // ![[xxx.jpg]] → <img src="/img/wodeqianbansheng/xxx.jpg" loading="lazy">
+  if (it.wikiEmbeds) {
+    md = md.replace(/!\[\[([^\]|]+?)(?:\|[^\]]*)?\]\]/g, (all, raw) => {
+      return `<img src="${it.imgRef}${normalizeImgName(raw)}" loading="lazy">`;
+    });
+  }
+
+  const re = new RegExp('<img\\s+src="' + escapeRe(it.imgRef) + '([^"]+)"\\s+loading="lazy">', 'g');
   const used = new Set();
   let m;
   while ((m = re.exec(md)) !== null) {
     const name = m[1];
     used.add(name);
-    const src = path.join(it.imgDir, name + '.jpg');
-    check(fs.existsSync(src), `缺图：${src}`);
+    const src = resolveImg(it, name);
+    check(!!src, `缺图：${name}（${it.imgDir} 与 ${ATTACH_DIR} 都没有）`);
     const webp = await sharp(src).resize({ width: 720 }).webp({ quality: 82 }).toBuffer();
     const dataUri = 'data:image/webp;base64,' + base64(webp);
     md = md.split(m[0]).join(`<img src="${dataUri}" loading="lazy">`);
@@ -103,13 +132,14 @@ function readIt(srcDir) {
 async function main() {
   const args = process.argv.slice(2);
   const demo = args.includes('--demo');
+  const dryRun = args.includes('--dry-run');
   const dirArg = args.indexOf('--dir');
   const srcDir = dirArg >= 0 ? args[dirArg + 1] : DEFAULT_DIR;
   // 口令优先级：环境变量 PRIVATE_ESSAYS_PASS（本机临时设置，不进命令行历史）> 交互输入
-  const pass = process.env.PRIVATE_ESSAYS_PASS || (demo
+  const pass = dryRun ? '' : (process.env.PRIVATE_ESSAYS_PASS || (demo
     ? 'demo-pw-2026-Blog@private'
-    : await askPassHidden('请输入文章口令（建议至少 12 位，含大小写与数字）：'));
-  if (!demo && !process.env.PRIVATE_ESSAYS_PASS) {
+    : await askPassHidden('请输入文章口令（建议至少 12 位，含大小写与数字）：')));
+  if (!dryRun && !demo && !process.env.PRIVATE_ESSAYS_PASS) {
     const again = await askPassHidden('请再次输入确认：');
     check(pass === again && pass.length > 0, '两次输入不一致或为空');
     check(pass.length >= 8, '口令过短（至少 8 位，强烈建议 12 位以上）');
@@ -119,6 +149,13 @@ async function main() {
   const rd = readIt(srcDir);
   const contents = [];
   for (const it of ITEMS) contents.push(await rd(it));
+
+  // --dry-run：只验证明文与图片能否全部读到，不写文件
+  if (dryRun) {
+    contents.forEach((c) => console.log(`[private-encrypt] --dry-run ${c.title}：正文 ${c.text.length} 字符`));
+    console.log('[private-encrypt] --dry-run 未写出 essays.json');
+    return;
+  }
 
   // 全局唯一 salt（供浏览器统一派生密钥）
   const salt = crypto.randomBytes(SALT_LEN);
