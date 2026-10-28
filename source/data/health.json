@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "configVersion": 14,
-  "generatedAt": "2026-10-28T05:57:01Z",
+  "generatedAt": "2026-10-28T13:15:41Z",
   "ttlHours": 12,
   "environment": {
     "kind": "github_actions",
@@ -10,15 +10,15 @@
     "bits": "64",
     "dnsSource": "system_resolver + cloudflare_doh",
     "ci": {
-      "GITHUB_RUN_ID": "40640912960",
+      "GITHUB_RUN_ID": "40694783156",
       "GITHUB_RUN_ATTEMPT": "1",
-      "GITHUB_SHA": "c48ef9d0c04f39f195f92910a22755d15b6cefb5",
+      "GITHUB_SHA": "a4f77177f9c4b5c1fd91c02606fff4a56103b573",
       "GITHUB_REF": "refs/heads/main",
       "GITHUB_WORKFLOW": "Watchdog Health Check",
       "RUNNER_OS": "Linux",
       "RUNNER_ARCH": "X64"
     },
-    "egressIp": "172.214.47.34"
+    "egressIp": "20.171.123.130"
   },
   "note": "health.json 是 watchdog 在某次检查时的观察结果（Watchdog observation）；HEALTHY 仅表示该站点当时满足本站预定义的允许策略，不代表第三方网站绝对安全；用户实际访问（User navigation）由离站确认页自行判断。configVersion/siteConfigHash/approvedHost 用于与当前 sites.json 配置绑定，任何不一致客户端一律 DENY。",
   "sites": {
@@ -28,8 +28,8 @@
       "automatedContentCheck": "BLOCKED_BY_WAF",
       "verificationMode": "manual_user_environment",
       "reason": "machine basic gates PASS（DNS/TLS）；内容检查被明确 WAF/anti-bot 阻断，内容确认由人工限时 maintenancePermit 承接（MANUAL_VERIFIED，非内容自动 PASS）",
-      "lastCheck": "2026-10-28T05:57:03Z",
-      "observedAt": "2026-10-28T05:57:01Z",
+      "lastCheck": "2026-10-28T13:15:43Z",
+      "observedAt": "2026-10-28T13:15:41Z",
       "checks": {
         "dns": {
           "state": "PASS",
@@ -73,7 +73,7 @@
         "tls": {
           "state": "PASS",
           "ok": true,
-          "detail": "TLS ok; 固定公网 IP=192.46.229.66, SNI=www.ncat21.com（notAfter=Oct 29 18:13:07 2026 GMT）",
+          "detail": "TLS ok; 固定公网 IP=192.46.229.66, SNI=www.ncat21.com（notAfter=Jan 26 09:57:58 2027 GMT）",
           "cert": {
             "subject": {
               "commonName": "ncat21.com"
@@ -83,9 +83,9 @@
               "organizationName": "Let's Encrypt",
               "commonName": "YE1"
             },
-            "notBefore": "Jul 31 18:13:08 2026 GMT",
-            "notAfter": "Oct 29 18:13:07 2026 GMT",
-            "serialNumber": "068D3311B582F85621616E4F5BF70EA7DD85",
+            "notBefore": "Oct 28 09:57:59 2026 GMT",
+            "notAfter": "Jan 26 09:57:58 2027 GMT",
+            "serialNumber": "06D8206ED813266D6860FD414DA06BB4878D",
             "SANs": [
               [
                 "DNS",
