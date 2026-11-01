@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "configVersion": 14,
-  "generatedAt": "2026-11-01T06:27:07Z",
+  "generatedAt": "2026-11-01T17:59:28Z",
   "ttlHours": 12,
   "environment": {
     "kind": "github_actions",
@@ -10,15 +10,15 @@
     "bits": "64",
     "dnsSource": "system_resolver + cloudflare_doh",
     "ci": {
-      "GITHUB_RUN_ID": "41280878614",
+      "GITHUB_RUN_ID": "41334239925",
       "GITHUB_RUN_ATTEMPT": "1",
-      "GITHUB_SHA": "7386ac31d472c68ce014b8c71ff2b72f003841c9",
+      "GITHUB_SHA": "0e2d27f549d0e405e8e7ec8135879a2bc7fa922b",
       "GITHUB_REF": "refs/heads/main",
       "GITHUB_WORKFLOW": "Watchdog Health Check",
       "RUNNER_OS": "Linux",
       "RUNNER_ARCH": "X64"
     },
-    "egressIp": "172.208.93.164"
+    "egressIp": "172.208.93.163"
   },
   "note": "health.json 是 watchdog 在某次检查时的观察结果（Watchdog observation）；HEALTHY 仅表示该站点当时满足本站预定义的允许策略，不代表第三方网站绝对安全；用户实际访问（User navigation）由离站确认页自行判断。configVersion/siteConfigHash/approvedHost 用于与当前 sites.json 配置绑定，任何不一致客户端一律 DENY。",
   "sites": {
@@ -28,8 +28,8 @@
       "automatedContentCheck": "BLOCKED_BY_WAF",
       "verificationMode": "manual_user_environment",
       "reason": "machine basic gates PASS（DNS/TLS）；内容检查被明确 WAF/anti-bot 阻断，内容确认由人工限时 maintenancePermit 承接（MANUAL_VERIFIED，非内容自动 PASS）",
-      "lastCheck": "2026-11-01T06:27:10Z",
-      "observedAt": "2026-11-01T06:27:07Z",
+      "lastCheck": "2026-11-01T17:59:30Z",
+      "observedAt": "2026-11-01T17:59:28Z",
       "checks": {
         "dns": {
           "state": "PASS",
