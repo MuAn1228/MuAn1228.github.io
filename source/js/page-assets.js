@@ -1,6 +1,6 @@
 // ===== 页面级资源按需加载（避免重型脚本全站加载拖慢所有页面） =====
 // 1) 首页独占特效（three/vanta/hero-3d/marquee/github-heatmap）只在首页加载
-// 2) 非关键资源（音乐引擎 APlayer、3D 标签云 TagCanvas）在浏览器空闲时再加载
+// 2) 音乐页立即加载播放器，其它页的音乐引擎与 3D 标签云仍在空闲时加载
 (function () {
   'use strict';
 
@@ -8,13 +8,18 @@
   var musicQueued = false;
   var tagQueued = false;
 
-  function loadScript(src, onLoad) {
+  function loadScript(src, onLoad, onError) {
     if (loaded[src]) { if (onLoad) onLoad(); return; }
     loaded[src] = true;
     var s = document.createElement('script');
     s.src = src;
     s.async = false; // 按顺序执行，保证依赖在前
     s.onload = onLoad;
+    s.onerror = function () {
+      delete loaded[src];
+      s.remove();
+      if (onError) onError();
+    };
     document.body.appendChild(s);
   }
 
@@ -44,16 +49,22 @@
   function loadMusic() {
     if (musicQueued) return;
     musicQueued = true;
+    function failed() {
+      musicQueued = false;
+      document.dispatchEvent(new CustomEvent('blog-music-load-error'));
+    }
     loadScript('/lib/APlayer.min.js', function () {
       loadScript('/js/music-playback-guard.js?v=1', function () {
-        loadScript('/js/music-continuous.js?v=3', function () {
+        loadScript('/js/music-continuous.js?v=4', function () {
           loadScript('/js/music-diagnostics.js?v=1', function () {
-            loadScript('/js/music-playlist.js?v=7');
-          });
-        });
-      });
-    });
+            loadScript('/js/music-playlist.js?v=8', null, failed);
+          }, failed);
+        }, failed);
+      }, failed);
+    }, failed);
   }
+
+  function isMusicPage() { return /^\/fun\/music\/?$/.test(window.location.pathname); }
 
   // 侧边栏 3D 标签云：仅当页面存在标签云卡片时加载
   function loadTagCloud() {
@@ -67,6 +78,7 @@
 
   function boot() {
     loadHomeEffects();
+    if (isMusicPage()) loadMusic();
     onIdle(function () {
       loadMusic();
       loadTagCloud();
@@ -74,6 +86,8 @@
   }
 
   if (document.readyState === 'loading') {
+    // 注入脚本位于 body 底部；音乐依赖无需等待页面上其它脚本完成。
+    if (document.body && isMusicPage()) loadMusic();
     document.addEventListener('DOMContentLoaded', boot);
   } else {
     boot();
@@ -82,8 +96,10 @@
   // pjax 切页后重跑：回到首页时恢复特效、新页面补标签云（已加载的脚本自动跳过）
   document.addEventListener('pjax:complete', function () {
     loadHomeEffects();
+    if (isMusicPage()) loadMusic();
     onIdle(function () {
       loadTagCloud();
     });
   });
+  document.addEventListener('blog-music-load', loadMusic);
 })();

@@ -1,5 +1,5 @@
-// ===== 静态音乐播放列表（网易云，49 首）=====
-// 本地文件（music-assets 仓库，155 首白名单）优先用完整版；其余依次尝试
+// ===== 静态音乐播放列表（网易云，50 首）=====
+// 本地文件（music-assets 仓库白名单）优先用完整版；其余按需依次尝试
 // Meting API → 网易云官方外链，全失败则由 error 兜底自动跳到下一首。
 // 本播放器是全站唯一的音频引擎：
 //  - 播放状态（当前曲目/进度/停止键状态）写入 sessionStorage，切页（整页刷新）后自动续播
@@ -328,6 +328,7 @@
   var originalSetAudio = null;  // APlayer 原生换源实现
   var diagnostics = null;
   var mediaActions = null;
+  var classicAttempt = null;
 
   function readState() {
     try { return JSON.parse(sessionStorage.getItem(STATE_KEY)); }
@@ -475,8 +476,9 @@
         count: queue.length, offset: offset || 0, autoplay: autoplay !== false
       })) {
         continuous = null;                       // 连续流不可用：本次加载回到经典路径
-        originalSetAudio(ap.list.audios[index]);
-        if (autoplay !== false) play();
+        var needsPlay = autoplay !== false && ap.paused;
+        setClassicAudio(ap.list.audios[index]);
+        if (needsPlay) play();
       } else if (autoplay !== false) {
         play();
       }
@@ -526,7 +528,7 @@
         })) return;
         continuous = null;                               // 启动失败退回经典路径
       }
-      return originalSetAudio(track);
+      return setClassicAudio(track);
     };
     var originalPlay = ap.play.bind(ap);
     ap.play = function () {
@@ -568,6 +570,17 @@
     ap.audio.addEventListener('error', function (event) {
       event.stopImmediatePropagation();
       if (changingPlaylist) return;
+      // 旧音源排队的 error 可能晚于下一次点歌到达；新音源没有原生错误时忽略它。
+      if (!ap.audio.error) return;
+      var item = ap.list.audios[ap.list.index];
+      var attempt = classicAttempt;
+      if (!(continuous && continuous.isActive()) && attempt && !attempt.fallback &&
+          attempt.owner === owner && attempt.index === ap.list.index && attempt.track === item &&
+          ap.audio.src === attempt.url) {
+        // Meting 失效先尝试同一首的官方外链，全部失败后才计入跳歌次数。
+        setClassicAudio(item, true);
+        return;
+      }
       var failed = getState();
       var shouldContinue = !ap.paused && !userPaused;
       document.dispatchEvent(new CustomEvent('blog-music-error', { detail: failed }));
@@ -595,10 +608,9 @@
   }
 
   function init() {
-    // 先加载仓库白名单，再解析歌单——否则本地歌曲会误走网络源
+    // 白名单决定本地音源；完整队列直接由元数据构建，不等待几十路 Meting 请求。
     loadLocalIds().then(function () {
-      return Promise.all(songs.map(resolve));
-    }).then(function (list) {
+      var list = songs.map(createTrack);
       playlists.mini = list;
       var container = document.createElement('div');
       document.body.appendChild(container);
@@ -679,15 +691,17 @@
 
   var CDN_BASE = 'https://cdn.jsdelivr.net/gh/MuAn1228/music-assets@master/';
 
+  function createTrack(song) {
+    var id = String(song.id);
+    return {
+      name: song.name, artist: song.artist, cover: song.cover, songId: id,
+      url: LOCAL_IDS && LOCAL_IDS.has(id) ? CDN_BASE + id + '.mp3'
+        : 'https://music.163.com/song/media/outer/url?id=' + id + '.mp3'
+    };
+  }
+
   function registerPlaylist(list) {
-    playlists.big = list.map(function (song) {
-      var id = String(song.id);
-      return {
-        name: song.name, artist: song.artist, cover: song.cover, songId: id,
-        url: LOCAL_IDS && LOCAL_IDS.has(id) ? CDN_BASE + id + '.mp3'
-          : 'https://music.163.com/song/media/outer/url?id=' + id + '.mp3'
-      };
-    });
+    playlists.big = list.map(createTrack);
   }
 
   // 加载仓库白名单（local-playlist-ids.json），失败时置空（全部走网络源）
@@ -700,30 +714,16 @@
       .catch(function () { LOCAL_IDS = new Set(); });
   }
 
-  function resolve(s) {
-    // 1) 仓库里有本地文件 → jsDelivr CDN 完整版（最稳定，切页也不受网络冲击）
-    var id = String(s.id);
-    if (LOCAL_IDS && LOCAL_IDS.has(id)) {
-      return Promise.resolve({
-        name: s.name, artist: s.artist,
-        url: CDN_BASE + id + '.mp3',
-        cover: s.cover, lrc: '', songId: id
-      });
-    }
-    // 2) Meting API（拿真实 CDN 直链）
-    var fallback = 'https://music.163.com/song/media/outer/url?id=' + id + '.mp3';
-    return fetch('https://api.injahow.cn/meting/?server=netease&type=song&id=' + id, { cache: 'no-store' })
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        var url = d && d[0] && d[0].url;
-        if (!url) throw new Error('no-url');
-        return url;
-      })
-      // 3) 网易云官方外链兜底（免费可外链的歌曲仍可用）
-      .catch(function () { return fallback; })
-      .then(function (url) {
-        return { name: s.name, artist: s.artist, url: url, cover: s.cover, lrc: '', songId: id };
-      });
+  function setClassicAudio(track, fallback) {
+    // type=url 直接交给 audio，只解析真正要播放的曲目；队列不保存有时效的签名地址。
+    var remote = track.songId && !(LOCAL_IDS && LOCAL_IDS.has(String(track.songId)));
+    var url = remote && !fallback ? METING_STREAM + track.songId : track.url;
+    classicAttempt = {
+      owner: owner, index: ap.list.index, track: track, url: url,
+      fallback: !remote || !!fallback
+    };
+    var playable = Object.assign({}, track, { url: url });
+    return originalSetAudio(playable);
   }
 
   // ===== 连续流（MediaSource）接线 =====
@@ -793,9 +793,11 @@
     }
     if (!ap) return;
     if (!shouldPlay) ap.pause();          // 先落下暂停意图，避免换源时带出新的播放请求
+    var needsPlay = shouldPlay && ap.paused;
     var track = ap.list.audios[ap.list.index];
-    if (track && originalSetAudio) originalSetAudio(track);
-    if (shouldPlay) play();
+    if (track && originalSetAudio) setClassicAudio(track);
+    // APlayer 换源会在未暂停时自行调用 audio.play，不能再重复请求。
+    if (needsPlay) play();
     else publishState();
   }
 

@@ -24,6 +24,9 @@ const localIds = [2085859568, 910001, 910003];
 const expectedUrl = index => localIds.includes(playlist[index].id)
   ? cdn + playlist[index].id + '.mp3'
   : 'https://music.163.com/song/media/outer/url?id=' + playlist[index].id + '.mp3';
+const metingUrl = id => 'https://api.injahow.cn/meting/?server=netease&type=url&id=' + id;
+const expectedSource = index => localIds.includes(playlist[index].id)
+  ? expectedUrl(index) : metingUrl(playlist[index].id);
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function until(predicate, description) {
@@ -177,6 +180,7 @@ async function createBrowser(options = {}) {
       return { ok: true, json: async () => playlist.map(item => ({ ...item })) };
     }
     if (String(url).includes('api.injahow.cn/meting/')) {
+      if (options.metingHangs) return new Promise(() => {});
       if (options.metingFails) throw new Error('Meting unavailable');
       const id = new URL(url).searchParams.get('id');
       return { ok: true, json: async () => [{ url: 'https://audio.example.test/' + id + '.mp3' }] };
@@ -271,9 +275,20 @@ async function createBrowser(options = {}) {
       event(audio, 'ended');
       await delay(20);
     },
-    async fail() {
+    async failSource() {
+      state(engine.audio()).error = { code: 4 };
       event(engine.audio(), 'error');
       await delay(20);
+    },
+    async fail() {
+      const before = engine.getState();
+      const source = engine.audio().src;
+      await this.failSource();
+      // A song failure exhausts both network sources; a primary-source failure alone is a retry.
+      if (source.includes('api.injahow.cn/meting/') && engine.getState().owner === before.owner &&
+          engine.getState().index === before.index && engine.audio().src === before.src) {
+        await this.failSource();
+      }
     },
     async navigateAway() {
       document.dispatchEvent(new window.Event('pjax:send'));
@@ -326,13 +341,24 @@ async function test(name, options, run) {
 }
 
 (async () => {
+  await test('unrequested remote songs never block player readiness or trigger metadata requests', {
+    grid: false, metingHangs: true
+  }, async b => {
+    assert.equal(b.readyCount(), 1);
+    assert.equal(b.requests.some(url => url.includes('api.injahow.cn/meting/')), false);
+    assert.ok(b.engine.ap.list.audios.length > 40);
+    b.engine.play();
+    await delay(20);
+    assert.equal(b.engine.getState().playing, true);
+  });
+
   await test('real APlayer initializes mini queue and announces readiness once', {}, async b => {
     assert.ok(b.engine.ap instanceof b.window.APlayer);
     assert.equal(b.readyCount(), 1);
     assertTrack(b, 'mini', 0);
     assert.equal(b.engine.getState().src, cdn + '2085859568.mp3');
     assert.ok(b.engine.ap.list.audios.length > playlist.length);
-    assert.ok(b.engine.ap.list.audios.some(item => item.url.startsWith('https://audio.example.test/')));
+    assert.equal(b.requests.some(url => url.includes('api.injahow.cn/meting/')), false);
     b.window.eval(engineSource);
     assert.equal(b.readyCount(), 1);
     assert.equal(b.document.querySelectorAll('.aplayer').length, 1);
@@ -344,6 +370,46 @@ async function test(name, options, run) {
     assert.deepEqual(Array.from(b.engine.ap.list.audios, item => item.url), playlist.map((_, i) => expectedUrl(i)));
     assert.equal(b.engine.getState().playing, true);
     assert.equal(b.document.querySelector('.mf-active').dataset.i, '2');
+  });
+
+  await test('classic remote playback tries Meting then official audio before marking the song unavailable', {}, async b => {
+    b.setAutoPlaying(false);
+    await b.clickTrack(1);
+    assert.equal(b.engine.audio().src, metingUrl(playlist[1].id));
+    let errors = 0;
+    b.document.addEventListener('blog-music-error', () => errors++);
+    const plays = b.plays.length;
+    await b.failSource();
+    assertTrack(b, 'big', 1);
+    assert.equal(b.engine.audio().src, expectedUrl(1));
+    assert.equal(b.plays.length, plays + 1, 'the replacement source requests playback exactly once');
+    assert.equal(errors, 0, 'a working fallback does not mark the row unavailable');
+    await b.failSource();
+    assertTrack(b, 'big', 2);
+    assert.equal(errors, 1, 'the song fails only after both sources fail');
+  });
+
+  await test('classic source fallback respects pause and does not request playback', {}, async b => {
+    await b.clickTrack(1);
+    b.engine.pause();
+    await delay(20);
+    const plays = b.plays.length;
+    await b.failSource();
+    assertTrack(b, 'big', 1);
+    assert.equal(b.engine.audio().src, expectedUrl(1));
+    assert.equal(b.plays.length, plays);
+    assert.equal(b.engine.getState().playing, false);
+  });
+
+  await test('late error events without a current media error cannot override a newer selection', {}, async b => {
+    await b.clickTrack(1);
+    await b.clickTrack(3);
+    const sources = b.sourceChanges.length;
+    b.mediaEvent('error');
+    await delay(20);
+    assertTrack(b, 'big', 3);
+    assert.equal(b.sourceChanges.length, sources);
+    assert.equal(b.engine.getState().playing, true);
   });
 
   await test('hidden natural end switches once, starts next track once, never plays mini', {}, async b => {
@@ -358,8 +424,8 @@ async function test(name, options, run) {
     assertTrack(b, 'big', 1);
     assert.equal(b.engine.getState().playing, true);
     assert.equal(b.plays.length - previousPlays, 1);
-    assert.deepEqual(b.sourceChanges.slice(previousSources), [expectedUrl(1)]);
-    assert.deepEqual(b.plays.slice(previousPlays).map(call => call.src), [expectedUrl(1)]);
+    assert.deepEqual(b.sourceChanges.slice(previousSources), [expectedSource(1)]);
+    assert.deepEqual(b.plays.slice(previousPlays).map(call => call.src), [expectedSource(1)]);
     assert.equal(b.stateEvents.at(-1).index, 1);
   });
 
@@ -613,9 +679,9 @@ async function test(name, options, run) {
       assertTrack(b, 'big', index);
       assert.equal(b.engine.getState().playing, true);
       assert.equal(switches, index);
-      assert.deepEqual(b.sourceChanges.slice(previousSources), [expectedUrl(index)]);
+      assert.deepEqual(b.sourceChanges.slice(previousSources), [expectedSource(index)]);
       assert.deepEqual(b.plays.slice(previous).map(call => [call.src, call.readyState]),
-        [[expectedUrl(index), 0], [expectedUrl(index), 4]]);
+        [[expectedSource(index), 0], [expectedSource(index), 4]]);
       assert.ok(b.plays.slice(previous).every(call => call.hidden && call.autoplay));
       b.mediaEvent('canplay');
       b.mediaEvent('canplaythrough');
@@ -797,10 +863,12 @@ async function test(name, options, run) {
     b.engine.ap.play();
     await delay(20);
     const sourcesBefore = b.sourceChanges.length;
+    const playsBefore = b.plays.length;
     b.stream.hooks.onFatal('append-failed', true);
     await delay(20);
     assert.ok(b.stream.calls.some(call => call.name === 'stop'));
     assert.equal(b.sourceChanges.length, sourcesBefore + 1);
+    assert.equal(b.plays.length, playsBefore + 1, 'classic fallback requests native play only once');
     assert.equal(b.engine.getState().playing, true, 'playback continues through the classic path');
     b.engine.ap.play();
     await delay(20);

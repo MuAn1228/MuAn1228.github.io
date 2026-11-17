@@ -142,6 +142,13 @@
 - 回归：`node test/music-background.js [--built]`、`node test/music-continuous.js [--built]`、`node test/music-engine-browser.js [--built]`、`node test/music-diagnostics.js`。真实 Chromium 测试保留默认手势授权限制，通过 CDP 点击开始，音频解码真实，隐藏状态为模拟。
 - **真机状态仍待复验**：本地测试不能证明 HeyTap 的锁屏/蓝牙行为已完全修复；无后台网络时续播仍受已完成缓冲余量限制，不得称为「无限续播」。
 
+## 音乐响应与切歌优化（2026-11-17）
+- 音乐页及 PJAX 进入时立即按需加载引擎，其他页面仍空闲加载。初始化只读本地白名单并构建完整队列，不再并发解析整份迷你歌单的 Meting 元数据；经典路径按需用 Meting `type=url`，失败先回退同曲官方外链，两源均失败才计入原有跳歌上限。
+- 显式点歌优先下载与追加目标，不再等待无关的未来慢曲；首曲尚未追加时再次点歌可取消过时选择。保持整首下载后追加、同一 MediaSource、当前播放与后台下载不因 hidden 被取消的约束。
+- 音乐页加载中保留最后点歌意图，可取消；歌单请求失败可手动重试，离页清理。状态更新只更新前后活动行，进度事件不重绘整份列表。
+- 当前缓存版本：`page-assets.js?v=8` → guard v1 → continuous v4 → diagnostics v1 → playlist v8；音乐页 `music-playlist-grid.js?v=3`。本地音源白名单现为 157 首，音乐页大歌单 391 首。
+- 回归：`node test/music-background.js [--built]`、`node test/music-continuous.js [--built]`、`node test/music-ui-response.js [--built]`、`node test/music-engine-browser.js [--built]`。Chromium 真实解码测试的 hidden 为模拟，原厂浏览器锁屏/蓝牙效果仍须真机验证。
+
 ## 自制游戏《第九层事故 BULLET DEPTHS》（小游戏页 iframe 接入，2026-09-06）
 - **游戏本体在独立仓库** `MuAn1228/bullet-depths`（源码在本机 `D:\game\tingjindilao`，SSH remote 已配好）。GitHub Pages 已开启（**master 分支根目录**），线上地址 `https://muan1228.github.io/bullet-depths/`。
 - 游戏技术栈：纯原生 JS（27 个文件）+ 本地 vendored `lib/three.min.js`，零外部依赖、全相对路径、无构建步骤。**更新游戏 = 在 `D:\game\tingjindilao` 里 `git push`，Pages 约 1 分钟自动更新，博客侧无需任何改动**。

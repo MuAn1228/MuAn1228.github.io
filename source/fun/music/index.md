@@ -10,5 +10,5 @@ title: 音乐
 
 <div id="music-grid" class="music-grid">加载中…</div>
 
-<script src="/js/music-playlist-grid.js?v=2"></script>
+<script src="/js/music-playlist-grid.js?v=3"></script>
 <script src="/js/music-grid.js"></script>

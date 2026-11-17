@@ -297,6 +297,54 @@
         state: 'queued', appended: false, attempts: 0, fetched: null,
         failure: null, failureReported: false, cancel: null, dropped: false };
     }
+    function prioritizeTarget(s, target) {
+      // 点歌是新的播放选择：目标不能等无关的未来下载按旧顺序落位。
+      // 已写入的音频与正在执行的 append 保留；尚未出声的过时起播下载可以撤销。
+      if (s.quotaOp) {
+        s.quotaOp.segment.fetched = s.quotaOp.bytes;
+        s.quotaOp.segment.state = 'downloaded';
+        s.quotaOp.segment.start = null;
+        s.quotaOp = null;
+      }
+      var previous = s.segments;
+      s.segments = previous.filter(function (item) {
+        return typeof item.end === 'number' || item.state === 'appending';
+      });
+      if (s.segments.indexOf(target) === -1) s.segments.push(target);
+      var room = BURST_AHEAD - (s.segments.length - currentIndex(s) - 1);
+      var nextQi = (target.qi + 1) % s.count;
+      while (room-- > 0) {
+        var following = null;
+        for (var i = 0; i < previous.length; i++) {
+          var item = previous[i];
+          if (item.qi === nextQi && !item.dropped && s.segments.indexOf(item) === -1 &&
+              !(item === previous[0] && !s.started && item.state === 'loading')) {
+            following = item;
+            break;
+          }
+        }
+        s.segments.push(following || createSegment(nextQi));
+        nextQi = (nextQi + 1) % s.count;
+      }
+      s.nextQi = nextQi;
+      if (target.state === 'queued') {
+        // 即使旧下载恰好也是新目标的后续歌曲，也先让出一个连接给用户选择。
+        // 用新的段承接被让位的预取，旧 Promise 的完成/失败不能改写新的排队状态。
+        var loading = s.segments.filter(function (item) { return item.state === 'loading'; });
+        var limit = s.started ? FETCH_CONCURRENCY : 1;
+        if (loading.length >= limit) {
+          var displaced = loading[loading.length - 1];
+          s.segments[s.segments.indexOf(displaced)] = createSegment(displaced.qi);
+        }
+      }
+      previous.forEach(function (item) {
+        if (s.segments.indexOf(item) !== -1) return;
+        item.dropped = true;
+        if (item.cancel) item.cancel();
+        item.fetched = null;
+      });
+      ops = ops.filter(function (op) { return !op.segment || !op.segment.dropped; });
+    }
     function firstPending(s) {
       for (var i = 0; i < s.segments.length; i++) {
         if (typeof s.segments[i].end !== 'number') return s.segments[i];
@@ -662,37 +710,19 @@
         if (Math.abs(i - current) < distance) { segment = candidate; distance = Math.abs(i - current); }
       }
       if (!segment) {
-        // 未缓冲的上一首/任意曲：保留正在写入和已播放的段，追加目标，仍使用同一个 src。
-        // 只取消尚未追加的未来下载，不中断当前可播放缓冲，也不把播放头提前移到缓冲末尾。
-        if (s.quotaOp) {
-          // 配额拒绝的 append 尚未写入任何字节，可以安全撤销未选择的未来段。
-          s.quotaOp.segment.fetched = s.quotaOp.bytes;
-          s.quotaOp.segment.state = 'downloaded';
-          s.quotaOp.segment.start = null;
-          s.quotaOp = null;
-        }
-        var retained = [];
-        s.segments.forEach(function (item) {
-          if (typeof item.end === 'number' || item.state === 'appending') retained.push(item);
-          else {
-            item.dropped = true;
-            if (item.cancel) item.cancel();
-            item.fetched = null;
-          }
-        });
-        s.segments = retained;
         segment = createSegment(index);
         s.segments.push(segment);
-        s.nextQi = (index + 1) % s.count;
       }
       s.autoplay = autoplay !== false;
       if (!s.started) { s.startTarget = segment; s.offset = wanted; }
       if (s.autoplay) audio.autoplay = true;
       if (typeof segment.end !== 'number') {
+        prioritizeTarget(s, segment);
         ignoreFailuresBefore(s, segment);
         s.pendingJump = { segment: segment, offset: wanted };
         lastNotified = index;
         prioritizeQuota(s);
+        drain(s);
         fillBurst(s);
         if (s.autoplay && audio.paused && hooks.play) hooks.play();
         if (hooks.onAdvance) hooks.onAdvance(index);

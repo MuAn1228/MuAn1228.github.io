@@ -90,7 +90,9 @@ function browser(options = {}) {
     };
     if (init && init.signal) init.signal.addEventListener('abort', () => { request.aborted = true; });
     calls.requests.push(request);
-    return Promise.resolve({ ok: true, headers: { get: name => name === 'content-type' ? 'audio/mpeg' : null },
+    const status = options.status && options.status[request.index] || 200;
+    return Promise.resolve({ ok: status >= 200 && status < 300, status,
+      headers: { get: name => name === 'content-type' ? 'audio/mpeg' : null },
       body: { getReader: () => ({
         read: () => request.queue.length ? Promise.resolve(request.queue.shift()) : new Promise(resolve => { request.waiter = resolve; }),
         cancel: () => { request.aborted = true; request.finish(); return Promise.resolve(); }
@@ -152,13 +154,42 @@ test('pending next keeps its download and the current playback position', async 
   assert.equal(h.calls.src.length, 1); assert.equal(h.calls.play, 1);
 });
 
-test('downloaded next waits for earlier pending segment without being fetched again', async h => {
+test('downloaded explicit target bypasses an unrelated pending track without refetching', async h => {
   h.start(); await flush(); h.request(0).complete(); await flush();
+  const unrelated = h.request(1);
   h.request(2).complete(); await flush();
   h.stream.jump(2, 0, true); await flush();
   assert.equal(h.calls.requests.filter(x => x.index === 2).length, 1);
-  h.request(1).complete(); await flush();
-  assert.equal(h.data.time, 200);
+  assert.equal(h.data.time, 100);
+  assert.deepEqual(h.calls.appends.map(x => x.index), [0, 2]);
+  assert.equal(unrelated.aborted, true);
+  assert.equal(h.calls.src.length, 1); assert.equal(h.calls.play, 1);
+});
+
+test('explicit queued target gets a download slot ahead of unrelated prefetches', async h => {
+  h.start(); await flush(); h.request(0).complete(); await flush(); h.tick(20);
+  const first = h.request(0);
+  h.stream.jump(6, 0, true); await flush();
+  h.request(6).complete(); await flush();
+  assert.equal(first.aborted, false);
+  assert.equal(h.data.time, 100);
+  assert.deepEqual(h.calls.appends.map(x => x.index), [0, 6]);
+  assert.equal(h.calls.src.length, 1); assert.equal(h.calls.play, 1);
+});
+
+test('latest explicit choice supersedes an initial download before any audio is appended', async h => {
+  h.start(); await flush();
+  const obsolete = h.request(0);
+  h.stream.jump(6, 0, true); await flush();
+  const superseded = h.request(6);
+  h.stream.jump(8, 4, true); await flush();
+  obsolete.complete(); superseded.complete(); await flush();
+  assert.equal(obsolete.aborted, true); assert.equal(superseded.aborted, true);
+  assert.equal(h.calls.appends.length, 0);
+  h.request(8).complete(); await flush();
+  assert.equal(h.data.time, 4);
+  assert.deepEqual(h.calls.appends.map(x => x.index), [8]);
+  assert.equal(h.calls.src.length, 1); assert.equal(h.calls.play, 1);
 });
 
 test('uncached previous appends to the same source; awaiting it does not move current audio', async h => {
@@ -178,18 +209,31 @@ test('future unavailable track reports only when playback reaches its boundary',
   h.request(2).complete(); await flush();
   h.tick(100); await flush();
   assert.deepEqual(h.calls.unavailable.map(x => x.index), [1]);
+  assert.equal(h.calls.requests.filter(x => x.index === 1).length, 1);
   assert.equal(h.calls.fatal.length, 0);
 });
+
+for (const status of [403, 404]) {
+  test('permanent HTTP ' + status + ' advances without retrying or replacing the source', async h => {
+    h.start(); await flush();
+    h.request(1).complete(); await flush();
+    assert.equal(h.calls.requests.filter(x => x.index === 0).length, 1);
+    assert.deepEqual(h.calls.unavailable, [{ index: 0, reason: 'http-' + status }]);
+    assert.deepEqual(h.calls.appends.map(x => x.index), [1]);
+    assert.equal(h.stream.isActive(), true);
+    assert.equal(h.calls.src.length, 1); assert.equal(h.calls.play, 1);
+  }, { status: { 0: status } });
+}
 
 test('failed explicit target during initial loading advances instead of blocking start forever', async h => {
   h.start(); await flush();
   h.stream.jump(2, 8, true); await flush();
-  h.request(0).complete(); await flush();
-  h.request(1).complete(); await flush();
   h.request(2).chunk([60, 104, 116, 109]); h.request(2).finish(); await flush();
   h.request(3).complete(); await flush();
   assert.equal(h.audio.duration, 100);
-  assert.equal(h.data.time, 200);
+  assert.equal(h.data.time, 0);
+  assert.deepEqual(h.calls.appends.map(x => x.index), [3]);
+  assert.deepEqual(h.calls.unavailable.map(x => x.index), [2]);
   assert.ok(h.calls.advances.includes(3));
   assert.equal(h.calls.play, 1);
 });
