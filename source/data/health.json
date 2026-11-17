@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "configVersion": 14,
-  "generatedAt": "2026-11-16T22:22:00Z",
+  "generatedAt": "2026-11-17T08:10:08Z",
   "ttlHours": 12,
   "environment": {
     "kind": "github_actions",
@@ -10,9 +10,9 @@
     "bits": "64",
     "dnsSource": "system_resolver + cloudflare_doh",
     "ci": {
-      "GITHUB_RUN_ID": "43969307234",
+      "GITHUB_RUN_ID": "44044387456",
       "GITHUB_RUN_ATTEMPT": "1",
-      "GITHUB_SHA": "93b9dd8b96f10515ae39e192e9b59f923e8c41bd",
+      "GITHUB_SHA": "6cc59dbbd131c3339e5a0926805c515638681dfa",
       "GITHUB_REF": "refs/heads/main",
       "GITHUB_WORKFLOW": "Watchdog Health Check",
       "RUNNER_OS": "Linux",
@@ -28,8 +28,8 @@
       "automatedContentCheck": "BLOCKED_BY_WAF",
       "verificationMode": "manual_user_environment",
       "reason": "machine basic gates PASS（DNS/TLS）；内容检查被明确 WAF/anti-bot 阻断，内容确认由人工限时 maintenancePermit 承接（MANUAL_VERIFIED，非内容自动 PASS）",
-      "lastCheck": "2026-11-16T22:22:02Z",
-      "observedAt": "2026-11-16T22:22:01Z",
+      "lastCheck": "2026-11-17T08:10:10Z",
+      "observedAt": "2026-11-17T08:10:08Z",
       "checks": {
         "dns": {
           "state": "PASS",
