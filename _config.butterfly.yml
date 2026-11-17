@@ -16,7 +16,6 @@ menu:
     游戏: /fun/games/ || fas fa-gamepad
     阅读: /fun/books/ || fas fa-book
     小游戏: /fun/arcade/ || fas fa-puzzle-piece
-    博客小屋: /room/ || fas fa-house-user
   展示: /showcase/ || fas fa-id-card
   交易: /finance/ || fas fa-chart-line
   分类: /categories/ || fas fa-folder-open
@@ -124,7 +123,7 @@ inject:
   head:
     - '<link rel="stylesheet" href="/css/custom.css">'
     - '<link rel="stylesheet" href="/lib/APlayer.min.css">'
-    - '<link rel="stylesheet" href="/css/whale-widget.css?v=1">'
+    - '<link rel="stylesheet" href="/css/whale-widget.css?v=2">'
   bottom:
     - '<script src="/js/device-guard.js"></script>'
     - '<script src="/js/sakura.js?v=2"></script>'

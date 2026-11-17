@@ -397,13 +397,6 @@ html:has(.gmt-term) #whale-widget {
   display: none !important;
 }
 
-/* 博客房间页：手机端隐藏，避免遮挡场景 */
-@media (max-width: 600px) {
-  html:has(#blog-room) #whale-widget {
-    display: none !important;
-  }
-}
-
 /* 尊重系统无声偏好：挂件本身不自动发声，这里只降低动画 */
 @media (prefers-reduced-motion: reduce) {
   #whale-widget,
