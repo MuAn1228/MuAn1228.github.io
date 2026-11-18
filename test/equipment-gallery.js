@@ -15,6 +15,7 @@ const built = process.argv.includes('--built');
 const assetRoot = path.join(repository, built ? 'public' : 'source');
 const interaction = fs.readFileSync(path.join(assetRoot, 'js/equipment-gallery.js'), 'utf8');
 const loader = fs.readFileSync(path.join(assetRoot, 'js/page-assets.js'), 'utf8');
+const localAsset = url => path.join(assetRoot, decodeURIComponent(new URL(url, 'https://example.test').pathname));
 
 function renderSource() {
   let render;
@@ -107,15 +108,15 @@ async function using(route, callback, options) {
     }
   }
 
-  await check('SSR contains all 12 real cards and official links before JavaScript runs', () =>
+  await check('SSR contains all 13 real cards and official links before JavaScript runs', () =>
     using('/equipments/', b => {
       const cards = [...b.document.querySelectorAll('[data-equipment-card]')];
-      assert.equal(cards.length, 12);
-      assert.equal(new Set(cards.map(card => card.dataset.equipmentCard)).size, 12);
+      assert.equal(cards.length, 13);
+      assert.equal(new Set(cards.map(card => card.dataset.equipmentCard)).size, 13);
       for (const card of cards) {
         const image = card.querySelector('img');
         assert.ok(image && image.alt.trim(), 'every equipment has an accessible image');
-        assert.ok(fs.existsSync(path.join(assetRoot, image.getAttribute('src'))), 'missing local product image: ' + image.getAttribute('src'));
+        assert.ok(fs.existsSync(localAsset(image.getAttribute('src'))), 'missing local product image: ' + image.getAttribute('src'));
         assert.ok(card.querySelector('h3').textContent.trim(), 'every equipment has a server-rendered name');
         const official = card.querySelector('a[target="_blank"]');
         assert.ok(['https:', 'http:'].includes(new URL(official.href).protocol), 'official link must be a web URL');
@@ -123,14 +124,35 @@ async function using(route, callback, options) {
       }
     }, { interactions: false }));
 
-  await check('SSR categories contain 4 everyday, 3 imaging, 4 desktop and 1 power device', () =>
+  await check('SSR categories contain 5 everyday, 3 imaging, 4 desktop and 1 power device', () =>
     using('/equipments/', b => {
       const counts = {};
       for (const card of b.document.querySelectorAll('[data-equipment-card]')) {
         counts[card.dataset.category] = (counts[card.dataset.category] || 0) + 1;
       }
-      assert.deepEqual(counts, { imaging: 3, everyday: 4, desktop: 4, power: 1 });
+      assert.deepEqual(counts, { imaging: 3, everyday: 5, desktop: 4, power: 1 });
       assert.equal(b.document.querySelectorAll('[data-filter]:not([data-filter="all"])').length, 4);
+    }, { interactions: false }));
+
+  await check('confirmed phone and mouse colors, white mouse model and everyday watch have real local assets', () =>
+    using('/equipments/', b => {
+      const items = b.data().items;
+      const phone = items.find(item => item.id === 'oneplus-ace3-pro');
+      const mouse = items.find(item => item.id === 'logitech-g304');
+      const watch = items.find(item => item.id === 'redmi-watch4');
+      assert.ok(phone && mouse && watch, 'the confirmed devices must be present');
+      assert.equal(phone.color, '钛空镜银');
+      assert.equal(mouse.color, '白色');
+      assert.match(mouse.model, /white/, 'the 3D model must match the confirmed white mouse');
+      assert.equal(watch.category, 'everyday');
+      for (const item of items) {
+        assert.ok(fs.statSync(localAsset(item.image)).size > 0, 'missing or empty product image: ' + item.image);
+        if (item.model) {
+          const model = fs.readFileSync(localAsset(item.model));
+          assert.ok(model.length >= 12, 'missing or empty GLB: ' + item.model);
+          assert.equal(model.toString('ascii', 0, 4), 'glTF', 'model must be an actual GLB: ' + item.model);
+        }
+      }
     }, { interactions: false }));
 
   await check('a linked category URL initializes the visible cards and pressed filter', () =>
@@ -144,7 +166,7 @@ async function using(route, callback, options) {
 
   await check('unknown category URLs safely show the full collection', () =>
     using('/equipments/?category=unknown', b => {
-      assert.equal(b.visibleCards().length, 12);
+      assert.equal(b.visibleCards().length, 13);
       assert.equal(b.$('[data-filter="all"]').getAttribute('aria-pressed'), 'true');
     }));
 
@@ -160,7 +182,7 @@ async function using(route, callback, options) {
       url = new URL(b.window.location.href);
       assert.equal(url.searchParams.has('category'), false);
       assert.equal(url.searchParams.get('from'), 'nav');
-      assert.equal(b.visibleCards().length, 12);
+      assert.equal(b.visibleCards().length, 13);
     }));
 
   await check('browser history restoration reapplies the URL category', () =>
@@ -202,15 +224,15 @@ async function using(route, callback, options) {
     using('/equipments/?category=everyday', b => {
       const names = b.data().items.filter(item => item.category === 'everyday').map(item => item.name);
       b.click('[data-equipment-card="oneplus-ace3-pro"] .eq-card-stage');
-      assert.equal(b.index(), '01 / 04');
+      assert.equal(b.index(), '01 / 05');
       b.click('[data-step="-1"]');
       assert.equal(b.title(), names.at(-1));
-      assert.equal(b.index(), '04 / 04');
+      assert.equal(b.index(), '05 / 05');
       b.click('[data-step="1"]');
       assert.equal(b.title(), names[0]);
       b.click('[data-step="1"]');
       assert.equal(b.title(), names[1]);
-      assert.equal(b.index(), '02 / 04');
+      assert.equal(b.index(), '02 / 05');
     }));
 
   await check('an off-category spotlight keeps the full dialog queue until it closes', () =>
@@ -219,16 +241,16 @@ async function using(route, callback, options) {
       assert.equal(b.$('.eq-hero-stage').dataset.equipment, 'sony-zve10');
       b.click('.eq-hero-stage');
       assert.equal(b.title(), items[0].name);
-      assert.equal(b.index(), '01 / 12');
+      assert.equal(b.index(), '01 / 13');
       b.click('[data-step="1"]');
       assert.equal(b.title(), items[1].name);
-      assert.equal(b.index(), '02 / 12', 'entering a filtered-category item must not change the queue');
+      assert.equal(b.index(), '02 / 13', 'entering a filtered-category item must not change the queue');
       b.click('[data-step="-1"]');
       assert.equal(b.title(), items[0].name, 'previous must return to the item just viewed');
-      assert.equal(b.index(), '01 / 12');
+      assert.equal(b.index(), '01 / 13');
       b.click('[data-step="-1"]');
       assert.equal(b.title(), items.at(-1).name);
-      assert.equal(b.index(), '12 / 12');
+      assert.equal(b.index(), '13 / 13');
     }));
 
   await check('reopening a filtered card resets a previous full spotlight queue', () =>
@@ -237,9 +259,9 @@ async function using(route, callback, options) {
       b.click('.eq-close');
       await flush();
       b.click('[data-equipment-card="oneplus-ace3-pro"] .eq-card-stage');
-      assert.equal(b.index(), '01 / 04');
+      assert.equal(b.index(), '01 / 05');
       b.click('[data-step="-1"]');
-      assert.equal(b.title(), 'OPPO Enco Free4');
+      assert.equal(b.title(), 'Redmi Watch 4');
     }));
 
   await check('keyboard arrows advance exactly one item and leave focus on the control', () =>

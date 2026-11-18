@@ -69,7 +69,7 @@
   // 装备馆只在本页加载；脚本自身负责 PJAX 重入和离页清理。
   function loadEquipment() {
     if (!document.getElementById('equipment-gallery')) return;
-    loadScript('/js/equipment-gallery.js?v=1');
+    loadScript('/js/equipment-gallery.js?v=2');
   }
 
   // 侧边栏 3D 标签云：仅当页面存在标签云卡片时加载

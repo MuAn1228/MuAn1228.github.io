@@ -1,15 +1,15 @@
 {
   "verifiedOn": "2026-11-18",
-  "note": "Official product presentation colors; user-specific memory, color, switch and GPU configurations are not assumed.",
+  "note": "Owner-confirmed colors: OnePlus Ace 3 Pro silver, Logitech G304 white. Other unspecified colors and hardware configurations remain official presentation references.",
   "items": [
     {
       "slug": "oneplus-ace3-pro",
       "name": "一加 Ace 3 Pro",
-      "image": "/img/equipment/oneplus-ace3-pro.webp",
+      "image": "/img/equipment/oneplus-ace3-pro-silver.webp",
       "officialUrl": "https://www.oneplus.com/cn/ace-3-pro/",
       "specsUrl": "https://www.oneplus.com/cn/ace-3-pro/specs",
-      "sourceImage": "https://oasisstatics.oneplus.cn/content/dam/oasis/page/2024/global/product/corvette/specs/1080-1080green.png",
-      "imageVariant": "绿野素青（官方示意图，用户实际配色未确认）",
+      "sourceImage": "https://oasisstatics.oneplus.cn/content/dam/oasis/page/2024/global/product/corvette/specs/1080-1080grey.png",
+      "imageVariant": "钛空镜银（用户已确认银色款）",
       "width": 1000,
       "height": 1000,
       "transparent": true,
@@ -18,7 +18,7 @@
         "6.78 英寸 · 120Hz",
         "6100mAh · 100W"
       ],
-      "notes": "官方 specs 页原图 1080×1080 PNG，WebP 已本地化。未写用户内存或存储容量。"
+      "notes": "用户明确银色款，官网参数页中的灰色图对应钛空镜银。已替换原绿野素青图并目检，官方透明 PNG 缩小为 1000×1000 WebP，43712 字节。未更改用户未提供的存储配置。"
     },
     {
       "slug": "oppo-pad5",
@@ -187,18 +187,19 @@
     {
       "slug": "logitech-g304",
       "name": "罗技 G304",
-      "image": "/img/equipment/logitech-g304.webp",
+      "image": "/img/equipment/logitech-g304-white.webp",
       "officialUrl": "https://www.logitechg.com/zh-cn/shop/p/g305-lightspeed-wireless-gaming-mouse",
-      "sourceImage": "https://resource.logitechg.com/content/dam/gaming/en/products/g305/2025-update/g305-lightspeed-mouse-top-angle-black-gallery-1.png",
+      "sourceImage": "https://resource.logitechg.com/content/dam/gaming/en/products/g305/2025-update/g305-lightspeed-mouse-top-angle-white-gallery-1.png",
       "specs": [
         "LIGHTSPEED 无线",
         "HERO 传感器",
         "最高 12,000 DPI"
       ],
       "transparent": true,
-      "notes": "官方URL含g305，但中文页H1明确G304（同款地区命名），非G304 X。黑色为官方示意配色，不代表用户实际配色。",
-      "modelSource": "https://www.logitechg.com/content/dam/gaming/en/ar-models/g305/g305-black-gaming-mice-hexa.glb",
-      "model": "/media/equipment/logitech-g304.glb"
+      "notes": "用户已确认白色；静态图与官方白色三维模型配色一致。",
+      "modelSource": "https://www.logitechg.com/content/dam/gaming/en/ar-models/g305/g305_white.glb",
+      "model": "/media/equipment/logitech-g304-white.glb",
+      "imageVariant": "白色（用户已确认）"
     },
     {
       "slug": "rapoo-v500pro98",
@@ -214,6 +215,37 @@
       ],
       "transparent": true,
       "notes": "官方jpg后缀URL实际返回有alpha的PNG，已核验。下载需要Referer https://www.rapoo.cn/。未填写轴体/实际配色。"
+    },
+    {
+      "slug": "redmi-watch4",
+      "name": "Redmi Watch 4",
+      "image": "/img/equipment/redmi-watch4.webp",
+      "officialUrl": "https://www.mi.com/redmi-watch-4",
+      "sourceImage": "https://i02.appmifile.com/204_operator_sg/02/01/2024/77a503abe5d086ba59f1fd1bd538457f.png",
+      "specSource": "https://www.mi.com/redmi-watch-4/specs",
+      "width": 255,
+      "height": 399,
+      "transparent": true,
+      "imageVariant": "官方展示配色 Silver Gray；用户实际配色未确认",
+      "specs": [
+        {
+          "label": "屏幕",
+          "value": "1.97 英寸 AMOLED"
+        },
+        {
+          "label": "通话",
+          "value": "蓝牙通话"
+        },
+        {
+          "label": "定位",
+          "value": "内置 GNSS"
+        },
+        {
+          "label": "防水等级",
+          "value": "5ATM"
+        }
+      ],
+      "notes": "小米官方 specs 的 1200×400 双表渲染，裁出右侧单只银灰色手表并去掉透明边距，未生成或修改产品外观，保留透明背景且不放大低分辨率。成品 16094 字节，已逐张目检。中国官网参数 JS 同样核验为 Redmi Watch 4，1.97 英寸 AMOLED 彩色方屏，390×450；通用蓝牙通话/GNSS/5ATM 也经小米 global 官方参数页核验。不宣称该图就是用户手表配色。"
     }
   ]
 }

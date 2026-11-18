@@ -85,7 +85,7 @@
       hero.setAttribute('aria-label', '查看 ' + item.name + ' 详情');
       var image = hero.querySelector('img');
       image.src = item.image;
-      image.alt = item.name + ' 官方产品图';
+      image.alt = item.name + (item.color ? ' · ' + item.color : '') + ' 官方产品图';
       text('.eq-exhibit-word', item.scene);
       text('.eq-spot-brand', item.brand);
       text('.eq-spot-name', item.name);
@@ -166,6 +166,9 @@
       currentItem = item;
       resetViewer();
       root.querySelector('.eq-view-modes').hidden = !item.model;
+      var modelButton = root.querySelector('[data-view="model"]');
+      modelButton.textContent = item.modelSize ? '官方 3D · ' + item.modelSize : '官方 3D ↻';
+      modelButton.title = item.modelSize ? '点击后加载约 ' + item.modelSize + ' 的官方模型' : '点击后加载官方模型';
       imageWrap.dataset.item = id;
       unzoom();
       resetTilt();
@@ -174,6 +177,7 @@
       text('#eq-detail-name', item.name);
       text('.eq-detail-note', item.note);
       text('.eq-detail-source-note', item.sourceNote);
+      text('.eq-detail-footnote', item.color ? '图片配色：' + item.color + '。未注明的硬件配置以实物为准。' : '图片为官方展示配色，具体配置以实际设备为准。');
       if (!dialog.open) {
         detailSequence = visibleItems();
         // Keep the initial sequence until close, including when a spotlight
@@ -183,7 +187,7 @@
       text('.eq-detail-index', number(detailSequence.indexOf(item) + 1) + ' / ' + number(detailSequence.length));
       var image = imageWrap.querySelector('img');
       image.src = item.image;
-      image.alt = item.name + ' 官方产品图';
+      image.alt = item.name + (item.color ? ' · ' + item.color : '') + ' 官方产品图';
       var specs = root.querySelector('.eq-specs');
       specs.replaceChildren();
       item.specs.forEach(function (spec) {

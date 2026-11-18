@@ -58,12 +58,16 @@
       "category": "everyday",
       "note": "消息、地图与灵感，都从掌心出发。",
       "tags": [
-        "智能手机",
-        "随身主力"
+        "钛空镜银",
+        "智能手机"
       ],
-      "image": "/img/equipment/oneplus-ace3-pro.webp",
+      "image": "/img/equipment/oneplus-ace3-pro-silver.webp",
       "officialUrl": "https://www.oneplus.com/cn/ace-3-pro/",
       "specs": [
+        {
+          "label": "配色",
+          "value": "钛空镜银"
+        },
         {
           "label": "芯片",
           "value": "第三代骁龙 8"
@@ -80,9 +84,10 @@
       "featured": true,
       "scene": "CONNECT",
       "sceneLabel": "随时在线",
-      "imageSource": "https://oasisstatics.oneplus.cn/content/dam/oasis/page/2024/global/product/corvette/specs/1080-1080green.png",
+      "imageSource": "https://oasisstatics.oneplus.cn/content/dam/oasis/page/2024/global/product/corvette/specs/1080-1080grey.png",
       "imageWidth": 1000,
-      "imageHeight": 1000
+      "imageHeight": 1000,
+      "color": "钛空镜银"
     },
     {
       "id": "asus-tx6pro",
@@ -266,6 +271,40 @@
       "imageHeight": 600
     },
     {
+      "id": "redmi-watch4",
+      "brand": "REDMI",
+      "name": "Redmi Watch 4",
+      "category": "everyday",
+      "note": "抬腕看看时间，也记录每一天的步伐。",
+      "tags": [
+        "智能手表",
+        "AMOLED"
+      ],
+      "image": "/img/equipment/redmi-watch4.webp",
+      "officialUrl": "https://www.mi.com/redmi-watch-4",
+      "specs": [
+        {
+          "label": "屏幕",
+          "value": "1.97 英寸 AMOLED"
+        },
+        {
+          "label": "通话",
+          "value": "蓝牙通话"
+        },
+        {
+          "label": "定位",
+          "value": "内置 GNSS"
+        },
+        {
+          "label": "防水等级",
+          "value": "5ATM"
+        }
+      ],
+      "imageSource": "https://i02.appmifile.com/204_operator_sg/02/01/2024/77a503abe5d086ba59f1fd1bd538457f.png",
+      "imageWidth": 255,
+      "imageHeight": 399
+    },
+    {
       "id": "sanc-n50pro6",
       "brand": "SANC",
       "name": "SANC N50Pro6",
@@ -305,12 +344,16 @@
       "category": "desktop",
       "note": "少一根线，多一点自由。",
       "tags": [
-        "LIGHTSPEED",
-        "无线鼠标"
+        "白色",
+        "LIGHTSPEED 无线"
       ],
-      "image": "/img/equipment/logitech-g304.webp",
+      "image": "/img/equipment/logitech-g304-white.webp",
       "officialUrl": "https://www.logitechg.com/zh-cn/shop/p/g305-lightspeed-wireless-gaming-mouse",
       "specs": [
+        {
+          "label": "配色",
+          "value": "白色"
+        },
         {
           "label": "连接方式",
           "value": "LIGHTSPEED 无线"
@@ -324,8 +367,10 @@
           "value": "最高 12,000 DPI"
         }
       ],
-      "imageSource": "https://resource.logitechg.com/content/dam/gaming/en/products/g305/2025-update/g305-lightspeed-mouse-top-angle-black-gallery-1.png",
-      "model": "/media/equipment/logitech-g304.glb"
+      "imageSource": "https://resource.logitechg.com/content/dam/gaming/en/products/g305/2025-update/g305-lightspeed-mouse-top-angle-white-gallery-1.png",
+      "model": "/media/equipment/logitech-g304-white.glb",
+      "modelSize": "10.9MB",
+      "color": "白色"
     },
     {
       "id": "rapoo-v500pro98",
