@@ -202,6 +202,7 @@
 - 测试：`node test/watch-security.js`（177 个用例）+ `node test/fault-drill.js`（55）+ `node test/hash-crosscheck.js`（63）+ `python test/candidate-security.py`（52）+ `python test/dns-security.py`（55）+ `python test/domain-migrate-security.py`（77），全部 exit 0 才通过。
 
 ## GitHub Actions 部署坑（重要，2026-09-07 新增）
+- **Pages 发布包同步（2026-11-18）**：曾出现上传成功但紧接着 deploy-pages 查询到 0 个 artifact，重跑后又因同名包累计变成 2 个失败。`update-contributions.yml` 现用 `github-pages-${{ github.run_id }}-${{ github.run_attempt }}` 为上传/部署指定相同独立包名，并在部署前用 `gh api` 最多轮询 30 秒确认当前包可见（需要 `actions:read`）。不要把上传和部署的包名改成不同值，或退回重试共享同名包。
 - 仓库有两个 workflow 都会部署到 GitHub Pages，且共用 `concurrency.group: pages`（后部署的覆盖先部署的）：
   1. `update-contributions.yml`：每天 08:17（北京）+ 每次 push main 触发，**构建前会 fetch_contributions.py** 更新热力图数据。
   2. `watchdog.yml`：每 6 小时触发，**构建前原来没有 fetch_contributions.py**（2026-09-07 已修复，commit 390dc5a）。

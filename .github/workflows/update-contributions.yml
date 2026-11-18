@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 
@@ -49,8 +50,29 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
+          name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
           path: ./public
+
+      # Artifact metadata can lag behind a completed upload. Separate attempts
+      # also need distinct names so a rerun cannot select an older artifact.
+      - name: Wait for Pages artifact metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PAGES_ARTIFACT: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            count=$(gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?name=$PAGES_ARTIFACT" --jq '.artifacts | map(select(.expired == false)) | length')
+            if [ "$count" = "1" ]; then
+              echo "Pages artifact is available."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Expected one Pages artifact after upload; metadata is not ready."
+          exit 1
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
