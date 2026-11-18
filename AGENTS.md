@@ -85,6 +85,14 @@
 - 文案存档在本地 Obsidian：`D:\obsidian\Obsidian Vault\博客\关于本站.md`（含原始段落；用户后续改文字再同步回 `source/about-site/index.md`，网页端版本已润色+分节）。
 - 该页为标准页面布局，标题由 name-particles 粒子化；无独立 canvas 横幅。
 
+## 我的装备（/equipments/，2026-11-18）
+- 导航「装备」位于「展示」之后。入口 `source/equipments/index.md`；`scripts/equipment-gallery.js` 注册 Hexo 标签，构建时从 `source/data/equipment.json` 渲染全部 12 件设备，禁用 JS 仍可查看设备与官方链接。
+- 图片位于 `source/img/equipment/`，全部使用本地 WebP 官方产品图，来源台账 `docs/equipment-image-sources.json`。图片配色仅为官方示意，不据此推断用户实际配色/内存/轴体。绿联型号已确认 **PB725**，SANC 是 **N50Pro6 升降支架版**（官网图片为同型号系列示意）。
+- 样式集中在 `source/css/custom.css` 的装备馆块，以 `html:has(#equipment-gallery)` 隔离；明暗模式跟随 `data-theme`。布局为桌面三列、手机两列、极窄屏一列。
+- `source/js/equipment-gallery.js?v=1` 由 `page-assets.js?v=9` 仅在装备页按需加载；提供分类、主视觉切换、图片缩放和原生 dialog。弹窗首次打开时固定切换队列，关闭重置；PJAX 离页清理事件/弹窗/滚动锁。修改脚本须同步 bump 子脚本及 page-assets 的版本。
+- **真 3D 仅罗技 G304**：官方黑色 GLB `source/media/equipment/logitech-g304.glb`（约 1.6MB），查看器 `source/lib/model-viewer/model-viewer.min.js`（4.1.0，Apache-2.0），来源与校验见 `docs/equipment-3d-sources.json`。只有用户点击详情中的「官方 3D」才动态 import 查看器并下载模型；其余设备是官方产品图与轻微 CSS 空间倾斜，不应称作真 3D。模型无外部纹理/解码器依赖；关闭/切设备/离页移除 viewer 并取消过时加载。
+- 回归 `node test/equipment-gallery.js [--built]`（15 项）；真实浏览器已验证官方模型加载、旋转、按需网络请求、390px/320px 布局、明暗模式及原生弹窗。主题当前未开启 PJAX，PJAX 重入由模拟事件回归覆盖，不据此宣称浏览器实跑过真实 PJAX。
+
 ## 行情终端模块（/finance/，美股+基金仪表盘，导航名「交易」）
 - 文件：`source/finance/index.md`（HTML 结构）+ `source/js/finance-tracker.js`（数据引擎+布局管理器+渲染，单文件 IIFE）+ `source/css/finance.css`。全屏暗色终端风格，URL `/finance/`，页面 title 与导航菜单均为「交易」（导航位于 展示 之后）。
 - **数据源（2026-09-08 大迁移）**：所有公共 CORS 代理已全军覆没，Yahoo 直连也被 403。行情已整体迁移到**腾讯财经（实时行情，script 标签免代理）+ 东方财富（K线，CORS 直连）**。关键坑：①BRK.B 带点号会生成非法变量名 `v_usBRK.B` 导致整个 script 块语法失败，必须过滤；②贵金属 `p[7]` 才是昨收，`p[3]` 是开盘价；③腾讯 usfqkline 对美股只返回 2 天数据不可用，K线用东方财富；④东方财富间歇性 ERR_EMPTY_RESPONSE，已加 3 次重试，不要在 fetch headers 里设 Referer（forbidden header）。基金仍用天天基金+腾讯接口。

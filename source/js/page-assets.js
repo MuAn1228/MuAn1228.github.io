@@ -66,6 +66,12 @@
 
   function isMusicPage() { return /^\/fun\/music\/?$/.test(window.location.pathname); }
 
+  // 装备馆只在本页加载；脚本自身负责 PJAX 重入和离页清理。
+  function loadEquipment() {
+    if (!document.getElementById('equipment-gallery')) return;
+    loadScript('/js/equipment-gallery.js?v=1');
+  }
+
   // 侧边栏 3D 标签云：仅当页面存在标签云卡片时加载
   function loadTagCloud() {
     if (tagQueued) return;
@@ -78,6 +84,7 @@
 
   function boot() {
     loadHomeEffects();
+    loadEquipment();
     if (isMusicPage()) loadMusic();
     onIdle(function () {
       loadMusic();
@@ -96,6 +103,7 @@
   // pjax 切页后重跑：回到首页时恢复特效、新页面补标签云（已加载的脚本自动跳过）
   document.addEventListener('pjax:complete', function () {
     loadHomeEffects();
+    loadEquipment();
     if (isMusicPage()) loadMusic();
     onIdle(function () {
       loadTagCloud();

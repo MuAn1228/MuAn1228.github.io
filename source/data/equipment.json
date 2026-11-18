@@ -1,0 +1,397 @@
+{
+  "categories": [
+    {
+      "id": "everyday",
+      "name": "随身日常"
+    },
+    {
+      "id": "imaging",
+      "name": "影像记录"
+    },
+    {
+      "id": "desktop",
+      "name": "桌面搭档"
+    },
+    {
+      "id": "power",
+      "name": "能量补给"
+    }
+  ],
+  "items": [
+    {
+      "id": "sony-zve10",
+      "brand": "SONY",
+      "name": "索尼 ZV-E10",
+      "category": "imaging",
+      "note": "把眼前的风景，留给以后的自己。",
+      "tags": [
+        "微单相机",
+        "E 卡口"
+      ],
+      "image": "/img/equipment/sony-zve10.webp",
+      "officialUrl": "https://www.sonystyle.com.cn/products/ilc/zv_e10/zv_e10_b.html",
+      "specs": [
+        {
+          "label": "传感器",
+          "value": "APS-C Exmor CMOS"
+        },
+        {
+          "label": "有效像素",
+          "value": "约 2420 万有效像素"
+        },
+        {
+          "label": "卡口与屏幕",
+          "value": "E 卡口 / 侧翻屏"
+        }
+      ],
+      "featured": true,
+      "scene": "CREATE",
+      "sceneLabel": "记录所见",
+      "imageSource": "https://sony.scene7.com/is/image/sonyglobalsolutions/slide1_Mobile-1?fmt=png-alpha&wid=1000",
+      "imageWidth": 664,
+      "imageHeight": 343
+    },
+    {
+      "id": "oneplus-ace3-pro",
+      "brand": "ONEPLUS",
+      "name": "一加 Ace 3 Pro",
+      "category": "everyday",
+      "note": "消息、地图与灵感，都从掌心出发。",
+      "tags": [
+        "智能手机",
+        "随身主力"
+      ],
+      "image": "/img/equipment/oneplus-ace3-pro.webp",
+      "officialUrl": "https://www.oneplus.com/cn/ace-3-pro/",
+      "specs": [
+        {
+          "label": "芯片",
+          "value": "第三代骁龙 8"
+        },
+        {
+          "label": "屏幕",
+          "value": "6.78 英寸 · 120Hz"
+        },
+        {
+          "label": "电池与充电",
+          "value": "6100mAh · 100W"
+        }
+      ],
+      "featured": true,
+      "scene": "CONNECT",
+      "sceneLabel": "随时在线",
+      "imageSource": "https://oasisstatics.oneplus.cn/content/dam/oasis/page/2024/global/product/corvette/specs/1080-1080green.png",
+      "imageWidth": 1000,
+      "imageHeight": 1000
+    },
+    {
+      "id": "asus-tx6pro",
+      "brand": "ASUS",
+      "name": "华硕 天选 6 Pro 酷睿版",
+      "category": "desktop",
+      "note": "代码与游戏之间，是我的桌面宇宙。",
+      "tags": [
+        "酷睿版",
+        "笔记本电脑"
+      ],
+      "image": "/img/equipment/asus-tx6pro.webp",
+      "officialUrl": "https://www.asus.com.cn/laptops/for-gaming/tuf-gaming/asus-tuf-gaming-f16-2025/helpdesk_service?model2Name=FX608JP",
+      "specs": [
+        {
+          "label": "平台",
+          "value": "酷睿平台"
+        },
+        {
+          "label": "屏幕尺寸",
+          "value": "16 英寸"
+        },
+        {
+          "label": "设备类型",
+          "value": "游戏笔记本"
+        }
+      ],
+      "featured": true,
+      "scene": "EXPLORE",
+      "sceneLabel": "灵感开机",
+      "imageSource": "https://dlcdnwebimgs.asus.com/gain/2ea2df2e-e109-48c6-9a70-09a01f17ccdf/"
+    },
+    {
+      "id": "dji-action4",
+      "brand": "DJI",
+      "name": "大疆 Osmo Action 4",
+      "category": "imaging",
+      "note": "让镜头跟上脚步，也跟上每一次出发。",
+      "tags": [
+        "运动相机",
+        "户外记录"
+      ],
+      "image": "/img/equipment/dji-action4.webp",
+      "officialUrl": "https://www.dji.com/cn/osmo-action-4",
+      "specs": [
+        {
+          "label": "传感器",
+          "value": "1/1.3 英寸 CMOS"
+        },
+        {
+          "label": "最高视频规格",
+          "value": "4K / 120fps"
+        },
+        {
+          "label": "防水",
+          "value": "裸机 18 米防水"
+        }
+      ],
+      "imageSource": "https://se-cdn.djiits.com/tpc/uploads/in_the_box/cover/90fea4d14448784d60262d60012ab8ae@retina_small.png",
+      "imageWidth": 551,
+      "imageHeight": 366
+    },
+    {
+      "id": "sony-1650",
+      "brand": "SONY",
+      "name": "索尼 E PZ 16–50mm",
+      "category": "imaging",
+      "note": "从广角到日常特写，轻装记录。",
+      "tags": [
+        "F3.5–5.6 OSS",
+        "套机镜头"
+      ],
+      "image": "/img/equipment/sony-1650.webp",
+      "officialUrl": "https://electronics.sony.com/imaging/lenses/aps-c-e-mount/p/selp1650",
+      "specs": [
+        {
+          "label": "焦距",
+          "value": "16–50mm"
+        },
+        {
+          "label": "最大光圈",
+          "value": "F3.5–5.6"
+        },
+        {
+          "label": "功能",
+          "value": "电动变焦 / OSS 光学防抖"
+        }
+      ],
+      "imageSource": "https://d1ncau8tqf99kp.cloudfront.net/converted/101554_original_local_1200x1050_v3_converted.webp",
+      "imageWidth": 774,
+      "imageHeight": 915
+    },
+    {
+      "id": "oppo-pad5",
+      "brand": "OPPO",
+      "name": "OPPO Pad 5",
+      "category": "everyday",
+      "note": "给阅读、笔记和偶尔的放空，多一点空间。",
+      "tags": [
+        "平板电脑",
+        "移动桌面"
+      ],
+      "image": "/img/equipment/oppo-pad5.webp",
+      "officialUrl": "https://www.oppo.com/cn/accessories/oppo-pad-5/",
+      "specs": [
+        {
+          "label": "芯片",
+          "value": "天玑 9400+"
+        },
+        {
+          "label": "屏幕",
+          "value": "3K 超清屏"
+        },
+        {
+          "label": "系统",
+          "value": "ColorOS"
+        }
+      ],
+      "imageSource": "https://www.oppo.com/content/dam/oppo_com/common/mkt/v2-2/pad-5-cn/listpage/600-600-purple.png",
+      "imageWidth": 600,
+      "imageHeight": 600
+    },
+    {
+      "id": "oppo-pencil2-pro",
+      "brand": "OPPO",
+      "name": "OPPO Pencil 2 Pro",
+      "category": "everyday",
+      "note": "随手一笔，把转瞬即逝的想法留下来。",
+      "tags": [
+        "手写笔",
+        "灵感速记"
+      ],
+      "image": "/img/equipment/oppo-pencil2-pro.webp",
+      "officialUrl": "https://www.opposhop.cn/cn/web/products/29726.html",
+      "specs": [
+        {
+          "label": "响应",
+          "value": "超低延迟"
+        },
+        {
+          "label": "书写",
+          "value": "舒适笔触"
+        },
+        {
+          "label": "反馈",
+          "value": "拟真震感"
+        }
+      ],
+      "imageSource": "https://www.oppo.com/content/dam/oppo_com/common/mkt/v2-2/oppo-pencil-2-pro-cn/listpage/600-600-black.png",
+      "imageWidth": 600,
+      "imageHeight": 600
+    },
+    {
+      "id": "oppo-enco-free4",
+      "brand": "OPPO",
+      "name": "OPPO Enco Free4",
+      "category": "everyday",
+      "note": "为日常配上背景音乐。",
+      "tags": [
+        "真无线耳机",
+        "音乐搭档"
+      ],
+      "image": "/img/equipment/oppo-enco-free4.webp",
+      "officialUrl": "https://www.opposhop.cn/cn/web/products/33454.html",
+      "specs": [
+        {
+          "label": "降噪",
+          "value": "主动降噪"
+        },
+        {
+          "label": "声学",
+          "value": "同轴双单元"
+        },
+        {
+          "label": "连接",
+          "value": "设备双连"
+        }
+      ],
+      "imageSource": "https://www.oppo.com/content/dam/oppo_com/common/mkt/v2-2/oppo-enco-free4-cn/listpage/600-600-blue.png",
+      "imageWidth": 600,
+      "imageHeight": 600
+    },
+    {
+      "id": "sanc-n50pro6",
+      "brand": "SANC",
+      "name": "SANC N50Pro6",
+      "category": "desktop",
+      "note": "多一块屏幕，多一点从容。",
+      "tags": [
+        "升降支架版",
+        "显示器"
+      ],
+      "image": "/img/equipment/sanc-n50pro6.webp",
+      "officialUrl": "http://www.ccclcd.com/liquid-crystal-display/n50-pro-6",
+      "specs": [
+        {
+          "label": "屏幕尺寸",
+          "value": "24.5 英寸"
+        },
+        {
+          "label": "面板",
+          "value": "Fast IPS"
+        },
+        {
+          "label": "刷新率",
+          "value": "原生 240Hz / 超频 260Hz"
+        },
+        {
+          "label": "分辨率",
+          "value": "1920 × 1080"
+        }
+      ],
+      "imageSource": "http://www.ccclcd.com/Data/sanc/upload/image/20260410/1-1.png",
+      "sourceNote": "升降支架版；图片为官网同型号系列示意，支架外观以实物为准。"
+    },
+    {
+      "id": "logitech-g304",
+      "brand": "LOGITECH G",
+      "name": "罗技 G304",
+      "category": "desktop",
+      "note": "少一根线，多一点自由。",
+      "tags": [
+        "LIGHTSPEED",
+        "无线鼠标"
+      ],
+      "image": "/img/equipment/logitech-g304.webp",
+      "officialUrl": "https://www.logitechg.com/zh-cn/shop/p/g305-lightspeed-wireless-gaming-mouse",
+      "specs": [
+        {
+          "label": "连接方式",
+          "value": "LIGHTSPEED 无线"
+        },
+        {
+          "label": "传感器",
+          "value": "HERO 传感器"
+        },
+        {
+          "label": "灵敏度",
+          "value": "最高 12,000 DPI"
+        }
+      ],
+      "imageSource": "https://resource.logitechg.com/content/dam/gaming/en/products/g305/2025-update/g305-lightspeed-mouse-top-angle-black-gallery-1.png",
+      "model": "/media/equipment/logitech-g304.glb"
+    },
+    {
+      "id": "rapoo-v500pro98",
+      "brand": "RAPOO",
+      "name": "雷柏 V500PRO-98",
+      "category": "desktop",
+      "note": "敲下的每一次，是代码，也是日常。",
+      "tags": [
+        "机械键盘",
+        "桌面输入"
+      ],
+      "image": "/img/equipment/rapoo-v500pro98.webp",
+      "officialUrl": "https://www.rapoo.cn/product/811",
+      "specs": [
+        {
+          "label": "布局",
+          "value": "98 键布局"
+        },
+        {
+          "label": "设备类型",
+          "value": "有线机械键盘"
+        },
+        {
+          "label": "结构",
+          "value": "可拆卸磁吸面盖"
+        },
+        {
+          "label": "按键",
+          "value": "98 键无冲"
+        }
+      ],
+      "imageSource": "https://rpw.rapoo.cn/goods/gallery/1722579530642.jpg"
+    },
+    {
+      "id": "ugreen-100w",
+      "brand": "UGREEN",
+      "name": "绿联 PB725",
+      "category": "power",
+      "note": "把电量带在身上，让出发少一点顾虑。",
+      "tags": [
+        "20000mAh",
+        "100W"
+      ],
+      "image": "/img/equipment/ugreen-100w.webp",
+      "officialUrl": "https://www.lulian.cn/product/1239.html",
+      "specs": [
+        {
+          "label": "型号",
+          "value": "PB725 · 能量湃 Pro"
+        },
+        {
+          "label": "标称容量",
+          "value": "20000mAh"
+        },
+        {
+          "label": "最高单口输出",
+          "value": "USB-C1 最高 100W"
+        },
+        {
+          "label": "接口与显示",
+          "value": "双 USB-C + USB-A / 数显屏"
+        }
+      ],
+      "imageSource": "https://images.lulian.cn/upload/202506/1749781404.jpg",
+      "imageWidth": 800,
+      "imageHeight": 800
+    }
+  ]
+}

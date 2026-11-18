@@ -1,0 +1,44 @@
+{
+  "checkedAt": "2026-11-18",
+  "models": [
+    {
+      "id": "logitech-g304",
+      "name": "Logitech G304 / G305 official black model",
+      "file": "source/media/equipment/logitech-g304.glb",
+      "publicPath": "/media/equipment/logitech-g304.glb",
+      "sourcePage": "https://www.logitechg.com/zh-cn/shop/p/g305-lightspeed-wireless-gaming-mouse",
+      "sourceUrl": "https://www.logitechg.com/content/dam/gaming/en/ar-models/g305/g305-black-gaming-mice-hexa.glb",
+      "bytes": 1618312,
+      "sha256": "48a1a909f3bd0182c54f1890e5decee16814c1e27df983c95d417fe41c5a0571",
+      "format": "glTF Binary 2.0",
+      "httpStatus": 200,
+      "extensionsUsed": [],
+      "extensionsRequired": [],
+      "embeddedImages": 3,
+      "externalResources": [],
+      "license": "Proprietary Logitech product visualization; copyright remains with Logitech; no open-source license is asserted",
+      "notes": "Official black color demonstration. URL is directly declared in Chinese G304 product page 3d.glb config for black color. Load only on explicit viewer interaction."
+    }
+  ],
+  "viewer": {
+    "name": "@google/model-viewer",
+    "version": "4.1.0",
+    "file": "source/lib/model-viewer/model-viewer.min.js",
+    "publicPath": "/lib/model-viewer/model-viewer.min.js",
+    "sourceUrl": "https://unpkg.com/@google/model-viewer@4.1.0/dist/model-viewer.min.js",
+    "sourceRepository": "https://github.com/google/model-viewer/releases/tag/v4.1.0",
+    "license": "Apache-2.0",
+    "licenseFile": "source/lib/model-viewer/LICENSE",
+    "licenseSource": "https://unpkg.com/@google/model-viewer@4.1.0/LICENSE",
+    "bytes": 979139,
+    "standaloneBrowserEsm": true,
+    "staticImports": [],
+    "optionalRemoteDependencies": [
+      "DRACO decoder (only for KHR_draco_mesh_compression)",
+      "KTX2 transcoder (only for KHR_texture_basisu)",
+      "Lottie loader (only if explicitly configured)"
+    ],
+    "dependenciesForThisModel": [],
+    "usage": "Dynamically append <script type=\"module\" src=\"/lib/model-viewer/model-viewer.min.js\"> on user intent; await customElements.whenDefined(\"model-viewer\"); create <model-viewer src=\"/media/equipment/logitech-g304.glb\" camera-controls touch-action=\"pan-y\" shadow-intensity=\"1\" camera-orbit=\"220deg 55deg auto\" alt=\"罗技 G304 官方黑色 3D 示意模型\">. Set an explicit width and height."
+  }
+}

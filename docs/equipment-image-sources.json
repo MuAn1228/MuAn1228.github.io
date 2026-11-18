@@ -1,0 +1,219 @@
+{
+  "verifiedOn": "2026-11-18",
+  "note": "Official product presentation colors; user-specific memory, color, switch and GPU configurations are not assumed.",
+  "items": [
+    {
+      "slug": "oneplus-ace3-pro",
+      "name": "一加 Ace 3 Pro",
+      "image": "/img/equipment/oneplus-ace3-pro.webp",
+      "officialUrl": "https://www.oneplus.com/cn/ace-3-pro/",
+      "specsUrl": "https://www.oneplus.com/cn/ace-3-pro/specs",
+      "sourceImage": "https://oasisstatics.oneplus.cn/content/dam/oasis/page/2024/global/product/corvette/specs/1080-1080green.png",
+      "imageVariant": "绿野素青（官方示意图，用户实际配色未确认）",
+      "width": 1000,
+      "height": 1000,
+      "transparent": true,
+      "specs": [
+        "第三代骁龙 8",
+        "6.78 英寸 · 120Hz",
+        "6100mAh · 100W"
+      ],
+      "notes": "官方 specs 页原图 1080×1080 PNG，WebP 已本地化。未写用户内存或存储容量。"
+    },
+    {
+      "slug": "oppo-pad5",
+      "name": "OPPO Pad 5",
+      "image": "/img/equipment/oppo-pad5.webp",
+      "officialUrl": "https://www.oppo.com/cn/accessories/oppo-pad-5/",
+      "specsUrl": "https://www.oppo.com/cn/tablets/",
+      "sourceImage": "https://www.oppo.com/content/dam/oppo_com/common/mkt/v2-2/pad-5-cn/listpage/600-600-purple.png",
+      "imageVariant": "紫色（官方示意图，用户实际配色未确认）",
+      "width": 600,
+      "height": 600,
+      "transparent": true,
+      "specs": [
+        "天玑 9400+",
+        "3K 超清屏",
+        "ColorOS"
+      ],
+      "notes": "官网平板产品列表 OPPO Pad 5 项核验，明确不是 Pad 5 Pro，也不是国际版同名机型。不写柔光版归属，因为用户未说明。"
+    },
+    {
+      "slug": "oppo-pencil2-pro",
+      "name": "OPPO Pencil 2 Pro",
+      "image": "/img/equipment/oppo-pencil2-pro.webp",
+      "officialUrl": "https://www.opposhop.cn/cn/web/products/29726.html",
+      "specsUrl": "https://www.oppo.com/cn/tablets/",
+      "sourceImage": "https://www.oppo.com/content/dam/oppo_com/common/mkt/v2-2/oppo-pencil-2-pro-cn/listpage/600-600-black.png",
+      "imageVariant": "黑色官方产品图",
+      "width": 600,
+      "height": 600,
+      "transparent": true,
+      "specs": [
+        "超低延迟",
+        "舒适笔触",
+        "拟真震感"
+      ],
+      "notes": "官网平板产品列表 OPPO Pencil 2 Pro 项核验。原图是纵向笔身，左右透明空间很大，展示时可给图片独立旋转与放大样式。"
+    },
+    {
+      "slug": "oppo-enco-free4",
+      "name": "OPPO Enco Free4",
+      "image": "/img/equipment/oppo-enco-free4.webp",
+      "officialUrl": "https://www.opposhop.cn/cn/web/products/33454.html",
+      "specsUrl": "https://store.oppo.com/cn/app/product/index?skuId=33453",
+      "sourceImage": "https://www.oppo.com/content/dam/oppo_com/common/mkt/v2-2/oppo-enco-free4-cn/listpage/600-600-blue.png",
+      "imageVariant": "水漾蓝（官方示意图，用户实际配色未确认）",
+      "width": 600,
+      "height": 600,
+      "transparent": true,
+      "specs": [
+        "主动降噪",
+        "同轴双单元",
+        "设备双连"
+      ],
+      "notes": "官网耳机列表确认型号与图片；官方商城规格确认主动降噪、11mm+6mm 同轴双单元、设备双连。用户拼写 ecno 已规范为 Enco。"
+    },
+    {
+      "slug": "dji-action4",
+      "name": "DJI Osmo Action 4",
+      "officialUrl": "https://www.dji.com/cn/osmo-action-4",
+      "sourcePage": "https://store.dji.com/cn/product/osmo-action-4",
+      "sourceImage": "https://se-cdn.djiits.com/tpc/uploads/in_the_box/cover/90fea4d14448784d60262d60012ab8ae@retina_small.png",
+      "specs": [
+        "1/1.3 英寸 CMOS",
+        "4K / 120fps",
+        "裸机 18 米防水"
+      ],
+      "specSource": "https://www.dji.com/osmo-action-4/specs",
+      "uncertainty": null,
+      "image": "/img/equipment/dji-action4.webp",
+      "transparent": true,
+      "width": 551,
+      "height": 366,
+      "bytes": 26140,
+      "processing": "官方原图 WebP 压缩，裁剪透明留白，添加 20px 透明安全边距。"
+    },
+    {
+      "slug": "sony-zve10",
+      "name": "Sony ZV-E10",
+      "officialUrl": "https://www.sonystyle.com.cn/products/ilc/zv_e10/zv_e10_b.html",
+      "sourcePage": "https://www.sony.co.uk/electronics/interchangeable-lens-cameras/zv-e10",
+      "sourceImage": "https://sony.scene7.com/is/image/sonyglobalsolutions/slide1_Mobile-1?fmt=png-alpha&wid=1000",
+      "specs": [
+        "APS-C Exmor CMOS",
+        "约 2420 万有效像素",
+        "E 卡口 / 侧翻屏"
+      ],
+      "specSource": "https://www.sony.com/electronics/support/e-mount-body-zv-e-series/zv-e10/specifications",
+      "uncertainty": "用户未提供机身配色，所用官方渲染为黑色。图为一代 ZV-E10 单机身（不是 ZV-E10 II）。",
+      "image": "/img/equipment/sony-zve10.webp",
+      "transparent": true,
+      "width": 664,
+      "height": 343,
+      "bytes": 25830,
+      "processing": "官方原图 WebP 压缩，裁剪透明留白，添加 20px 透明安全边距。"
+    },
+    {
+      "slug": "sony-1650",
+      "name": "Sony E PZ 16–50mm F3.5–5.6 OSS",
+      "officialUrl": "https://electronics.sony.com/imaging/lenses/aps-c-e-mount/p/selp1650",
+      "sourcePage": "https://electronics.sony.com/imaging/lenses/aps-c-e-mount/p/selp1650",
+      "sourceImage": "https://d1ncau8tqf99kp.cloudfront.net/converted/101554_original_local_1200x1050_v3_converted.webp",
+      "specs": [
+        "16–50mm",
+        "F3.5–5.6",
+        "电动变焦 / OSS 光学防抖"
+      ],
+      "specSource": "https://electronics.sony.com/imaging/lenses/aps-c-e-mount/p/selp1650",
+      "uncertainty": "按用户所述 16–50 套头选择一代 SELP1650；用户未提供镜头配色。",
+      "image": "/img/equipment/sony-1650.webp",
+      "transparent": true,
+      "width": 774,
+      "height": 915,
+      "bytes": 65184,
+      "processing": "官方原图 WebP 压缩，裁剪透明留白，添加 20px 透明安全边距。"
+    },
+    {
+      "slug": "ugreen-100w",
+      "name": "绿联能量湃 Pro PB725",
+      "model": "PB725-45208",
+      "officialUrl": "https://www.lulian.cn/product/1239.html",
+      "sourcePage": "https://www.lulian.cn/product/1239.html",
+      "sourceImage": "https://images.lulian.cn/upload/202506/1749781404.jpg",
+      "specs": [
+        "20000mAh",
+        "USB-C1 最高 100W",
+        "双 USB-C + USB-A / 数显屏"
+      ],
+      "specSource": "https://www.lulian.cn/product/1239.html",
+      "uncertainty": null,
+      "image": "/img/equipment/ugreen-100w.webp",
+      "transparent": false,
+      "width": 800,
+      "height": 800,
+      "bytes": 10058,
+      "processing": "官方白底原图转 WebP，未抠图。"
+    },
+    {
+      "slug": "asus-tx6pro",
+      "name": "华硕天选 6 Pro 酷睿版",
+      "image": "/img/equipment/asus-tx6pro.webp",
+      "officialUrl": "https://www.asus.com.cn/laptops/for-gaming/tuf-gaming/asus-tuf-gaming-f16-2025/helpdesk_service?model2Name=FX608JP",
+      "sourceImage": "https://dlcdnwebimgs.asus.com/gain/2ea2df2e-e109-48c6-9a70-09a01f17ccdf/",
+      "specs": [
+        "酷睿平台",
+        "16 英寸",
+        "游戏笔记本"
+      ],
+      "transparent": true,
+      "notes": "用户未提供CPU/GPU/内存/存储，不填写具体配置。ASUS已将6/7 Pro页面合并；此渲染图是FX608JP支持页img#pd_img官方绑定素材，非根据网页当前顶部广告取图。该素材在官网亦被多个天选型号复用。配色为官方示意。"
+    },
+    {
+      "slug": "sanc-n50pro6",
+      "name": "SANC N50Pro6 · 升降支架版",
+      "image": "/img/equipment/sanc-n50pro6.webp",
+      "officialUrl": "http://www.ccclcd.com/liquid-crystal-display/n50-pro-6",
+      "sourceImage": "http://www.ccclcd.com/Data/sanc/upload/image/20260410/1-1.png",
+      "specs": [
+        "24.5 英寸",
+        "Fast IPS",
+        "原生 240Hz / 超频 260Hz",
+        "1920 × 1080"
+      ],
+      "transparent": true,
+      "notes": "使用官网N50 Pro 6本型号正面渲染，不用P/D/节能版。官网未单列升降版商品页，图中支架属于官方系列示意，升降版名称来自用户提供。官网HTTPS无法访问，HTTP正常。"
+    },
+    {
+      "slug": "logitech-g304",
+      "name": "罗技 G304",
+      "image": "/img/equipment/logitech-g304.webp",
+      "officialUrl": "https://www.logitechg.com/zh-cn/shop/p/g305-lightspeed-wireless-gaming-mouse",
+      "sourceImage": "https://resource.logitechg.com/content/dam/gaming/en/products/g305/2025-update/g305-lightspeed-mouse-top-angle-black-gallery-1.png",
+      "specs": [
+        "LIGHTSPEED 无线",
+        "HERO 传感器",
+        "最高 12,000 DPI"
+      ],
+      "transparent": true,
+      "notes": "官方URL含g305，但中文页H1明确G304（同款地区命名），非G304 X。黑色为官方示意配色，不代表用户实际配色。",
+      "modelSource": "https://www.logitechg.com/content/dam/gaming/en/ar-models/g305/g305-black-gaming-mice-hexa.glb",
+      "model": "/media/equipment/logitech-g304.glb"
+    },
+    {
+      "slug": "rapoo-v500pro98",
+      "name": "雷柏 V500PRO-98",
+      "image": "/img/equipment/rapoo-v500pro98.webp",
+      "officialUrl": "https://www.rapoo.cn/product/811",
+      "sourceImage": "https://rpw.rapoo.cn/goods/gallery/1722579530642.jpg",
+      "specs": [
+        "98 键布局",
+        "有线机械键盘",
+        "可拆卸磁吸面盖",
+        "98 键无冲"
+      ],
+      "transparent": true,
+      "notes": "官方jpg后缀URL实际返回有alpha的PNG，已核验。下载需要Referer https://www.rapoo.cn/。未填写轴体/实际配色。"
+    }
+  ]
+}
