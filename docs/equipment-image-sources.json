@@ -1,6 +1,6 @@
 {
   "verifiedOn": "2026-11-18",
-  "note": "Owner-confirmed colors: OnePlus Ace 3 Pro silver, Logitech G304 white. Other unspecified colors and hardware configurations remain official presentation references.",
+  "note": "Owner-confirmed colors: OnePlus Ace 3 Pro silver, Logitech G304 white, ASUS Tianxuan 6 Pro Intel black. Other unspecified colors and hardware configurations remain official presentation references.",
   "items": [
     {
       "slug": "oneplus-ace3-pro",
@@ -158,16 +158,21 @@
     {
       "slug": "asus-tx6pro",
       "name": "华硕天选 6 Pro 酷睿版",
-      "image": "/img/equipment/asus-tx6pro.webp",
+      "image": "/img/equipment/asus-tx6pro-black.webp",
       "officialUrl": "https://www.asus.com.cn/laptops/for-gaming/tuf-gaming/asus-tuf-gaming-f16-2025/helpdesk_service?model2Name=FX608JP",
-      "sourceImage": "https://dlcdnwebimgs.asus.com/gain/2ea2df2e-e109-48c6-9a70-09a01f17ccdf/",
+      "sourceImage": "https://dlcdnwebimgs.asus.com.cn/gain/5947344d-ac7b-4b63-bfa7-421fd434ce8e/",
       "specs": [
         "酷睿平台",
         "16 英寸",
         "游戏笔记本"
       ],
       "transparent": true,
-      "notes": "用户未提供CPU/GPU/内存/存储，不填写具体配置。ASUS已将6/7 Pro页面合并；此渲染图是FX608JP支持页img#pd_img官方绑定素材，非根据网页当前顶部广告取图。该素材在官网亦被多个天选型号复用。配色为官方示意。"
+      "notes": "用户确认黑色。使用华硕官方规格页明确绑定华硕天选6 Pro酷睿版(FX608JP)的黑色机身透明渲染；不使用混合6/7 Pro型号或锐龙版图片。未据图片推断用户CPU/GPU/内存/存储配置。",
+      "sourcePage": "https://www.asus.com.cn/laptops/for-gaming/tuf-gaming/asus-tuf-gaming-f16-2025/techspec/",
+      "imageVariant": "黑色（用户已确认）",
+      "width": 1000,
+      "height": 1000,
+      "sha256": "2bb4498947cc67ea1ef609218b0b89e0e32461f22981ccdccd5465aa53d45d0d"
     },
     {
       "slug": "sanc-n50pro6",

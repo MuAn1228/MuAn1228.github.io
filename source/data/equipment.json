@@ -96,12 +96,16 @@
       "category": "desktop",
       "note": "代码与游戏之间，是我的桌面宇宙。",
       "tags": [
-        "酷睿版",
-        "笔记本电脑"
+        "黑色",
+        "酷睿版"
       ],
-      "image": "/img/equipment/asus-tx6pro.webp",
+      "image": "/img/equipment/asus-tx6pro-black.webp",
       "officialUrl": "https://www.asus.com.cn/laptops/for-gaming/tuf-gaming/asus-tuf-gaming-f16-2025/helpdesk_service?model2Name=FX608JP",
       "specs": [
+        {
+          "label": "配色",
+          "value": "黑色"
+        },
         {
           "label": "平台",
           "value": "酷睿平台"
@@ -118,7 +122,10 @@
       "featured": true,
       "scene": "EXPLORE",
       "sceneLabel": "灵感开机",
-      "imageSource": "https://dlcdnwebimgs.asus.com/gain/2ea2df2e-e109-48c6-9a70-09a01f17ccdf/"
+      "imageSource": "https://dlcdnwebimgs.asus.com.cn/gain/5947344d-ac7b-4b63-bfa7-421fd434ce8e/",
+      "color": "黑色",
+      "imageWidth": 1000,
+      "imageHeight": 1000
     },
     {
       "id": "dji-action4",

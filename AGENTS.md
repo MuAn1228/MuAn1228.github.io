@@ -87,7 +87,7 @@
 
 ## 我的装备（/equipments/，2026-11-18）
 - 导航「装备」位于「展示」之后。入口 `source/equipments/index.md`；`scripts/equipment-gallery.js` 注册 Hexo 标签，构建时从 `source/data/equipment.json` 渲染全部 13 件设备（含 Redmi Watch 4），禁用 JS 仍可查看设备与官方链接。
-- 图片位于 `source/img/equipment/`，全部使用本地 WebP 官方产品图，来源台账 `docs/equipment-image-sources.json`。**用户已确认一加 Ace 3 Pro 为钛空镜银、罗技 G304 为白色**，对应图片使用 `oneplus-ace3-pro-silver.webp` / `logitech-g304-white.webp`；其余未注明配色为官方示意，不推断实际内存/轴体等。绿联型号已确认 **PB725**，SANC 是 **N50Pro6 升降支架版**（官网图片为同型号系列示意）。
+- 图片位于 `source/img/equipment/`，全部使用本地 WebP 官方产品图，来源台账 `docs/equipment-image-sources.json`。**用户已确认一加 Ace 3 Pro 为钛空镜银、罗技 G304 为白色、华硕天选 6 Pro 酷睿版为黑色**，对应图片使用 `oneplus-ace3-pro-silver.webp` / `logitech-g304-white.webp` / `asus-tx6pro-black.webp`；其余未注明配色为官方示意，不推断实际内存/轴体等。绿联型号已确认 **PB725**，SANC 是 **N50Pro6 升降支架版**（官网图片为同型号系列示意）。
 - **用户否定首版黑绿独立展馆风格**：现恢复全站蓝紫粉渐变、标准粒子标题、紫色胶囊按钮与毛玻璃卡片；不要再覆盖本页 `#web_bg`、body、导航、页脚来做独立配色。样式集中在 `source/css/custom.css` 的装备馆块，以 `html:has(#equipment-gallery)` 隔离；明暗模式跟随 `data-theme`，桌面三列、手机两列、极窄屏一列。
 - `source/js/equipment-gallery.js?v=2` 由 `page-assets.js?v=10` 仅在装备页按需加载；提供分类、主视觉切换、图片缩放和原生 dialog。弹窗首次打开时固定切换队列，关闭重置；PJAX 离页清理事件/弹窗/滚动锁。修改脚本须同步 bump 子脚本及 page-assets 的版本，样式当前缓存版本 `custom.css?v=20261118-2`。
 - **真 3D 仅罗技 G304**：官方白色 GLB `source/media/equipment/logitech-g304-white.glb`（约 10.9MB，按钮明确提示，不能换回黑色模型），查看器 `source/lib/model-viewer/model-viewer.min.js`（4.1.0，Apache-2.0），来源与校验见 `docs/equipment-3d-sources.json`。只有用户点击详情中的「官方 3D」才动态 import 查看器并下载模型；其余设备是官方产品图与轻微 CSS 空间倾斜，不应称作真 3D。模型无外部纹理/解码器依赖，KHR_texture_transform 原生支持；关闭/切设备/离页移除 viewer 并取消过时加载。
