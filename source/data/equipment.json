@@ -44,9 +44,6 @@
           "value": "E 卡口 / 侧翻屏"
         }
       ],
-      "featured": true,
-      "scene": "CREATE",
-      "sceneLabel": "记录所见",
       "imageSource": "https://sony.scene7.com/is/image/sonyglobalsolutions/slide1_Mobile-1?fmt=png-alpha&wid=1000",
       "imageWidth": 664,
       "imageHeight": 343
@@ -81,9 +78,6 @@
           "value": "6100mAh · 100W"
         }
       ],
-      "featured": true,
-      "scene": "CONNECT",
-      "sceneLabel": "随时在线",
       "imageSource": "https://oasisstatics.oneplus.cn/content/dam/oasis/page/2024/global/product/corvette/specs/1080-1080grey.png",
       "imageWidth": 1000,
       "imageHeight": 1000,
@@ -119,9 +113,6 @@
           "value": "游戏笔记本"
         }
       ],
-      "featured": true,
-      "scene": "EXPLORE",
-      "sceneLabel": "灵感开机",
       "imageSource": "https://dlcdnwebimgs.asus.com.cn/gain/5947344d-ac7b-4b63-bfa7-421fd434ce8e/",
       "color": "黑色",
       "imageWidth": 1000,

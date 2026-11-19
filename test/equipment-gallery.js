@@ -94,6 +94,22 @@ async function using(route, callback, options) {
   try { await callback(instance); } finally { instance.close(); }
 }
 
+function assertSpotlight(b, item) {
+  const data = b.data();
+  const hero = b.$('.eq-hero-stage');
+  assert.equal(hero.dataset.equipment, item.id);
+  assert.equal(hero.querySelector('img').getAttribute('src'), item.image);
+  assert.ok(hero.querySelector('img').alt.includes(item.name), 'the main image must name the selected equipment');
+  assert.equal(b.$('.eq-spot-name').textContent.trim(), item.name);
+  assert.equal(b.$('.eq-spot-brand').textContent.trim(), item.brand);
+  assert.equal(b.$('.eq-spot-note').textContent.trim(), data.categories.find(category => category.id === item.category).name);
+  const index = data.items.findIndex(entry => entry.id === item.id);
+  assert.equal(b.$('.eq-spot-count').textContent.trim(), String(index + 1).padStart(2, '0') + ' / ' + String(data.items.length).padStart(2, '0'));
+  const selected = [...b.document.querySelectorAll('[data-spotlight][aria-pressed="true"]')];
+  assert.equal(selected.length, 1, 'exactly one equipment selector must be pressed');
+  assert.equal(selected[0].dataset.spotlight, item.id);
+}
+
 (async () => {
   let passed = 0;
   let failed = 0;
@@ -154,6 +170,98 @@ async function using(route, callback, options) {
         }
       }
     }, { interactions: false }));
+
+  await check('SSR shows 13 equipment selectors by real name and omits the old promotional column', () =>
+    using('/equipments/', b => {
+      const items = b.data().items;
+      const buttons = [...b.document.querySelectorAll('[data-spotlight]')];
+      assert.equal(buttons.length, 13);
+      assert.deepEqual(buttons.map(button => button.dataset.spotlight), items.map(item => item.id));
+      for (const item of items) {
+        const button = buttons.find(entry => entry.dataset.spotlight === item.id);
+        assert.ok(button.textContent.includes(item.name), 'equipment selector must display its actual name: ' + item.name);
+      }
+      assert.equal(b.$('.eq-hero-copy'), null);
+      const heroText = b.$('.eq-hero').textContent.replace(/\s/g, '');
+      for (const phrase of ['数码 · 影像 · 创作', '把热爱，', '装进日常。', '桌面上的灵感，背包里的远方。', '那些陪我创作、记录和探索的小伙伴。', '逛逛我的装备']) {
+        assert.equal(heroText.includes(phrase.replace(/\s/g, '')), false, 'removed promotional text must not remain: ' + phrase);
+      }
+    }, { interactions: false }));
+
+  await check('every equipment selector updates the main image, name, brand, category and selection', () =>
+    using('/equipments/', b => {
+      for (const item of b.data().items) {
+        b.click('[data-spotlight="' + item.id + '"]');
+        assertSpotlight(b, item);
+        assert.equal(b.$('.eq-dialog').open, false, 'selecting a main image must not open details');
+      }
+    }));
+
+  await check('main image previous and next controls cycle through all 13 devices in both directions', () =>
+    using('/equipments/', b => {
+      const items = b.data().items;
+      assertSpotlight(b, items[0]);
+      b.click('[data-spot-step="-1"]');
+      assertSpotlight(b, items.at(-1));
+      b.click('[data-spot-step="1"]');
+      assertSpotlight(b, items[0]);
+      for (let offset = 1; offset <= items.length; offset++) {
+        b.click('[data-spot-step="1"]');
+        assertSpotlight(b, items[offset % items.length]);
+      }
+      for (let offset = 1; offset <= items.length; offset++) {
+        b.click('[data-spot-step="-1"]');
+        assertSpotlight(b, items[(items.length - offset) % items.length]);
+      }
+    }));
+
+  await check('selecting Redmi Watch 4 resets main-image navigation and opens the selected device details', () =>
+    using('/equipments/?category=imaging', b => {
+      const items = b.data().items;
+      const index = items.findIndex(item => item.id === 'redmi-watch4');
+      assert.ok(index >= 0);
+      b.click('[data-spotlight="redmi-watch4"]');
+      assertSpotlight(b, items[index]);
+      b.click('[data-spot-step="1"]');
+      assertSpotlight(b, items[(index + 1) % items.length]);
+      b.click('[data-spot-step="-1"]');
+      assertSpotlight(b, items[index]);
+      b.click('[data-spot-step="-1"]');
+      assertSpotlight(b, items[(index - 1 + items.length) % items.length]);
+      b.click('[data-spot-step="1"]');
+      assertSpotlight(b, items[index]);
+      assert.equal(b.visibleCards().length, 3, 'main-image selection must preserve the collection filter');
+      b.click('.eq-hero-stage');
+      assert.equal(b.$('.eq-dialog').open, true);
+      assert.equal(b.title(), 'Redmi Watch 4');
+      assert.equal(b.$('.eq-detail-image-wrap img').getAttribute('src'), items[index].image);
+      assert.equal(b.index(), String(index + 1).padStart(2, '0') + ' / 13');
+    }));
+
+  await check('main image controls move once after repeated PJAX returns and script re-evaluation', () =>
+    using('/equipments/', b => {
+      const items = b.data().items;
+      const watchIndex = items.findIndex(item => item.id === 'redmi-watch4');
+      for (let round = 0; round < 3; round++) {
+        event(b.window, 'pjax:send');
+        b.document.body.innerHTML = '<main>Other page</main>';
+        b.window.history.replaceState({}, '', '/about-site/');
+        event(b.window, 'pjax:complete');
+        b.document.body.innerHTML = markup;
+        b.window.history.replaceState({}, '', '/equipments/');
+        event(b.window, 'pjax:complete');
+        b.window.eval(interaction);
+        assertSpotlight(b, items[0]);
+        b.click('[data-spot-step="1"]');
+        assertSpotlight(b, items[1]);
+        b.click('[data-spotlight="redmi-watch4"]');
+        assertSpotlight(b, items[watchIndex]);
+        b.click('[data-spot-step="-1"]');
+        assertSpotlight(b, items[(watchIndex - 1 + items.length) % items.length]);
+        b.click('[data-spot-step="1"]');
+        assertSpotlight(b, items[watchIndex]);
+      }
+    }));
 
   await check('a linked category URL initializes the visible cards and pressed filter', () =>
     using('/equipments/?category=imaging', b => {

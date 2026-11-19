@@ -37,6 +37,8 @@
     var returnFocus = null;
     var activeCategory = 'all';
     var hero = root.querySelector('.eq-hero-stage');
+    var spotlightIndex = 0;
+    var spotButtons = Array.from(root.querySelectorAll('[data-spotlight]'));
     var imageWrap = root.querySelector('.eq-detail-image-wrap');
     var zoomButton = root.querySelector('.eq-zoom');
     var modelViewer = null;
@@ -80,20 +82,22 @@
     function readFilter() { applyFilter(new URL(window.location.href).searchParams.get('category'), false); }
     function spotlight(id) {
       var item = byId[id];
-      if (!item || !item.featured) return;
+      if (!item) return;
+      spotlightIndex = items.indexOf(item);
       hero.dataset.equipment = id;
       hero.setAttribute('aria-label', '查看 ' + item.name + ' 详情');
       var image = hero.querySelector('img');
       image.src = item.image;
       image.alt = item.name + (item.color ? ' · ' + item.color : '') + ' 官方产品图';
-      text('.eq-exhibit-word', item.scene);
       text('.eq-spot-brand', item.brand);
       text('.eq-spot-name', item.name);
-      text('.eq-spot-note', item.sceneLabel);
-      var tabs = Array.from(root.querySelectorAll('[data-spotlight]'));
-      tabs.forEach(function (tab) { tab.setAttribute('aria-pressed', String(tab.dataset.spotlight === id)); });
-      text('.eq-spot-count', number(tabs.findIndex(function (tab) { return tab.dataset.spotlight === id; }) + 1) + ' / ' + number(tabs.length));
+      text('.eq-spot-note', categories.find(function (category) { return category.id === item.category; }).name);
+      spotButtons.forEach(function (tab) { tab.setAttribute('aria-pressed', String(tab.dataset.spotlight === id)); });
+      text('.eq-spot-count', number(spotlightIndex + 1) + ' / ' + number(items.length));
       resetTilt();
+    }
+    function stepSpotlight(direction) {
+      spotlight(items[(spotlightIndex + direction + items.length) % items.length].id);
     }
     function unzoom() {
       imageWrap.classList.remove('is-zoomed');
@@ -230,6 +234,7 @@
       if (!target || !root.contains(target)) return;
       if (target.hasAttribute('data-filter')) applyFilter(target.dataset.filter, true);
       else if (target.hasAttribute('data-spotlight')) spotlight(target.dataset.spotlight);
+      else if (target.hasAttribute('data-spot-step')) stepSpotlight(Number(target.dataset.spotStep));
       else if (target.hasAttribute('data-equipment')) showItem(target.dataset.equipment, target);
       else if (target.hasAttribute('data-view')) {
         if (target.dataset.view === 'model') showModel();
