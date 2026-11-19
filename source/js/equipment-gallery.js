@@ -179,7 +179,8 @@
       text('.eq-detail-brand', item.brand);
       text('.eq-detail-category', categories.find(function (category) { return category.id === item.category; }).name);
       text('#eq-detail-name', item.name);
-      text('.eq-detail-note', item.note);
+      text('.eq-detail-note', item.description || item.note);
+      text('.eq-config-note', item.configNote);
       text('.eq-detail-source-note', item.sourceNote);
       text('.eq-detail-footnote', item.color ? '图片配色：' + item.color + '。未注明的硬件配置以实物为准。' : '图片为官方展示配色，具体配置以实际设备为准。');
       if (!dialog.open) {
@@ -203,6 +204,20 @@
         row.append(term, description);
         specs.appendChild(row);
       });
+      var sourceLinks = root.querySelector('.eq-spec-sources');
+      sourceLinks.replaceChildren();
+      (item.specSources || []).forEach(function (source) {
+        if (!/^https?:\/\//i.test(source.url)) return;
+        var link = document.createElement('a');
+        link.href = source.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = source.title;
+        sourceLinks.appendChild(link);
+      });
+      root.querySelector('.eq-spec-provenance').hidden = sourceLinks.children.length === 0;
+      root.querySelector('.eq-detail-copy').scrollTop = 0;
+      dialog.scrollTop = 0;
       var official = root.querySelector('.eq-official-link');
       official.href = item.officialUrl;
       official.setAttribute('aria-label', '查看 ' + item.name + ' 官方资料（新窗口）');

@@ -32,21 +32,69 @@
       "officialUrl": "https://www.sonystyle.com.cn/products/ilc/zv_e10/zv_e10_b.html",
       "specs": [
         {
-          "label": "传感器",
-          "value": "APS-C Exmor CMOS"
+          "label": "影像传感器",
+          "value": "APS-C Exmor CMOS，23.5 × 15.6mm"
         },
         {
           "label": "有效像素",
-          "value": "约 2420 万有效像素"
+          "value": "约 2420 万"
         },
         {
-          "label": "卡口与屏幕",
-          "value": "E 卡口 / 侧翻屏"
+          "label": "镜头卡口",
+          "value": "索尼 E 卡口"
+        },
+        {
+          "label": "视频录制",
+          "value": "4K 最高 30p；全高清最高 120p（NTSC）"
+        },
+        {
+          "label": "自动对焦",
+          "value": "快速混合 AF：425 点相位检测 + 425 点对比度检测"
+        },
+        {
+          "label": "连拍速度",
+          "value": "Hi+ 模式最高约 11 张/秒"
+        },
+        {
+          "label": "液晶屏",
+          "value": "3.0 型侧翻触摸屏，约 92.16 万点"
+        },
+        {
+          "label": "影像配置文件",
+          "value": "支持 S-Log2、S-Log3、HLG；机内 XAVC S 为 8-bit 4:2:0"
+        },
+        {
+          "label": "音频接口",
+          "value": "3.5mm 麦克风输入 + 3.5mm 耳机输出"
+        },
+        {
+          "label": "供电",
+          "value": "NP-FW50 可充电电池；支持 USB 供电与机内充电"
+        },
+        {
+          "label": "机身尺寸",
+          "value": "约 115.2 × 64.2 × 44.8mm（宽 × 高 × 深）"
+        },
+        {
+          "label": "机身重量",
+          "value": "约 343g（含电池与存储卡，不含镜头）"
         }
       ],
       "imageSource": "https://sony.scene7.com/is/image/sonyglobalsolutions/slide1_Mobile-1?fmt=png-alpha&wid=1000",
       "imageWidth": 664,
-      "imageHeight": 343
+      "imageHeight": 343,
+      "description": "ZV-E10 是采用 APS-C 画幅 Exmor CMOS 的可换镜头微单相机，使用索尼 E 卡口。侧翻触摸屏、麦克风输入和耳机监听接口兼顾照片拍摄与 Vlog 视频录制。",
+      "specSources": [
+        {
+          "title": "索尼 ZV-E10 官方规格",
+          "url": "https://www.sony.com/electronics/support/e-mount-body-zv-e-series/zv-e10/specifications"
+        },
+        {
+          "title": "索尼中国 ZV-E10 产品资料",
+          "url": "https://www.sonystyle.com.cn/products/ilc/zv_e10/zv_e10_b.html"
+        }
+      ],
+      "configNote": "规格对应第一代 ZV-E10。视频帧率随 PAL/NTSC 制式和录制模式变化；镜头独立列于装备清单中，不计入机身尺寸与重量。"
     },
     {
       "id": "oneplus-ace3-pro",
@@ -62,26 +110,66 @@
       "officialUrl": "https://www.oneplus.com/cn/ace-3-pro/",
       "specs": [
         {
-          "label": "配色",
-          "value": "钛空镜银"
+          "label": "配色与材质",
+          "value": "钛空镜银 · 玻璃后盖 / 金属中框"
         },
         {
-          "label": "芯片",
-          "value": "第三代骁龙 8"
+          "label": "处理平台",
+          "value": "第三代骁龙 8 · 台积电 4nm · Adreno 750 GPU"
+        },
+        {
+          "label": "内存与存储",
+          "value": "16GB LPDDR5X RAM / 512GB UFS 4.0"
         },
         {
           "label": "屏幕",
-          "value": "6.78 英寸 · 120Hz"
+          "value": "6.78 英寸 AMOLED 曲面屏 · 2780 × 1264 · 450 PPI"
         },
         {
-          "label": "电池与充电",
-          "value": "6100mAh · 100W"
+          "label": "刷新率与亮度",
+          "value": "1–120Hz 自适应；全局激发最高 1600 尼特，局部峰值最高 4500 尼特"
+        },
+        {
+          "label": "后置相机",
+          "value": "5000 万像素 f/1.8 OIS 主摄 + 800 万超广角 + 200 万微距"
+        },
+        {
+          "label": "视频录制",
+          "value": "后置最高 4K 60fps；1080P 慢动作最高 240fps"
+        },
+        {
+          "label": "电池与快充",
+          "value": "双电芯等效典型容量 6100mAh · 100W SUPERVOOC 超级闪充"
+        },
+        {
+          "label": "无线连接",
+          "value": "Wi-Fi 7 · 蓝牙 5.4 · 多功能 NFC · 双卡 5G"
+        },
+        {
+          "label": "接口",
+          "value": "USB Type-C · USB 2.0 · 双 Nano-SIM"
+        },
+        {
+          "label": "尺寸与重量",
+          "value": "163.30 × 75.27 × 8.85mm；玻璃版约 212g"
+        },
+        {
+          "label": "防护",
+          "value": "IP65 防尘防水 · 康宁大猩猩玻璃 Victus 2"
         }
       ],
       "imageSource": "https://oasisstatics.oneplus.cn/content/dam/oasis/page/2024/global/product/corvette/specs/1080-1080grey.png",
       "imageWidth": 1000,
       "imageHeight": 1000,
-      "color": "钛空镜银"
+      "color": "钛空镜银",
+      "description": "搭载第三代骁龙 8 的安卓手机，配备 6.78 英寸 AMOLED 曲面屏与 6100mAh 冰川电池。钛空镜银采用玻璃后盖和金属中框，后置主摄支持 OIS 光学防抖。",
+      "specSources": [
+        {
+          "title": "一加 Ace 3 Pro 官方参数规格",
+          "url": "https://www.oneplus.com/cn/ace-3-pro/specs"
+        }
+      ],
+      "configNote": "钛空镜银与16GB+512GB为实机配置。亮度、快充与IP65为官方规定测试条件下的规格，不代表所有使用场景均能达到相同数值。"
     },
     {
       "id": "asus-tx6pro",
@@ -101,22 +189,66 @@
           "value": "黑色"
         },
         {
-          "label": "平台",
-          "value": "酷睿平台"
+          "label": "处理器",
+          "value": "Intel Core i7-14650HX；系统显示基准频率 2.20GHz"
         },
         {
-          "label": "屏幕尺寸",
-          "value": "16 英寸"
+          "label": "内存",
+          "value": "16GB"
         },
         {
-          "label": "设备类型",
-          "value": "游戏笔记本"
+          "label": "独立显卡",
+          "value": "NVIDIA GeForce RTX 5060 Laptop GPU；8GB 显存"
+        },
+        {
+          "label": "集成显卡",
+          "value": "Intel UHD Graphics"
+        },
+        {
+          "label": "存储总容量",
+          "value": "约 1TB（系统显示 954GB）"
+        },
+        {
+          "label": "系统类型",
+          "value": "64 位 Windows"
+        },
+        {
+          "label": "触控输入",
+          "value": "无笔和触控输入"
+        },
+        {
+          "label": "屏幕设计",
+          "value": "16 英寸 IPS；16:10 屏幕比例"
+        },
+        {
+          "label": "扩展槽",
+          "value": "2 × DDR5 SO-DIMM、2 × M.2 PCIe（含已使用插槽）"
+        },
+        {
+          "label": "外部接口",
+          "value": "3 × USB-A、2 × USB-C（含雷电 4）、HDMI 2.1 FRL、RJ45、3.5mm 复合音频口"
+        },
+        {
+          "label": "键盘",
+          "value": "RGB 背光键盘"
+        },
+        {
+          "label": "系列电池规格",
+          "value": "90Wh，4 芯锂离子电池"
         }
       ],
       "imageSource": "https://dlcdnwebimgs.asus.com.cn/gain/5947344d-ac7b-4b63-bfa7-421fd434ce8e/",
       "color": "黑色",
       "imageWidth": 1000,
-      "imageHeight": 1000
+      "imageHeight": 1000,
+      "description": "这台黑色天选 6 Pro 酷睿版搭载英特尔酷睿 i7-14650HX 与 RTX 5060 Laptop 8GB 独立显卡，配备 16GB 内存和约 1TB 存储。16 英寸屏幕与 RGB 背光键盘之外，机身还保留了内存、存储扩展槽及多种外接接口。",
+      "specSources": [
+        {
+          "title": "华硕天选 6 Pro 酷睿版 · 官方规格参数",
+          "url": "https://www.asus.com.cn/laptops/for-gaming/tuf-gaming/asus-tuf-gaming-f16-2025/techspec/"
+        }
+      ],
+      "configNote": "CPU、内存、显卡与存储总容量按这台设备的系统信息记录；屏幕分辨率、刷新率及具体硬盘型号尚未记录。"
     },
     {
       "id": "dji-action4",
@@ -132,21 +264,69 @@
       "officialUrl": "https://www.dji.com/cn/osmo-action-4",
       "specs": [
         {
-          "label": "传感器",
+          "label": "影像传感器",
           "value": "1/1.3 英寸 CMOS"
         },
         {
-          "label": "最高视频规格",
-          "value": "4K / 120fps"
+          "label": "视频录制",
+          "value": "4K 16:9 最高 120fps；4K 4:3 最高 60fps"
         },
         {
-          "label": "防水",
-          "value": "裸机 18 米防水"
+          "label": "镜头",
+          "value": "155° 广角，F2.8；对焦范围 0.4m 至无穷远"
+        },
+        {
+          "label": "色彩模式",
+          "value": "支持 10-bit 与 D-Log M"
+        },
+        {
+          "label": "电子增稳",
+          "value": "RockSteady 3.0 / 3.0+；慢动作与延时摄影模式不支持电子增稳"
+        },
+        {
+          "label": "触摸屏",
+          "value": "前屏 1.4 英寸；后屏 2.25 英寸，均为全彩触摸屏"
+        },
+        {
+          "label": "防水深度",
+          "value": "裸机 18m；搭配专用防水壳可达 60m"
+        },
+        {
+          "label": "存储",
+          "value": "无内置存储；支持最高 512GB microSD 卡"
+        },
+        {
+          "label": "电池",
+          "value": "1770mAh，6.8Wh"
+        },
+        {
+          "label": "官方续航测试",
+          "value": "约 160 分钟（25℃、1080p/24fps、RockSteady 开启、Wi-Fi 与屏幕关闭）"
+        },
+        {
+          "label": "尺寸与重量",
+          "value": "70.5 × 44.2 × 32.8mm；145g"
+        },
+        {
+          "label": "工作温度",
+          "value": "−20℃ 至 45℃；充电温度为 5℃ 至 40℃"
         }
       ],
       "imageSource": "https://se-cdn.djiits.com/tpc/uploads/in_the_box/cover/90fea4d14448784d60262d60012ab8ae@retina_small.png",
       "imageWidth": 551,
-      "imageHeight": 366
+      "imageHeight": 366,
+      "description": "Osmo Action 4 是配备 1/1.3 英寸 CMOS、前后全彩触摸屏和磁吸快拆结构的运动相机。支持 4K 高帧率视频、10-bit D-Log M 色彩模式与电子增稳。",
+      "specSources": [
+        {
+          "title": "大疆 Osmo Action 4 官方参数",
+          "url": "https://www.dji.com/osmo-action-4/specs"
+        },
+        {
+          "title": "大疆 Osmo Action 4 产品说明",
+          "url": "https://www.dji.com/osmo-action-4"
+        }
+      ],
+      "configNote": "防水深度以正确关闭电池舱、USB-C 舱盖并拧紧镜头保护盖为前提；长时间水下拍摄或高水压冲击场景应按官方说明使用防水壳。160 分钟为指定测试条件下的数据，不代表 4K/120fps 录制时长。"
     },
     {
       "id": "sony-1650",
@@ -162,21 +342,69 @@
       "officialUrl": "https://electronics.sony.com/imaging/lenses/aps-c-e-mount/p/selp1650",
       "specs": [
         {
+          "label": "型号与画幅",
+          "value": "SELP1650；APS-C 专用，索尼 E 卡口"
+        },
+        {
           "label": "焦距",
           "value": "16–50mm"
         },
         {
-          "label": "最大光圈",
-          "value": "F3.5–5.6"
+          "label": "等效焦距",
+          "value": "24–75mm（安装于 APS-C 机身时，35mm 等效）"
         },
         {
-          "label": "功能",
-          "value": "电动变焦 / OSS 光学防抖"
+          "label": "光圈范围",
+          "value": "最大 F3.5–5.6；最小 F22–36"
+        },
+        {
+          "label": "光学结构",
+          "value": "8 组 9 片"
+        },
+        {
+          "label": "光圈叶片",
+          "value": "7 片，圆形光圈"
+        },
+        {
+          "label": "最近对焦距离",
+          "value": "0.25–0.30m（随焦距变化）"
+        },
+        {
+          "label": "最大放大倍率",
+          "value": "0.215 倍"
+        },
+        {
+          "label": "变焦与防抖",
+          "value": "电动变焦 PZ；OSS 光学防抖"
+        },
+        {
+          "label": "滤镜口径",
+          "value": "40.5mm"
+        },
+        {
+          "label": "外形尺寸",
+          "value": "约 φ64.7 × 29.9mm（最大直径 × 收回长度）"
+        },
+        {
+          "label": "镜头重量",
+          "value": "约 116g"
         }
       ],
       "imageSource": "https://d1ncau8tqf99kp.cloudfront.net/converted/101554_original_local_1200x1050_v3_converted.webp",
       "imageWidth": 774,
-      "imageHeight": 915
+      "imageHeight": 915,
+      "description": "E PZ 16–50mm F3.5–5.6 OSS 是面向索尼 APS-C E 卡口相机的可伸缩电动变焦镜头，覆盖广角到中焦视角。镜头内置 Optical SteadyShot 光学防抖，收回后长度约 29.9mm。",
+      "specSources": [
+        {
+          "title": "索尼 SELP1650 官方规格",
+          "url": "https://www.sony.com/electronics/support/lenses-e-mount-lenses/selp1650/specifications"
+        },
+        {
+          "title": "索尼 E PZ 16–50mm 官方功能说明",
+          "url": "https://www.sony.co.uk/electronics/camera-lenses/selp1650/specifications"
+        }
+      ],
+      "configNote": "对应第一代 SELP1650，不是 SELP16502（OSS II）。最大光圈随焦距由 F3.5 变为 F5.6，不是恒定光圈镜头。"
     },
     {
       "id": "oppo-pad5",
@@ -192,21 +420,69 @@
       "officialUrl": "https://www.oppo.com/cn/accessories/oppo-pad-5/",
       "specs": [
         {
-          "label": "芯片",
-          "value": "天玑 9400+"
+          "label": "处理平台",
+          "value": "MediaTek 天玑 9400+ · 8 核 · 最高 3.7GHz · Immortalis G925 MC12"
         },
         {
           "label": "屏幕",
-          "value": "3K 超清屏"
+          "value": "12.1 英寸 LCD · 3000 × 2120 · 7:5 · 304 PPI"
         },
         {
-          "label": "系统",
-          "value": "ColorOS"
+          "label": "刷新率",
+          "value": "最高144Hz，支持多档自适应刷新"
+        },
+        {
+          "label": "触控与亮度",
+          "value": "触控采样最高 540Hz、默认 240Hz；全局激发最高亮度典型值 900 尼特"
+        },
+        {
+          "label": "存储规格",
+          "value": "LPDDR5X；128GB 版本为 UFS 3.1，256GB/512GB 版本为 UFS 4.1"
+        },
+        {
+          "label": "电池",
+          "value": "典型容量 10420mAh / 40.85Wh；额定容量 10165mAh / 39.85Wh"
+        },
+        {
+          "label": "充电",
+          "value": "最高 67W 超级闪充 / 67W UFCS；兼容 55W PPS、18W PD"
+        },
+        {
+          "label": "接口",
+          "value": "USB Type-C · USB 3.2 Gen 1 · 最高 5Gbps"
+        },
+        {
+          "label": "无线网络",
+          "value": "Wi-Fi 7；支持 2.4GHz / 5GHz 双频并发及 5GHz 160MHz"
+        },
+        {
+          "label": "音频",
+          "value": "6 扬声器 / 2 麦克风；支持 Type-C 数字耳机"
+        },
+        {
+          "label": "摄像头",
+          "value": "前置 800 万 / 后置 800 万像素；后置最高 4K 30fps"
+        },
+        {
+          "label": "尺寸与重量",
+          "value": "266.93 × 193.35 × 5.99mm；普通屏约 579g，柔光屏约 577g"
         }
       ],
       "imageSource": "https://www.oppo.com/content/dam/oppo_com/common/mkt/v2-2/pad-5-cn/listpage/600-600-purple.png",
       "imageWidth": 600,
-      "imageHeight": 600
+      "imageHeight": 600,
+      "description": "中国版 OPPO Pad 5 采用天玑 9400+ 平台与 12.1 英寸、7:5 比例 LCD 屏，出厂搭载 ColorOS 16.0。机身内置六扬声器，支持 USB 3.2 Gen 1 数据传输和 67W 超级闪充。",
+      "specSources": [
+        {
+          "title": "OPPO Pad 5 中国官方商城参数",
+          "url": "https://www.opposhop.cn/cn/web/products/36910.html"
+        },
+        {
+          "title": "OPPO 中国平板产品列表",
+          "url": "https://www.oppo.com/cn/tablets/"
+        }
+      ],
+      "configNote": "参数对应中国版 OPD2506。存储规格、重量分别列明容量与普通屏/柔光屏的差异，实机容量及屏幕版本尚未注明；系统版本可能随更新变化。"
     },
     {
       "id": "oppo-pencil2-pro",
@@ -222,21 +498,65 @@
       "officialUrl": "https://www.opposhop.cn/cn/web/products/29726.html",
       "specs": [
         {
-          "label": "响应",
-          "value": "超低延迟"
+          "label": "兼容平板",
+          "value": "OPPO Pad 6 / Pad 5 / Pad 4 Pro / Pad 3 / Pad 3 Pro"
         },
         {
-          "label": "书写",
-          "value": "舒适笔触"
+          "label": "压力感应",
+          "value": "16384 级压感；实际笔触表现因书写方式及应用而异"
         },
         {
-          "label": "反馈",
-          "value": "拟真震感"
+          "label": "采样率",
+          "value": "240Hz；低延迟能力需适配应用支持"
+        },
+        {
+          "label": "供电方式",
+          "value": "磁吸无线充电；吸附于兼容平板的指定区域配对和充电"
+        },
+        {
+          "label": "尺寸",
+          "value": "长度约 165.3mm / 直径约 8.88mm"
+        },
+        {
+          "label": "重量",
+          "value": "约 15.2g"
+        },
+        {
+          "label": "续航",
+          "value": "约 14 小时；官方实验室常温、使用 OPPO Pad 3 Pro 磁吸充电测试"
+        },
+        {
+          "label": "书写反馈",
+          "value": "内置线性马达；书写振感支持 OPPO 便签、享做笔记和云记"
+        },
+        {
+          "label": "笔尖",
+          "value": "加厚软胶笔尖；包装另附 1 枚替换笔尖"
+        },
+        {
+          "label": "操控与演示",
+          "value": "360° 环形触控区域；演示模式支持虚拟激光指示、隔空翻页和画线标注"
         }
       ],
       "imageSource": "https://www.oppo.com/content/dam/oppo_com/common/mkt/v2-2/oppo-pencil-2-pro-cn/listpage/600-600-black.png",
       "imageWidth": 600,
-      "imageHeight": 600
+      "imageHeight": 600,
+      "description": "面向兼容 OPPO 平板的主动式手写笔，提供 16384 级压感、240Hz 采样及磁吸无线充电。笔身内置线性马达，可在适配应用中提供书写振感，并支持演示时的隔空翻页和标注。",
+      "specSources": [
+        {
+          "title": "OPPO Pencil 2 Pro 官方商城及图文详情",
+          "url": "https://www.opposhop.cn/cn/web/products/29726.html"
+        },
+        {
+          "title": "OPPO Pencil 2 Pro 官方产品参数图",
+          "url": "https://msecfs.opposhop.cn/commons-media-picture/GOODS/20260708/18212900b38102ec64d8cf41b3b7bf41392992769.jpg?_w_=2312&_h_=2222"
+        },
+        {
+          "title": "OPPO Pencil 2 Pro 官方功能与续航说明",
+          "url": "https://msecfs.opposhop.cn/commons-media-picture/GOODS/20260708/136e82e9e9b844afa9d47aa7837aa1451010935613.jpg?_w_=2312&_h_=1313"
+        }
+      ],
+      "configNote": "低延迟适配应用包括 OPPO 便签、享做笔记、云记、画世界 Pro 和 WPS Office；铅笔音效目前仅支持 OPPO 便签。功能取决于平板、应用和系统适配，续航为官方实验室值。"
     },
     {
       "id": "oppo-enco-free4",
@@ -252,21 +572,65 @@
       "officialUrl": "https://www.opposhop.cn/cn/web/products/33454.html",
       "specs": [
         {
-          "label": "降噪",
-          "value": "主动降噪"
+          "label": "型号与佩戴",
+          "value": "ETED1 · 入耳式真无线耳机"
         },
         {
-          "label": "声学",
-          "value": "同轴双单元"
+          "label": "发声单元",
+          "value": "11mm + 6mm 双动圈扬声器"
         },
         {
-          "label": "连接",
-          "value": "设备双连"
+          "label": "主动降噪",
+          "value": "最高55dB（官方标称峰值）；支持自适应、深/中/轻度降噪及通透模式"
+        },
+        {
+          "label": "蓝牙与双连",
+          "value": "蓝牙 5.4 · 支持设备双连 · 官方传输半径 10 米"
+        },
+        {
+          "label": "频率响应",
+          "value": "15Hz–40kHz"
+        },
+        {
+          "label": "通话",
+          "value": "3 麦克风 · 三麦 AI 通话降噪"
+        },
+        {
+          "label": "AAC 关闭降噪续航",
+          "value": "耳机最长 11 小时 / 搭配充电盒最长 45 小时（默认设置、50% 音量）"
+        },
+        {
+          "label": "AAC 开启降噪续航",
+          "value": "耳机最长 6 小时 / 搭配充电盒最长 24 小时（默认设置、50% 音量）"
+        },
+        {
+          "label": "LHDC 关闭降噪续航",
+          "value": "耳机最长 9 小时 / 搭配充电盒最长 37 小时（默认设置、50% 音量）"
+        },
+        {
+          "label": "电池与充电",
+          "value": "充电盒 530mAh · USB Type-C · 耳机与充电盒有线充满约 80 分钟"
+        },
+        {
+          "label": "重量",
+          "value": "单耳 4.7±0.2g；充电盒 39.5±1g；整机 49.0±1g"
+        },
+        {
+          "label": "整机尺寸",
+          "value": "65.40 × 52.40 × 25.30mm"
         }
       ],
       "imageSource": "https://www.oppo.com/content/dam/oppo_com/common/mkt/v2-2/oppo-enco-free4-cn/listpage/600-600-blue.png",
       "imageWidth": 600,
-      "imageHeight": 600
+      "imageHeight": 600,
+      "description": "采用 11mm+6mm 双动圈扬声器的入耳式真无线耳机，支持主动降噪、三麦 AI 通话降噪及设备双连。默认设置、50% 音量、AAC 且关闭降噪时，官方标示单次音乐播放最长 11 小时，搭配充电盒最长 45 小时。",
+      "specSources": [
+        {
+          "title": "OPPO Enco Free4 官方商城详细参数",
+          "url": "https://www.opposhop.cn/cn/web/products/33454.html"
+        }
+      ],
+      "configNote": "续航为官方指定音量、编码与降噪条件下的测试值，实际结果会随音量、连接及环境变化。是否为丹拿版尚未注明，因此未将丹拿调音列为这副耳机的配置。"
     },
     {
       "id": "redmi-watch4",
@@ -283,24 +647,68 @@
       "specs": [
         {
           "label": "屏幕",
-          "value": "1.97 英寸 AMOLED"
+          "value": "1.97英寸 AMOLED；最高60Hz刷新率"
+        },
+        {
+          "label": "屏幕亮度",
+          "value": "最高600nit"
+        },
+        {
+          "label": "机身结构",
+          "value": "铝合金中框；不锈钢旋转表冠"
         },
         {
           "label": "通话",
-          "value": "蓝牙通话"
+          "value": "内置麦克风与扬声器；蓝牙通话需保持手机连接"
         },
         {
-          "label": "定位",
-          "value": "内置 GNSS"
+          "label": "卫星定位",
+          "value": "内置GNSS；支持GPS、北斗、GLONASS、Galileo与QZSS"
+        },
+        {
+          "label": "电池容量",
+          "value": "470mAh"
+        },
+        {
+          "label": "官方续航",
+          "value": "典型使用模式最长20天；AOD模式约10天（实验室条件）"
+        },
+        {
+          "label": "充电方式",
+          "value": "磁吸充电"
+        },
+        {
+          "label": "运动记录",
+          "value": "150余种运动模式"
         },
         {
           "label": "防水等级",
-          "value": "5ATM"
+          "value": "5ATM；支持泳池及浅水游泳"
+        },
+        {
+          "label": "尺寸",
+          "value": "47.5 × 41.1 × 10.5mm（不含表带与凸起）"
+        },
+        {
+          "label": "重量",
+          "value": "约31.5g（不含表带）"
         }
       ],
       "imageSource": "https://i02.appmifile.com/204_operator_sg/02/01/2024/77a503abe5d086ba59f1fd1bd538457f.png",
       "imageWidth": 255,
-      "imageHeight": 399
+      "imageHeight": 399,
+      "description": "采用1.97英寸AMOLED方屏和铝合金中框，配有旋转表冠与快拆表带。支持连接手机进行蓝牙通话，也可利用内置GNSS独立记录户外运动路线。",
+      "specSources": [
+        {
+          "title": "小米官方规格",
+          "url": "https://www.mi.com/global/product/redmi-watch-4/specs/"
+        },
+        {
+          "title": "小米官方产品说明",
+          "url": "https://www.mi.com/global/product/redmi-watch-4/"
+        }
+      ],
+      "configNote": "续航为小米实验室特定使用条件下的数据，开启常亮显示、持续定位或频繁通话会影响实际续航。5ATM不代表可在50米深水环境使用。"
     },
     {
       "id": "sanc-n50pro6",
@@ -316,24 +724,64 @@
       "officialUrl": "http://www.ccclcd.com/liquid-crystal-display/n50-pro-6",
       "specs": [
         {
+          "label": "设备版本",
+          "value": "N50Pro6 · 升降支架版"
+        },
+        {
           "label": "屏幕尺寸",
           "value": "24.5 英寸"
         },
         {
-          "label": "面板",
+          "label": "面板类型",
           "value": "Fast IPS"
-        },
-        {
-          "label": "刷新率",
-          "value": "原生 240Hz / 超频 260Hz"
         },
         {
           "label": "分辨率",
           "value": "1920 × 1080"
+        },
+        {
+          "label": "刷新率",
+          "value": "原生 240Hz；超频 260Hz"
+        },
+        {
+          "label": "亮度",
+          "value": "400 cd/m²"
+        },
+        {
+          "label": "静态对比度",
+          "value": "1000:1"
+        },
+        {
+          "label": "响应时间",
+          "value": "1ms GTG（官方标称）"
+        },
+        {
+          "label": "色域覆盖",
+          "value": "100% sRGB（CIE 1931）"
+        },
+        {
+          "label": "视频接口",
+          "value": "HDMI 2.0、DisplayPort 1.4"
+        },
+        {
+          "label": "音频接口",
+          "value": "Audio Out 音频输出"
+        },
+        {
+          "label": "VESA 安装孔距",
+          "value": "100 × 100 mm"
         }
       ],
       "imageSource": "http://www.ccclcd.com/Data/sanc/upload/image/20260410/1-1.png",
-      "sourceNote": "升降支架版；图片为官网同型号系列示意，支架外观以实物为准。"
+      "sourceNote": "升降支架版；图片为官网同型号系列示意，支架外观以实物为准。",
+      "description": "SANC N50Pro6 是一款采用 Fast IPS 面板的 24.5 英寸电竞显示器，原生刷新率为 240Hz，可超频至 260Hz。当前记录的设备为升降支架版，配备 HDMI、DisplayPort 和音频输出接口。",
+      "specSources": [
+        {
+          "title": "SANC 盛色 N50 Pro 6 · 官方产品参数",
+          "url": "http://www.ccclcd.com/liquid-crystal-display/n50-pro-6"
+        }
+      ],
+      "configNote": "260Hz 为超频刷新率，需在支持的连接与设置下启用；1ms 为厂商标称响应时间。"
     },
     {
       "id": "logitech-g304",
@@ -349,26 +797,70 @@
       "officialUrl": "https://www.logitechg.com/zh-cn/shop/p/g305-lightspeed-wireless-gaming-mouse",
       "specs": [
         {
-          "label": "配色",
-          "value": "白色"
+          "label": "机身配色",
+          "value": "白色（已确认）"
         },
         {
-          "label": "连接方式",
-          "value": "LIGHTSPEED 无线"
+          "label": "无线连接",
+          "value": "LIGHTSPEED 2.4GHz；USB 接收器"
         },
         {
           "label": "传感器",
-          "value": "HERO 传感器"
+          "value": "HERO 光学传感器"
         },
         {
-          "label": "灵敏度",
-          "value": "最高 12,000 DPI"
+          "label": "分辨率",
+          "value": "200–12,000 DPI"
+        },
+        {
+          "label": "无线报告速率",
+          "value": "1000Hz（1ms）"
+        },
+        {
+          "label": "按键",
+          "value": "6 个可编程按键"
+        },
+        {
+          "label": "板载存储",
+          "value": "1 个硬件配置文件"
+        },
+        {
+          "label": "供电方式",
+          "value": "1 节可更换 AA 电池"
+        },
+        {
+          "label": "官方续航",
+          "value": "性能模式最长 250 小时；省电模式最长 9 个月"
+        },
+        {
+          "label": "尺寸（长 × 宽 × 高）",
+          "value": "116.6 × 62.15 × 38.2 mm"
+        },
+        {
+          "label": "重量",
+          "value": "约 75g（不含电池）；约 99g（含 1 节 AA 电池）"
+        },
+        {
+          "label": "接收器收纳",
+          "value": "机身内置 USB Nano 接收器储存空间"
         }
       ],
       "imageSource": "https://resource.logitechg.com/content/dam/gaming/en/products/g305/2025-update/g305-lightspeed-mouse-top-angle-white-gallery-1.png",
       "model": "/media/equipment/logitech-g304-white.glb",
       "modelSize": "10.9MB",
-      "color": "白色"
+      "color": "白色",
+      "description": "白色 G304 通过 LIGHTSPEED 2.4GHz 接收器无线连接，采用 HERO 光学传感器与一节可更换 AA 电池。机身提供 6 个按键和板载配置存储，可通过罗技 G HUB 设置按键功能与灵敏度。",
+      "specSources": [
+        {
+          "title": "罗技 G304 · 官方产品页",
+          "url": "https://www.logitechg.com/zh-cn/shop/p/g305-lightspeed-wireless-gaming-mouse"
+        },
+        {
+          "title": "G304 LIGHTSPEED 无线游戏鼠标 · 官方技术规格",
+          "url": "https://support.logi.com/hc/zh-cn/articles/360023303474-G304-LIGHTSPEED-%E6%97%A0%E7%BA%BF%E6%B8%B8%E6%88%8F%E9%BC%A0%E6%A0%87%E6%8A%80%E6%9C%AF%E8%A7%84%E6%A0%BC"
+        }
+      ],
+      "configNote": "白色机身已确认。续航为官方测试标称，实际使用受电池类型、工作模式和使用条件影响；75g 与 99g 分别对应不含电池和含一节 AA 电池。"
     },
     {
       "id": "rapoo-v500pro98",
@@ -385,22 +877,62 @@
       "specs": [
         {
           "label": "布局",
-          "value": "98 键布局"
+          "value": "98 键紧凑布局，保留数字小键盘"
         },
         {
-          "label": "设备类型",
-          "value": "有线机械键盘"
+          "label": "连接方式",
+          "value": "有线；键线分离；支持三向走线"
         },
         {
-          "label": "结构",
-          "value": "可拆卸磁吸面盖"
+          "label": "双形态面盖",
+          "value": "可拆卸磁吸面盖；悬浮式 / 下沉式"
         },
         {
-          "label": "按键",
-          "value": "98 键无冲"
+          "label": "面板材质",
+          "value": "金属面板"
+        },
+        {
+          "label": "键帽工艺",
+          "value": "ABS 双色注塑"
+        },
+        {
+          "label": "按键无冲",
+          "value": "98 键全键无冲突"
+        },
+        {
+          "label": "按键编程",
+          "value": "97 键可编程；板载多组配置；支持固件升级"
+        },
+        {
+          "label": "灯光",
+          "value": "混彩按键背光至多 20 种模式；RGB 侧灯 4 种模式"
+        },
+        {
+          "label": "支脚",
+          "value": "两段式防滑脚架"
+        },
+        {
+          "label": "机身尺寸",
+          "value": "383 × 134 × 40 mm"
+        },
+        {
+          "label": "机身重量",
+          "value": "约 966g（不含线材）"
+        },
+        {
+          "label": "连接线长度",
+          "value": "约 1.8m"
         }
       ],
-      "imageSource": "https://rpw.rapoo.cn/goods/gallery/1722579530642.jpg"
+      "imageSource": "https://rpw.rapoo.cn/goods/gallery/1722579530642.jpg",
+      "description": "V500PRO-98 是雷柏的 98 键有线机械键盘，在紧凑布局中保留数字小键盘。可拆卸磁吸面盖支持悬浮式与下沉式两种形态，并提供按键背光、RGB 侧灯和板载配置存储。",
+      "specSources": [
+        {
+          "title": "雷柏 V500PRO-98 · 官方详情与技术参数",
+          "url": "https://www.rapoo.cn/product/811"
+        }
+      ],
+      "configNote": "轴体与机身配色尚未注明；按键编程、灯光等功能以官方说明的 Windows 模式为准。"
     },
     {
       "id": "ugreen-100w",
@@ -416,25 +948,65 @@
       "officialUrl": "https://www.lulian.cn/product/1239.html",
       "specs": [
         {
-          "label": "型号",
-          "value": "PB725 · 能量湃 Pro"
+          "label": "型号与编码",
+          "value": "PB725 / 45208"
         },
         {
-          "label": "标称容量",
+          "label": "电池类型",
+          "value": "锂离子电池"
+        },
+        {
+          "label": "电芯容量",
           "value": "20000mAh"
         },
         {
-          "label": "最高单口输出",
-          "value": "USB-C1 最高 100W"
+          "label": "额定输出容量",
+          "value": "11000mAh（官网标注 TYP，5V⎓4A 工况）"
         },
         {
-          "label": "接口与显示",
-          "value": "双 USB-C + USB-A / 数显屏"
+          "label": "USB-C1 单口输出",
+          "value": "最高 100W（20V⎓5A）"
+        },
+        {
+          "label": "USB-C2 输出档位",
+          "value": "最高档位 20V⎓1.5A；另支持 5V / 9V / 12V / 15V 档位"
+        },
+        {
+          "label": "双 C 口同时输出",
+          "value": "USB-C1 + USB-C2 合计最高 95W"
+        },
+        {
+          "label": "自身充电输入",
+          "value": "USB-C1 最高 65W（20V⎓3.25A）"
+        },
+        {
+          "label": "接口",
+          "value": "2 × USB-C + 1 × USB-A"
+        },
+        {
+          "label": "电量显示",
+          "value": "动态数显屏"
+        },
+        {
+          "label": "外形尺寸",
+          "value": "54 × 50 × 121mm"
+        },
+        {
+          "label": "净重",
+          "value": "455g"
         }
       ],
       "imageSource": "https://images.lulian.cn/upload/202506/1749781404.jpg",
       "imageWidth": 800,
-      "imageHeight": 800
+      "imageHeight": 800,
+      "description": "绿联能量湃 Pro PB725 是带数显屏的三接口移动电源，电芯标称容量为 20000mAh。USB-C1 单口最高支持 100W 输出，也可通过该接口以最高 65W 为充电宝充电。",
+      "specSources": [
+        {
+          "title": "绿联 PB725 / 45208 官方产品参数",
+          "url": "https://www.lulian.cn/product/1239.html"
+        }
+      ],
+      "configNote": "20000mAh 是电芯容量，不能当作 USB 输出端额定容量；官网额定输出容量按 5V⎓4A 工况标注。100W 是 USB-C1 单口最高值，双 C 口同时使用合计最高 95W；实际输出取决于设备、线材及协议协商。"
     }
   ]
 }

@@ -312,6 +312,113 @@ function assertSpotlight(b, item) {
       assert.equal(b.$('.eq-detail-image-wrap img').getAttribute('src'), '/img/equipment/oppo-pad5.webp');
     }));
 
+  await check('all 13 detail pages render complete descriptions, specification rows and official provenance', () =>
+    using('/equipments/', b => {
+      const items = b.data().items;
+      assert.equal(items.length, 13);
+      b.click('.eq-hero-stage');
+      for (let index = 0; index < items.length; index++) {
+        const item = items[index];
+        assert.ok(typeof item.description === 'string' && item.description.trim(), 'missing detailed product introduction: ' + item.name);
+        assert.ok(item.specs.length >= 6, 'details must contain substantive product specifications: ' + item.name);
+        assert.equal(b.title(), item.name);
+        assert.equal(b.$('.eq-detail-note').textContent, item.description);
+        assert.equal(b.$('.eq-config-note').textContent, item.configNote || '');
+        const rows = Array.from(b.document.querySelectorAll('.eq-specs > div'), row => ({
+          label: row.querySelector('dt').textContent,
+          value: row.querySelector('dd').textContent
+        }));
+        assert.deepEqual(rows, item.specs, 'all specifications must render once and in order: ' + item.name);
+        const sources = (item.specSources || []).filter(source => /^https?:\/\//i.test(source.url));
+        assert.ok(sources.length, 'detailed product facts must have an official source: ' + item.name);
+        const links = Array.from(b.document.querySelectorAll('.eq-spec-sources a'));
+        assert.deepEqual(links.map(link => ({ title: link.textContent, url: link.href })),
+          sources.map(source => ({ title: source.title, url: new URL(source.url).href })));
+        for (const link of links) {
+          assert.equal(link.target, '_blank');
+          assert.match(link.rel, /noopener/);
+          assert.match(link.rel, /noreferrer/);
+        }
+        assert.equal(b.$('.eq-spec-provenance').hidden, false);
+        if (index < items.length - 1) b.click('[data-step="1"]');
+      }
+    }));
+
+  await check('switching equipment clears previous notes, specs and provenance when the next item has none', () =>
+    using('/equipments/', b => {
+      const data = b.data();
+      Object.assign(data.items[0], {
+        description: 'First product introduction.',
+        configNote: 'Only the first equipment has this configuration note.',
+        specs: [{ label: 'First exclusive specification', value: 'First exclusive value' }],
+        specSources: [{ title: 'First official specification', url: 'https://example.test/official-first' }]
+      });
+      Object.assign(data.items[1], {
+        description: 'Second product introduction.',
+        configNote: '',
+        specs: [{ label: 'Second specification', value: 'Second value' }],
+        specSources: []
+      });
+      b.$('#eq-data').textContent = JSON.stringify(data);
+      b.window.eval(interaction);
+      b.click('.eq-hero-stage');
+      assert.equal(b.$('.eq-spec-provenance').hidden, false);
+      assert.equal(b.$('.eq-spec-sources a').textContent, 'First official specification');
+      b.click('[data-step="1"]');
+      assert.equal(b.$('.eq-detail-note').textContent, 'Second product introduction.');
+      assert.equal(b.$('.eq-config-note').textContent, '');
+      assert.equal(b.document.querySelectorAll('.eq-specs > div').length, 1);
+      assert.equal(b.$('.eq-specs dt').textContent, 'Second specification');
+      assert.equal(b.$('.eq-specs dd').textContent, 'Second value');
+      assert.equal(b.document.querySelectorAll('.eq-spec-sources a').length, 0);
+      assert.equal(b.$('.eq-spec-provenance').hidden, true);
+      assert.equal(b.$('.eq-detail-copy').textContent.includes('First exclusive'), false);
+    }, { interactions: false }));
+
+  await check('changing equipment and reopening details reset both dialog scroll positions', () =>
+    using('/equipments/', async b => {
+      b.click('.eq-hero-stage');
+      const copy = b.$('.eq-detail-copy');
+      const dialog = b.$('.eq-dialog');
+      copy.scrollTop = 380;
+      dialog.scrollTop = 140;
+      assert.equal(copy.scrollTop, 380);
+      assert.equal(dialog.scrollTop, 140);
+      b.click('[data-step="1"]');
+      assert.equal(copy.scrollTop, 0, 'the newly selected equipment must start at its introduction');
+      assert.equal(dialog.scrollTop, 0, 'mobile dialog scroll must also return to the beginning');
+      b.click('.eq-close');
+      await flush();
+      copy.scrollTop = 270;
+      dialog.scrollTop = 90;
+      b.click('.eq-hero-stage');
+      assert.equal(copy.scrollTop, 0);
+      assert.equal(dialog.scrollTop, 0);
+    }));
+
+  await check('confirmed laptop hardware and phone memory survive in the rendered product details', () =>
+    using('/equipments/', async b => {
+      const items = b.data().items;
+      const laptop = items.find(item => /天选/.test(item.name));
+      const phone = items.find(item => /Ace\s*3\s*Pro/i.test(item.name));
+      assert.ok(laptop && phone, 'the confirmed laptop and phone must be present');
+      function open(item) {
+        b.click('[data-equipment-card="' + item.id + '"] .eq-card-stage');
+        return b.$('.eq-specs').textContent;
+      }
+      const laptopText = open(laptop);
+      assert.match(laptopText, /i7/i);
+      assert.match(laptopText, /RTX\s*5060/i);
+      assert.match(laptopText, /16\s*GB/i);
+      assert.match(laptopText, /954\s*GB/i, 'the reported installed storage must not be replaced with an assumed capacity');
+      b.click('.eq-close');
+      await flush();
+      const phoneText = open(phone);
+      assert.match(phoneText, /16\s*GB/i);
+      assert.match(phoneText, /512\s*GB/i);
+      assert.match(phoneText, /钛空镜银/);
+    }));
+
   await check('closing details restores opener focus, scrolling and zoom state', () =>
     using('/equipments/', async b => {
       const opener = b.$('[data-equipment-card="oppo-pad5"] .eq-card-stage');
