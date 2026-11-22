@@ -167,16 +167,16 @@
       button.textContent = interactive ? '完成操作' : '操作地图';
       mount.dataset.interactive = String(interactive);
       if (map) {
-        if (interactive) { map.dragging.enable(); map.touchZoom.enable(); map.doubleClickZoom.enable(); }
-        else { map.dragging.disable(); map.touchZoom.disable(); map.doubleClickZoom.disable(); }
+        if (interactive) { map.dragging.enable(); map.touchZoom.enable(); map.doubleClickZoom.enable(); map.scrollWheelZoom.enable(); }
+        else { map.dragging.disable(); map.touchZoom.disable(); map.doubleClickZoom.disable(); map.scrollWheelZoom.disable(); }
       }
-      help.textContent = coarse.matches ? (interactive ? '可拖动或双指缩放；点「完成操作」继续滚动页面。' : '点省份查看记录；点「操作地图」开启拖动和双指缩放。') : '点击省份查看记录；使用左上角按钮缩放，拖动地图平移。';
+      help.textContent = coarse.matches ? (interactive ? '可拖动或双指缩放；点「完成操作」继续滚动页面。' : '点省份查看记录；点「操作地图」开启拖动和双指缩放。') : '点击省份查看记录；滚轮或左上角按钮缩放，拖动地图平移。';
     }
     function buildMap() {
       if (!window.L) throw new Error('Leaflet unavailable');
       map = L.map(mount, {
         center: [34, 104], zoom: 3, minZoom: 2, maxZoom: 10,
-        zoomControl: false, attributionControl: true, scrollWheelZoom: false,
+        zoomControl: false, attributionControl: true, scrollWheelZoom: interactive,
         dragging: interactive, touchZoom: interactive, doubleClickZoom: interactive,
         zoomSnap: 0.25, zoomDelta: 0.5, worldCopyJump: false,
         maxBounds: [[-10, 60], [65, 150]], maxBoundsViscosity: 0.8,

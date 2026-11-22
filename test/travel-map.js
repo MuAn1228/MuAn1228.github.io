@@ -107,6 +107,17 @@ function browser(options = {}) {
   return {
     dom, window, document, calls, run, find,
     async ready() { await flush(); },
+    async wheel(deltaY) {
+      const event = new window.WheelEvent('wheel', {
+        deltaY, deltaMode: 0, clientX: 380, clientY: 260,
+        bubbles: true, cancelable: true
+      });
+      find('#travel-map').dispatchEvent(event);
+      // Wait for Leaflet's actual wheel debounce rather than invoking its handler.
+      await new Promise(resolve => setTimeout(resolve, calls.maps[0].options.wheelDebounceTime + 30));
+      await flush();
+      return event;
+    },
     click(selector) { const node = find(selector); assert.ok(node, 'missing control: ' + selector); node.click(); return node; },
     province(name) {
       const button = [...document.querySelectorAll('#travel-provinces button')].find(node => node.textContent.includes(name));
@@ -245,18 +256,43 @@ async function using(options, callback) {
     assert.ok(b.find('#travel-selection-posts a'));
   }));
 
-  await check('touch mode keeps page scrolling available until explicit map interaction', () => using({ mobile: true }, b => {
+  await check('desktop wheel events zoom the real Leaflet map in both directions', () => using({}, async b => {
+    const map = b.calls.maps[0];
+    const initial = map.getZoom();
+    const zoomIn = await b.wheel(-120);
+    assert.ok(map.getZoom() > initial, 'scrolling up on the map must zoom in');
+    assert.equal(zoomIn.defaultPrevented, true, 'map zoom must consume the wheel event');
+    const enlarged = map.getZoom();
+    const zoomOut = await b.wheel(120);
+    assert.ok(map.getZoom() < enlarged, 'scrolling down on the map must zoom out');
+    assert.equal(zoomOut.defaultPrevented, true);
+  }));
+
+  await check('touch mode enables wheel zoom only during explicit map interaction', () => using({ mobile: true }, async b => {
     const map = b.calls.maps[0];
     assert.equal(map.dragging.enabled(), false);
     assert.equal(map.touchZoom.enabled(), false);
     assert.equal(map.scrollWheelZoom.enabled(), false);
+    const initial = map.getZoom();
+    const beforeInteraction = await b.wheel(-120);
+    assert.equal(map.getZoom(), initial);
+    assert.equal(beforeInteraction.defaultPrevented, false, 'inactive map must leave page scrolling available');
     b.click('[data-map-action="interact"]');
     assert.equal(map.dragging.enabled(), true);
     assert.equal(map.touchZoom.enabled(), true);
+    assert.equal(map.scrollWheelZoom.enabled(), true);
     assert.equal(b.find('[data-map-action="interact"]').getAttribute('aria-pressed'), 'true');
+    const duringInteraction = await b.wheel(-120);
+    assert.ok(map.getZoom() > initial, 'wheel zoom must work after enabling map interaction');
+    assert.equal(duringInteraction.defaultPrevented, true);
+    const enlarged = map.getZoom();
     b.click('[data-map-action="interact"]');
     assert.equal(map.dragging.enabled(), false);
     assert.equal(map.touchZoom.enabled(), false);
+    assert.equal(map.scrollWheelZoom.enabled(), false);
+    const afterInteraction = await b.wheel(120);
+    assert.equal(map.getZoom(), enlarged);
+    assert.equal(afterInteraction.defaultPrevented, false, 'finishing map interaction must restore page scrolling');
   }));
 
   await check('satellite tile failure returns to the usable footprint basemap', () => using({}, b => {

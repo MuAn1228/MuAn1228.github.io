@@ -41,7 +41,7 @@ title: 旅行
           <span><i class="travel-legend-unvisited" aria-hidden="true"></i>待探索</span>
         </div>
       </div>
-      <p id="travel-map-help" class="travel-map-help">点击省份查看记录；使用左上角按钮缩放。</p>
+      <p id="travel-map-help" class="travel-map-help">点击省份查看记录；滚轮或左上角按钮缩放。</p>
       <div id="travel-provinces" class="travel-provinces" role="group" aria-label="已到访的省份"></div>
     </div>
     <aside class="travel-map-detail" aria-labelledby="travel-selection-title">
@@ -56,5 +56,5 @@ title: 旅行
 </section>
 
 <script src="/lib/leaflet/leaflet.js"></script>
-<script src="/js/travel-map.js?v=2"></script>
+<script src="/js/travel-map.js?v=3"></script>
 <script src="/js/travel-reel.js"></script>
