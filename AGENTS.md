@@ -59,8 +59,8 @@
 - 最近一次修复：4bab6/1287988 两张照片方向（提交 10b753c，已推送远端 main）。
 
 ## 旅行地图（沐安的山海回响，2026-11-23）
-- 入口 `source/travel/index.md`；加载顺序 Leaflet → `travel-world.js?v=1`（个人世界资料）→ `travel-atlas-effects.js?v=2`（地标/地形/罗盘）→ `travel-map.js?v=5`（交互/游记/刻印）。仅本页加载，custom.css 缓存版本 `20261123-3`。
-- 用户要求定制游戏风：古卷地形、黄铜刻印、温暖像素地标与霓虹信号统一为「沐安的山海回响」。五种手绘 SVG 地标与自制 MA 罗盘，纹理 `source/img/travel/atlas-vellum.webp` 由 ImageGen 生成；设计与生成提示词见 `docs/travel-atlas-art-direction.md`。地标与连线都是象征，不代表真实精确城市坐标或行程；公开网页不能保证无法复刻。
+- 入口 `source/travel/index.md`；加载顺序 Leaflet → `travel-world.js?v=1`（个人世界资料）→ `travel-atlas-effects.js?v=3`（地标/地形/罗盘）→ `travel-map.js?v=5`（交互/游记/刻印）。仅本页加载，custom.css 缓存版本 `20261123-4`。
+- 用户要求定制游戏风「沐安的山海回响」，并明确**地图必须与全站蓝紫粉主色一致，不要再改成独立绿金主题**。保留古卷纹理、五种手绘 SVG 地标、自制 MA 罗盘与刻印探索；省份、地标、光点、罗盘、控件统一紫色系，真实照片和卫星影像不染色。纹理 `source/img/travel/atlas-vellum.webp` 由 ImageGen 生成，用 CSS 去绿并映入紫色底；设计与生成提示词见 `docs/travel-atlas-art-direction.md`。地标与连线都是象征，不代表真实精确城市坐标或行程；公开网页不能保证无法复刻。
 - 访客可点击/键盘唤醒地标，`localStorage['blog-travel-echoes-v1']` 只保存访客收集的刻印，与作者真实到访/文章数分开。刻印栏复用同一 SVG 地标；未知省份不解锁；存储不可用时仍可使用。详情仅使用生成器提取的真实本地照片与原文完整句，河北无文不虚构。卫星影像仍点击后才加载，并暂停隐藏的萤火 canvas。
 - **桌面滚轮缩放必须保留**；触屏默认保留页面滚动，点「操作地图」开启拖拽/缩放。动效可关闭，并尊重 reduced-motion、标签页隐藏与地图离屏；离页/初始化失败都要清理 canvas、RAF、观察器和 Leaflet 层。
 - `scripts/travel-data.js` 的 visited 与文章数分离：河北有足迹但 counts=0，不得虚构文章或跳不存在的省分类。文章链接使用生成器的真实 posts 数据，cover/excerpt 分别来自已有本地图片与原文。回归 `node test/travel-map.js [--built]`（源码36项，构建37项）。

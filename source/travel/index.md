@@ -91,6 +91,6 @@ title: 旅行
 
 <script src="/lib/leaflet/leaflet.js"></script>
 <script src="/js/travel-world.js?v=1"></script>
-<script src="/js/travel-atlas-effects.js?v=2"></script>
+<script src="/js/travel-atlas-effects.js?v=3"></script>
 <script src="/js/travel-map.js?v=5"></script>
 <script src="/js/travel-reel.js"></script>

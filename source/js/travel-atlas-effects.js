@@ -164,7 +164,7 @@
       stars = [];
       var count = Math.min(coarse.matches ? 28 : 55, Math.round(starWidth * starHeight / 9500));
       for (var index = 0; index < count; index++) {
-        stars.push({ x: random(), y: random(), radius: 0.45 + random(), phase: random() * 6.28, depth: 0.25 + random(), colour: index % 3 ? '#e6cc83' : '#9fe4bd' });
+        stars.push({ x: random(), y: random(), radius: 0.45 + random(), phase: random() * 6.28, depth: 0.25 + random(), colour: index % 3 ? '#d0b1f4' : '#b7c8ff' });
       }
       drawStars(0);
     }
@@ -200,10 +200,10 @@
       onAdd: function () {
         this.container = svg('svg', { class: 'travel-constellation leaflet-zoom-hide', role: 'group', 'aria-label': '旅行记忆地标', 'pointer-events': 'none' }, pane);
         var defs = svg('defs', {}, this.container);
-        gradient(defs, 'travel-land-gradient', ['#53645b', '#364b46', '#223c39']);
-        gradient(defs, 'travel-visited-gradient', ['#dac08a', '#a98b56', '#768962']);
-        gradient(defs, 'travel-selected-gradient', ['#f0dba3', '#c7b178', '#91baa0']);
-        gradient(defs, 'travel-link-gradient', ['#d6c087', '#9fe3c8', '#cca982']);
+        gradient(defs, 'travel-land-gradient', ['#51436b', '#3a3153', '#26243e']);
+        gradient(defs, 'travel-visited-gradient', ['#c2a4e6', '#9273b9', '#687bac']);
+        gradient(defs, 'travel-selected-gradient', ['#efd2f2', '#c3adf4', '#9aaee6']);
+        gradient(defs, 'travel-link-gradient', ['#b79ad6', '#a6baf0', '#edb8dc']);
         var glow = svg('filter', { id: 'travel-node-glow', x: '-100%', y: '-100%', width: '300%', height: '300%' }, defs);
         svg('feGaussianBlur', { stdDeviation: '2', result: 'halo' }, glow);
         var merge = svg('feMerge', {}, glow);

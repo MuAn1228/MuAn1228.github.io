@@ -6,6 +6,8 @@ The visual language draws on exploration, ancient maps, cyberpunk signals and co
 
 The province glyphs, terrain stamps and compass are drawn in project SVG code. The visitor's locally collected seals remain separate from the author's real footprint and article counts.
 
+The user's final palette direction follows the blog's blue–violet–pink colours. Map terrain, seals, landmarks, signals and controls use that palette. The original vellum texture is colour-neutralized and blended over a violet background in CSS; actual travel photographs and satellite imagery retain their colours.
+
 ## Generated material
 
 - Built-in ImageGen, new generation, opaque background.
