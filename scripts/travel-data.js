@@ -5,6 +5,73 @@
 // 手动标记的已访问省份（还没写文章时先亮起来）
 // 陕西/浙江/江苏/上海 已有旅行文章（自动计数），此处仅保留无文章的手动标记
 var MANUAL_VISITED = ['河北'];
+var travelFs = require('node:fs');
+var travelPath = require('node:path');
+
+function travelBody(post) {
+  return String(post.raw || post.content || '')
+    .replace(/^\uFEFF?---\s*\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, '');
+}
+
+function travelExcerpt(body) {
+  var readable = body
+    .replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, ' ')
+    .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/https?:\/\/\S+/g, ' ')
+    .replace(/^\s*(?:#{1,6}|>|[-*+]\s|\d+\.\s)\s*/gm, '')
+    .replace(/[*_~`]/g, '')
+    .replace(/&nbsp;|&#160;/gi, ' ')
+    .replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, '<').replace(/&gt;/gi, '>')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+  // Preserve complete sentences rather than presenting an arbitrary cut as a quotation.
+  var sentences = readable.match(/[^。！？.!?]+[。！？.!?]+[”’」』"]?/g) || [];
+  var excerpt = '';
+  for (var index = 0; index < sentences.length; index++) {
+    var sentence = sentences[index].trim();
+    if (!excerpt && sentence.length > 80) continue;
+    if (excerpt.length + sentence.length > 80) break;
+    excerpt += sentence;
+  }
+  return excerpt || (readable.length <= 80 ? readable : '');
+}
+
+function travelCover(post, body, root, urlFor) {
+  var candidates = [];
+  if (typeof post.cover === 'string') candidates.push(post.cover);
+  var markdown = /!\[[^\]]*\]\(\s*<?([^\s)>]+)>?(?:\s+[^)]*)?\)/.exec(body);
+  var html = /<img\b[^>]*\b(?:src|data-src)\s*=\s*["']([^"']+)["']/i.exec(body);
+  var first = markdown && (!html || markdown.index < html.index) ? markdown : html;
+  if (first) candidates.push(first[1]);
+  var sourceDir = travelPath.resolve(hexo.source_dir || travelPath.resolve('source'));
+  for (var index = 0; index < candidates.length; index++) {
+    var value = candidates[index].trim();
+    var cdn = /^https?:\/\/cdn\.jsdelivr\.net\/gh\/MuAn1228\/MuAn1228\.github\.io@[^/]+\/source(\/img\/posts\/[^?#]+)/i.exec(value);
+    if (cdn) value = cdn[1];
+    else {
+      var site = String(hexo.config.url || '').replace(/\/+$/, '');
+      if (site && value.indexOf(site + '/') === 0) value = value.slice(site.length);
+      if (/^https?:|^\/\//i.test(value)) continue;
+      value = value.split(/[?#]/)[0];
+      if (root !== '/' && value.indexOf(root) === 0) value = '/' + value.slice(root.length);
+      if (value.indexOf('img/') === 0) value = '/' + value;
+    }
+    try { value = decodeURIComponent(value); } catch (error) { continue; }
+    if (!/^\/img\/.+\.(?:avif|gif|jpe?g|png|webp)$/i.test(value) || /\\|(?:^|\/)\.\.(?:\/|$)/.test(value)) continue;
+    var file = travelPath.resolve(sourceDir, '.' + value);
+    if (file.indexOf(sourceDir + travelPath.sep) !== 0) continue;
+    try {
+      if (travelFs.statSync(file).isFile()) {
+        return urlFor ? urlFor.call(hexo, value.slice(1), { relative: false }) : root + value.slice(1);
+      }
+    } catch (error) { /* A missing or untrusted image does not become a public cover. */ }
+  }
+  return '';
+}
 
 function shortName(name) {
   return String(name || '').trim()
@@ -55,7 +122,11 @@ hexo.extend.generator.register('travel-data', function (locals) {
     var names = new Set(provinces.map(function (c) { return shortName(c.name); }).filter(Boolean));
     if (!names.size) return;
     var url = urlFor ? urlFor.call(hexo, path, { relative: false }) : root + path;
-    var entry = { title: String(post.title || ''), url: url, date: postDate(post.date) };
+    var body = travelBody(post);
+    var entry = {
+      title: String(post.title || ''), url: url, date: postDate(post.date),
+      cover: travelCover(post, body, root, urlFor), excerpt: travelExcerpt(body)
+    };
     var included = false;
     names.forEach(function (name) {
       if (!posts[name]) posts[name] = [];

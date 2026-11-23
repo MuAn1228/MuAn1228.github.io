@@ -7,6 +7,15 @@
   var satelliteURL = 'https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}';
   var activeRoot = null;
   var cleanup = function () {};
+  var explorationKey = 'blog-travel-echoes-v1';
+  var memoryAwakened = [];
+
+  function region(name) {
+    var world = window.__travelWorld;
+    return world && world.regions && world.regions[name] || {
+      glyph: 'waystone', relic: '未命名的回响', caption: ''
+    };
+  }
 
   function shortName(name) {
     return name.replace(/(?:壮族自治区|回族自治区|维吾尔自治区|特别行政区|自治区|省|市)$/, '');
@@ -24,6 +33,9 @@
     var provinceList = root.querySelector('#travel-provinces');
     var help = root.querySelector('#travel-map-help');
     var postList = root.querySelector('#travel-selection-posts');
+    var sealList = root.querySelector('#travel-seals');
+    var selectionCover = root.querySelector('#travel-selection-cover');
+    var selectionQuote = root.querySelector('#travel-selection-quote');
     var controller = new AbortController();
     var cleanups = [];
     var disposed = false;
@@ -32,6 +44,7 @@
     var dataError = false, geoError = false;
     var selected = null, view = 'atlas', extent = 'overview';
     var layers = Object.create(null), visited = Object.create(null);
+    var awakened = new Set();
     var coarse = window.matchMedia('(pointer: coarse)');
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     var interactive = !coarse.matches;
@@ -66,6 +79,89 @@
       } catch (error) { /* Malformed links do not become travel records. */ }
       return null;
     }
+    function safeImageURL(value) {
+      var destination = safeURL(value);
+      if (!destination) return null;
+      try {
+        var url = new URL(destination);
+        var path = decodeURIComponent(url.pathname);
+        if (url.username || url.password || path.indexOf(base.pathname + 'img/') !== 0) return null;
+        if (!/\.(?:avif|gif|jpe?g|png|webp)$/i.test(path) || /\\/.test(path)) return null;
+        return url.href;
+      } catch (error) { return null; }
+    }
+    function photo(image, post, cover) {
+      image.hidden = true;
+      image.removeAttribute('src');
+      var destination = post && safeImageURL(post.cover);
+      if (!destination) return;
+      image.loading = 'lazy'; image.decoding = 'async';
+      image.alt = post.title + ' · 旅行照片';
+      image.hidden = false;
+      image.src = destination;
+      if (!cover) image.addEventListener('error', function () { image.hidden = true; }, { once: true });
+    }
+    function loadAwakened() {
+      var names = memoryAwakened;
+      try {
+        var saved = JSON.parse(localStorage.getItem(explorationKey) || 'null');
+        if (Array.isArray(saved)) names = saved;
+      } catch (error) { /* The in-memory collection works when browser storage is unavailable. */ }
+      awakened = new Set(names.filter(function (name) { return typeof name === 'string' && visited[name]; }));
+      memoryAwakened = Array.from(awakened);
+      try { localStorage.setItem(explorationKey, JSON.stringify(memoryAwakened)); } catch (error) { /* Storage is optional. */ }
+    }
+    function renderDiscovery(message) {
+      if (!data) return;
+      var count = awakened.size, total = data.visited.length;
+      root.dataset.awakenedCount = String(count);
+      var counter = root.querySelector('#travel-discovery-count');
+      var maximum = root.querySelector('#travel-discovery-total');
+      var announcement = root.querySelector('#travel-discovery-status');
+      if (counter) counter.textContent = count;
+      if (maximum) maximum.textContent = total;
+      if (announcement) announcement.textContent = message || (total && count === total
+        ? '山海已回应，沐安的 ' + total + ' 枚足迹刻印都已唤醒。'
+        : '已唤醒 ' + count + '/' + total + ' 枚刻印，点选足迹，收集旅途的回响。');
+      if (sealList) sealList.querySelectorAll('button[data-province]').forEach(function (button) {
+        var name = button.dataset.province;
+        var unlocked = awakened.has(name);
+        button.classList.toggle('is-awakened', unlocked);
+        button.classList.toggle('is-selected', selected === name);
+        button.setAttribute('aria-pressed', String(selected === name));
+        button.setAttribute('aria-label', name + ' · ' + region(name).relic + ' · ' + (unlocked ? '已唤醒' : '待唤醒'));
+        button.querySelector('.travel-seal-state').textContent = unlocked ? '已唤醒' : '待唤醒';
+      });
+      if (effects && effects.setAwakened) effects.setAwakened(Array.from(awakened));
+    }
+    function buildSeals() {
+      if (!sealList || !data) return;
+      var marks = { city: '▥', bridge: '⌒', lotus: '✧', ruin: '▤', waystone: '◇' };
+      sealList.replaceChildren();
+      data.visited.forEach(function (name) {
+        var emblem = region(name);
+        var button = document.createElement('button');
+        button.type = 'button'; button.className = 'travel-seal';
+        button.dataset.province = name; button.dataset.glyph = emblem.glyph;
+        var mark = document.createElement('span');
+        mark.className = 'travel-seal-mark'; mark.setAttribute('aria-hidden', 'true');
+        if (window.__createTravelSealGlyph) mark.appendChild(window.__createTravelSealGlyph(emblem.glyph));
+        else mark.textContent = marks[emblem.glyph] || marks.waystone;
+        var title = document.createElement('span'); title.className = 'travel-seal-name'; title.textContent = emblem.relic;
+        var state = document.createElement('span'); state.className = 'travel-seal-state';
+        button.appendChild(mark); button.appendChild(title); button.appendChild(state);
+        sealList.appendChild(button);
+      });
+    }
+    function awaken(name) {
+      if (!visited[name] || awakened.has(name)) return;
+      awakened.add(name);
+      memoryAwakened = Array.from(awakened);
+      try { localStorage.setItem(explorationKey, JSON.stringify(memoryAwakened)); } catch (error) { /* Keep exploring within this tab. */ }
+      var message = '已唤醒「' + region(name).relic + '」 · ' + awakened.size + '/' + data.visited.length;
+      if (awakened.size === data.visited.length) message += ' · 山海已回应，全部足迹刻印收集完成。';
+      renderDiscovery(message);
+    }
     function records(name) {
       if (!data) return [];
       return (data.posts[name] || []).filter(function (post) {
@@ -81,23 +177,35 @@
         path.setAttribute('aria-pressed', String(name === selected));
         path.setAttribute('aria-label', name + (data ? (visited[name] ? '，已到访，' + (data.counts[name] || 0) + ' 篇游记' : '，尚无足迹') : '，记录加载中'));
       });
-      provinceList.querySelectorAll('button[data-province]').forEach(function (button) {
+      root.querySelectorAll('button[data-province]').forEach(function (button) {
         button.setAttribute('aria-pressed', String(button.dataset.province === selected));
+        button.classList.toggle('is-selected', button.dataset.province === selected);
       });
       if (effects) effects.select(selected);
       var focus = root.querySelector('#travel-map-focus');
-      if (focus) focus.textContent = selected ? selected + (visited[selected] ? ' · 足迹聚焦' : ' · 待探索') : (extent === 'visited' ? '已到访的星图' : '全国足迹');
+      if (focus) focus.textContent = selected ? selected + (visited[selected] ? ' · ' + region(selected).relic : ' · 待探索') : (extent === 'visited' ? '已点亮的山河' : '全国足迹');
     }
     function renderSelection() {
       if (!data) return;
       postList.replaceChildren();
+      if (selectionCover) { selectionCover.hidden = true; selectionCover.removeAttribute('src'); }
+      if (selectionQuote) { selectionQuote.hidden = true; selectionQuote.textContent = ''; }
+      var relic = root.querySelector('#travel-selection-relic');
+      if (relic) { relic.textContent = selected ? region(selected).relic : ''; relic.hidden = !selected; }
       var posts = [];
       if (selected) {
         var count = data.counts[selected] || 0;
         text('#travel-selection-label', visited[selected] ? '走过的地方' : '下一程的灵感');
         text('#travel-selection-title', selected);
-        text('#travel-selection-summary', visited[selected] ? (count ? '留下了 ' + count + ' 篇旅行记录，重温途中的风景。' : '足迹已点亮，游记还在整理中。') : '这里的风景，留给下一次出发。');
+        var caption = region(selected).caption;
+        text('#travel-selection-summary', visited[selected]
+          ? ((caption || (count ? '重温途中的风景。' : '足迹已点亮，游记还在整理中。')) + (count ? ' 这里留有 ' + count + ' 篇旅行手记。' : ''))
+          : '这里的风景，留给下一次出发。');
         posts = records(selected);
+        if (selectionCover && posts[0]) photo(selectionCover, posts[0], true);
+        if (selectionQuote && posts[0] && typeof posts[0].excerpt === 'string' && posts[0].excerpt.trim()) {
+          selectionQuote.textContent = posts[0].excerpt; selectionQuote.hidden = false;
+        }
       } else {
         text('#travel-selection-label', '足迹概览');
         text('#travel-selection-title', '下一站，仍在路上');
@@ -114,6 +222,10 @@
       posts.forEach(function (post) {
         var card = document.createElement('a');
         card.className = 'travel-map-post'; card.href = safeURL(post.url);
+        if (!selected && safeImageURL(post.cover)) {
+          var image = document.createElement('img'); image.className = 'travel-map-post-cover';
+          photo(image, post, false); card.appendChild(image);
+        }
         var title = document.createElement('strong'); title.textContent = post.title;
         if (/^\d{4}-\d{2}-\d{2}$/.test(post.date)) {
           var date = document.createElement('time');
@@ -147,14 +259,16 @@
     function select(name, zoom) {
       if (!data) return;
       selected = name; extent = name ? 'selection' : 'overview';
+      if (name) awaken(name);
       renderSelection();
       if (zoom) fitExtent(true);
     }
     function renderEffects() {
       if (!map || !geo || !data || effects || !window.__createTravelAtlasEffects) return;
-      effects = window.__createTravelAtlasEffects(map, root, geo, data.visited, { reduced: reduced, coarse: coarse });
+      effects = window.__createTravelAtlasEffects(map, root, geo, data.visited, { reduced: reduced, coarse: coarse, onSelect: function (name) { select(name, true); } });
       effects.select(selected);
       effects.setView(view);
+      if (effects.setAwakened) effects.setAwakened(Array.from(awakened));
     }
     function syncEffects() {
       root.dataset.mapEffects = effectsEnabled ? 'on' : 'off';
@@ -265,6 +379,7 @@
       }
     });
     if (coarse.addEventListener) listen(coarse, 'change', function () { interactive = !coarse.matches; syncInteraction(); });
+    if (selectionCover) listen(selectionCover, 'error', function () { selectionCover.hidden = true; });
 
     // The resources fail independently: records remain usable without geometry.
     root.setAttribute('aria-busy', 'true'); mount.dataset.mapView = 'atlas';
@@ -273,6 +388,11 @@
     });
     text('#travel-stat-provinces', '—'); text('#travel-stat-posts', '—');
     provinceList.replaceChildren(); postList.replaceChildren();
+    if (sealList) sealList.replaceChildren();
+    if (selectionCover) { selectionCover.hidden = true; selectionCover.removeAttribute('src'); }
+    if (selectionQuote) { selectionQuote.hidden = true; selectionQuote.textContent = ''; }
+    var initialRelic = root.querySelector('#travel-selection-relic');
+    if (initialRelic) { initialRelic.hidden = true; initialRelic.textContent = ''; }
     text('#travel-selection-label', '足迹概览'); text('#travel-selection-title', '下一站，仍在路上');
     text('#travel-selection-summary', '正在整理途中的旅行记录…');
     root.querySelector('#travel-all-posts').href = new URL('categories/' + encodeURIComponent('旅行') + '/', base).href;
@@ -290,6 +410,7 @@
         button.textContent = name + ' · ' + (data.counts[name] ? data.counts[name] + ' 篇' : '待整理');
         provinceList.appendChild(button);
       });
+      loadAwakened(); buildSeals(); renderDiscovery();
       text('#travel-stat-provinces', data.visited.length); text('#travel-stat-posts', data.totalPosts);
       renderSelection(); renderEffects(); refreshStatus();
     }).catch(function () {

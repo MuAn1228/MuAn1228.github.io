@@ -58,11 +58,12 @@
 - EXIF 方向映射容易出错（脚本曾漏掉 orient 4、错映射 orient 6 导致照片倒放）。**若某张照片方向错误，与其纠结 EXIF 映射表，用户更接受直接把该缩略图旋转 180° 的简单方案。** 修正后需浏览器目视核对（源图浏览器会自动应用 EXIF，作对照）。
 - 最近一次修复：4bab6/1287988 两张照片方向（提交 10b753c，已推送远端 main）。
 
-## 旅行地图（全息星图，2026-11-23）
-- 入口 `source/travel/index.md`；`travel-map.js?v=4` 管交互与游记，`travel-atlas-effects.js?v=1` 在 Leaflet 后、地图脚本前仅本页加载。样式在 custom.css 的旅行地图块，缓存版本 `20261123-2`。
-- 默认全宽星图：本地省界、静态厚度、五处省级足迹光点与装饰星链；星链只是视觉连接，不是实际旅行路线，节点也不表示去过省中心城市。卫星影像仍点击后才加载，卫星模式停止隐藏的星空 canvas 绘制。
+## 旅行地图（沐安的山海回响，2026-11-23）
+- 入口 `source/travel/index.md`；加载顺序 Leaflet → `travel-world.js?v=1`（个人世界资料）→ `travel-atlas-effects.js?v=2`（地标/地形/罗盘）→ `travel-map.js?v=5`（交互/游记/刻印）。仅本页加载，custom.css 缓存版本 `20261123-3`。
+- 用户要求定制游戏风：古卷地形、黄铜刻印、温暖像素地标与霓虹信号统一为「沐安的山海回响」。五种手绘 SVG 地标与自制 MA 罗盘，纹理 `source/img/travel/atlas-vellum.webp` 由 ImageGen 生成；设计与生成提示词见 `docs/travel-atlas-art-direction.md`。地标与连线都是象征，不代表真实精确城市坐标或行程；公开网页不能保证无法复刻。
+- 访客可点击/键盘唤醒地标，`localStorage['blog-travel-echoes-v1']` 只保存访客收集的刻印，与作者真实到访/文章数分开。刻印栏复用同一 SVG 地标；未知省份不解锁；存储不可用时仍可使用。详情仅使用生成器提取的真实本地照片与原文完整句，河北无文不虚构。卫星影像仍点击后才加载，并暂停隐藏的萤火 canvas。
 - **桌面滚轮缩放必须保留**；触屏默认保留页面滚动，点「操作地图」开启拖拽/缩放。动效可关闭，并尊重 reduced-motion、标签页隐藏与地图离屏；离页/初始化失败都要清理 canvas、RAF、观察器和 Leaflet 层。
-- `scripts/travel-data.js` 的 visited 与文章数分离：河北有足迹但 counts=0，不得虚构文章或跳不存在的省分类。文章链接使用生成器的真实 posts 数据。回归 `node test/travel-map.js [--built]`（源码26项，构建27项）。
+- `scripts/travel-data.js` 的 visited 与文章数分离：河北有足迹但 counts=0，不得虚构文章或跳不存在的省分类。文章链接使用生成器的真实 posts 数据，cover/excerpt 分别来自已有本地图片与原文。回归 `node test/travel-map.js [--built]`（源码36项，构建37项）。
 
 ## 展示页黑洞 hero（/showcase/，重要坑）
 - 黑洞效果整体呈现叠在 **展示页顶部**（铺满 100vw），下方是原「极简居中」展示内容，中间用渐变过渡（2026-08-24 起渐变高度 60px、目标色 `rgba(0,0,0,0.35)`，提交 5f0a8bf），适配明/暗模式。
