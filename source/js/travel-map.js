@@ -27,7 +27,7 @@
     var controller = new AbortController();
     var cleanups = [];
     var disposed = false;
-    var map = null, outlines = null, satellite = null, labels = null;
+    var map = null, outlines = null, satellite = null, effects = null;
     var data = null, geo = null;
     var dataError = false, geoError = false;
     var selected = null, view = 'atlas', extent = 'overview';
@@ -35,6 +35,7 @@
     var coarse = window.matchMedia('(pointer: coarse)');
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     var interactive = !coarse.matches;
+    var effectsEnabled = !reduced.matches;
     var resizeObserver = null, frame = 0;
 
     function listen(target, event, callback, options) {
@@ -83,6 +84,9 @@
       provinceList.querySelectorAll('button[data-province]').forEach(function (button) {
         button.setAttribute('aria-pressed', String(button.dataset.province === selected));
       });
+      if (effects) effects.select(selected);
+      var focus = root.querySelector('#travel-map-focus');
+      if (focus) focus.textContent = selected ? selected + (visited[selected] ? ' · 足迹聚焦' : ' · 待探索') : (extent === 'visited' ? '已到访的星图' : '全国足迹');
     }
     function renderSelection() {
       if (!data) return;
@@ -146,20 +150,20 @@
       renderSelection();
       if (zoom) fitExtent(true);
     }
-    function renderLabels() {
-      if (!map || !geo || !data) return;
-      if (labels) map.removeLayer(labels);
-      labels = L.layerGroup();
-      geo.features.forEach(function (feature) {
-        var properties = feature.properties || {};
-        var name = shortName(properties.name || '');
-        var point = properties.centroid || properties.center;
-        if (!visited[name] || !Array.isArray(point)) return;
-        var label = document.createElement('span'); label.textContent = name;
-        L.tooltip({ permanent: true, direction: 'center', className: 'travel-province-label', interactive: false, opacity: 1 })
-          .setLatLng([point[1], point[0]]).setContent(label).addTo(labels);
-      });
-      if (map.getZoom() >= 3.5) labels.addTo(map);
+    function renderEffects() {
+      if (!map || !geo || !data || effects || !window.__createTravelAtlasEffects) return;
+      effects = window.__createTravelAtlasEffects(map, root, geo, data.visited, { reduced: reduced, coarse: coarse });
+      effects.select(selected);
+      effects.setView(view);
+    }
+    function syncEffects() {
+      root.dataset.mapEffects = effectsEnabled ? 'on' : 'off';
+      var button = root.querySelector('[data-map-action="effects"]');
+      if (button) {
+        button.setAttribute('aria-pressed', String(effectsEnabled));
+        button.textContent = effectsEnabled ? '关闭动效' : '开启动效';
+      }
+      if (effects) effects.setEnabled(effectsEnabled);
     }
     function syncInteraction() {
       var button = root.querySelector('[data-map-action="interact"]');
@@ -208,13 +212,8 @@
           });
         }
       }).addTo(map);
-      map.on('zoomend', function () {
-        if (!labels) return;
-        if (map.getZoom() >= 3.5 && !map.hasLayer(labels)) labels.addTo(map);
-        else if (map.getZoom() < 3.5 && map.hasLayer(labels)) map.removeLayer(labels);
-      });
       map.on('dragstart', function () { extent = 'manual'; });
-      syncInteraction(); updatePaths(); renderLabels(); fitExtent(false);
+      syncInteraction(); updatePaths(); renderEffects(); fitExtent(false);
       if (window.ResizeObserver) {
         resizeObserver = new ResizeObserver(function () {
           if (frame) cancelAnimationFrame(frame);
@@ -231,6 +230,7 @@
     function switchView(next) {
       if (!map || !geo || view === next) return;
       view = next; mount.dataset.mapView = view;
+      if (effects) effects.setView(view);
       root.querySelectorAll('button[data-map-view]').forEach(function (button) {
         button.setAttribute('aria-pressed', String(button.dataset.mapView === view));
       });
@@ -261,6 +261,7 @@
         if (action === 'overview' || action === 'visited') {
           selected = null; extent = action; renderSelection(); fitExtent(true);
         } else if (action === 'interact') { interactive = !interactive; syncInteraction(); }
+        else if (action === 'effects') { effectsEnabled = !effectsEnabled; syncEffects(); }
       }
     });
     if (coarse.addEventListener) listen(coarse, 'change', function () { interactive = !coarse.matches; syncInteraction(); });
@@ -275,7 +276,7 @@
     text('#travel-selection-label', '足迹概览'); text('#travel-selection-title', '下一站，仍在路上');
     text('#travel-selection-summary', '正在整理途中的旅行记录…');
     root.querySelector('#travel-all-posts').href = new URL('categories/' + encodeURIComponent('旅行') + '/', base).href;
-    refreshStatus(); syncInteraction();
+    refreshStatus(); syncInteraction(); syncEffects();
 
     loadJSON('data/travel.json').then(function (value) {
       if (disposed) return;
@@ -290,7 +291,7 @@
         provinceList.appendChild(button);
       });
       text('#travel-stat-provinces', data.visited.length); text('#travel-stat-posts', data.totalPosts);
-      renderSelection(); renderLabels(); refreshStatus();
+      renderSelection(); renderEffects(); refreshStatus();
     }).catch(function () {
       if (disposed) return;
       dataError = true;
@@ -304,6 +305,7 @@
     }).catch(function () {
       if (disposed) return;
       geoError = true;
+      if (effects) { effects.destroy(); effects = null; }
       if (map) { map.remove(); map = null; }
       refreshStatus();
     });
@@ -312,6 +314,7 @@
       if (resizeObserver) resizeObserver.disconnect();
       if (frame) cancelAnimationFrame(frame);
       cleanups.forEach(function (remove) { remove(); });
+      if (effects) { effects.destroy(); effects = null; }
       if (map) { map.remove(); map = null; }
       activeRoot = null; cleanup = function () {};
     };

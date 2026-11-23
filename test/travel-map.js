@@ -14,6 +14,7 @@ const built = process.argv.includes('--built');
 const assetRoot = path.join(repository, built ? 'public' : 'source');
 const read = file => fs.readFileSync(path.join(assetRoot, file), 'utf8');
 const interaction = read('js/travel-map.js');
+const effects = read('js/travel-atlas-effects.js');
 const leaflet = read('lib/leaflet/leaflet.js');
 const geography = JSON.parse(read('lib/china.json'));
 const page = read(built ? 'travel/index.html' : 'travel/index.md');
@@ -63,23 +64,56 @@ function browser(options = {}) {
   });
   const window = dom.window;
   const document = window.document;
-  const calls = { requests: [], removed: 0, maps: [] };
+  const calls = { requests: [], removed: 0, maps: [], observers: [], media: [], frames: new Map(), canvasDraws: 0 };
   Object.defineProperty(document, 'readyState', { value: 'complete', configurable: true });
   Object.defineProperty(window, 'innerWidth', { value: options.mobile ? 390 : 1280, configurable: true });
-  window.matchMedia = query => ({
-    matches: query.includes('reduced-motion') || (options.mobile && /max-width|pointer: coarse/.test(query)),
-    media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}
-  });
+  window.matchMedia = query => {
+    const listeners = new Set();
+    const media = {
+      matches: query.includes('reduced-motion') ? options.reducedMotion !== false : !!(options.mobile && /max-width|pointer: coarse/.test(query)),
+      media: query,
+      addEventListener(name, callback) { if (name === 'change') listeners.add(callback); },
+      removeEventListener(name, callback) { if (name === 'change') listeners.delete(callback); },
+      addListener(callback) { listeners.add(callback); },
+      removeListener(callback) { listeners.delete(callback); },
+      change(matches) { this.matches = matches; for (const callback of listeners) callback({ matches, media: query }); }
+    };
+    calls.media.push(media);
+    return media;
+  };
+  const requestFrame = window.requestAnimationFrame.bind(window);
+  const cancelFrame = window.cancelAnimationFrame.bind(window);
+  window.requestAnimationFrame = callback => {
+    const frame = requestFrame(timestamp => { calls.frames.delete(frame); callback(timestamp); });
+    calls.frames.set(frame, callback);
+    return frame;
+  };
+  window.cancelAnimationFrame = frame => { calls.frames.delete(frame); cancelFrame(frame); };
+  window.HTMLCanvasElement.prototype.getContext = function () {
+    if (options.noCanvas) return null;
+    if (!this.context) {
+      const noop = () => {};
+      this.context = {
+        canvas: this, setTransform: noop, resetTransform: noop, scale: noop, translate: noop,
+        clearRect() { calls.canvasDraws++; }, fillRect() { calls.canvasDraws++; }, beginPath: noop, closePath: noop,
+        moveTo: noop, lineTo: noop, arc: noop, fill: noop, stroke: noop, save: noop, restore: noop,
+        createRadialGradient() { return { addColorStop: noop }; },
+        createLinearGradient() { return { addColorStop: noop }; }
+      };
+    }
+    return this.context;
+  };
   window.SVGSVGElement.prototype.createSVGRect = () => ({});
   const bounds = { x: 0, y: 0, left: 0, top: 0, right: 760, bottom: 520, width: 760, height: 520 };
   window.HTMLElement.prototype.getBoundingClientRect = function () { return bounds; };
   for (const key of ['clientWidth', 'offsetWidth']) Object.defineProperty(window.HTMLElement.prototype, key, { get: () => 760 });
   for (const key of ['clientHeight', 'offsetHeight']) Object.defineProperty(window.HTMLElement.prototype, key, { get: () => 520 });
   window.IntersectionObserver = class {
-    constructor(callback) { this.callback = callback; }
-    observe(target) { this.callback([{ target, isIntersecting: true }], this); }
-    unobserve() {}
-    disconnect() {}
+    constructor(callback) { this.callback = callback; this.targets = new Set(); calls.observers.push(this); }
+    observe(target) { this.targets.add(target); this.callback([{ target, isIntersecting: true, intersectionRatio: 1 }], this); }
+    unobserve(target) { this.targets.delete(target); }
+    disconnect() { this.targets.clear(); }
+    change(isIntersecting) { this.callback([...this.targets].map(target => ({ target, isIntersecting, intersectionRatio: isIntersecting ? 1 : 0 })), this); }
   };
   window.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
   let dataFailures = options.failData || 0;
@@ -96,6 +130,7 @@ function browser(options = {}) {
     return { ok: true, status: 200, json: async () => isData ? (options.data || liveData) : geography };
   };
   window.eval(leaflet);
+  window.eval(effects);
   const originalMap = window.L.map;
   window.L.map = function (...args) { const map = originalMap.apply(this, args); calls.maps.push(map); return map; };
   const originalRemove = window.L.Map.prototype.remove;
@@ -199,6 +234,120 @@ async function using(options, callback) {
     assert.equal(b.document.querySelectorAll('.travel-province-shape.is-visited').length, 5);
     assert.ok(b.document.querySelectorAll('.travel-province-shape').length >= 34);
     assert.ok(b.find('.travel-map-boundary'), 'unnamed boundary feature must remain visible');
+  }));
+
+  await check('decorative constellation contains only real footprints and a sparse illustrative star chain', () => using({}, b => {
+    const constellation = b.find('.travel-constellation');
+    assert.ok(constellation, 'footprint constellation must render with the actual map');
+    assert.equal(b.document.querySelectorAll('.travel-constellation').length, 1);
+    const nodes = [...constellation.querySelectorAll('g.travel-star-node[data-province]')];
+    assert.deepEqual(nodes.map(node => node.dataset.province).sort(), [...liveData.visited].sort());
+    assert.equal(nodes.length, 5, 'no unvisited province may become a glowing footprint');
+    const links = [...constellation.querySelectorAll('path.travel-star-link')];
+    const comets = [...constellation.querySelectorAll('path.travel-star-comet')];
+    assert.equal(links.length, nodes.length - 1);
+    assert.equal(comets.length, links.length);
+    assert.deepEqual(comets.map(path => path.getAttribute('d')).sort(), links.map(path => path.getAttribute('d')).sort(), 'light flows must follow the actual decorative arcs');
+    assert.ok(constellation.querySelector('.travel-star-grid'));
+    assert.equal(constellation.getAttribute('aria-hidden'), 'true');
+    assert.equal(constellation.querySelectorAll('button, a, [role="button"], [tabindex="0"]').length, 0, 'decoration must not duplicate interactive province controls');
+    assert.equal(constellation.closest('.leaflet-pane').style.pointerEvents, 'none', 'decoration must not intercept map interaction');
+  }));
+
+  await check('constellation node projection and arcs update after real wheel zoom', () => using({}, async b => {
+    const node = b.find('.travel-star-node[data-province="河北"]');
+    const link = b.find('.travel-star-link');
+    assert.ok(node && link);
+    const nodeBefore = node.getAttribute('transform');
+    const arcBefore = link.getAttribute('d');
+    await b.wheel(-120);
+    const nodeAfter = b.find('.travel-star-node[data-province="河北"]').getAttribute('transform');
+    const arcAfter = b.find('.travel-star-link').getAttribute('d');
+    assert.notEqual(nodeAfter, nodeBefore);
+    assert.notEqual(arcAfter, arcBefore);
+    assert.doesNotMatch(nodeAfter + arcAfter, /NaN|Infinity|undefined/);
+    assert.equal(b.document.querySelectorAll('.travel-star-node').length, 5);
+  }));
+
+  await check('effects toggle preserves static footprints and always respects reduced motion', () => using({}, async b => {
+    const root = b.find('#travel-atlas');
+    assert.equal(root.dataset.mapEffects, 'off');
+    assert.equal(b.find('[data-map-action="effects"]').getAttribute('aria-pressed'), 'false');
+    b.click('[data-map-action="effects"]');
+    assert.equal(root.dataset.mapEffects, 'on');
+    assert.equal(root.dataset.mapPaused, 'true', 'explicit effects choice must still respect the system motion preference');
+    const draws = b.calls.canvasDraws;
+    await new Promise(resolve => setTimeout(resolve, 50));
+    assert.equal(b.calls.canvasDraws, draws, 'reduced motion must not start a canvas animation loop');
+    b.click('[data-map-action="effects"]');
+    assert.equal(root.dataset.mapEffects, 'off');
+    assert.equal(b.document.querySelectorAll('.travel-star-node').length, 5, 'switching motion off must retain static footprint context');
+    assert.equal(b.document.querySelectorAll('.travel-star-link').length, 4);
+  }));
+
+  await check('constellation initializes once whichever independent resource finishes first', async () => {
+    for (const order of [['travel.json', 'china.json'], ['china.json', 'travel.json']]) {
+      await using({ pending: true }, async b => {
+        for (const filename of order) {
+          const request = b.calls.requests.find(request => request.url.endsWith(filename));
+          assert.ok(request);
+          request.resolve({ ok: true, json: async () => filename === 'travel.json' ? liveData : geography });
+          await b.ready();
+        }
+        assert.equal(b.document.querySelectorAll('.travel-constellation').length, 1);
+        assert.equal(b.document.querySelectorAll('.travel-star-node').length, 5);
+        assert.equal(b.document.querySelectorAll('.travel-star-link').length, 4);
+      });
+    }
+  });
+
+  await check('satellite view switches reuse the same footprint effects layer', () => using({}, b => {
+    const original = b.find('.travel-constellation');
+    for (let index = 0; index < 3; index++) {
+      b.click('[data-map-view="satellite"]');
+      b.click('[data-map-view="atlas"]');
+    }
+    assert.equal(b.find('.travel-constellation'), original);
+    assert.equal(b.document.querySelectorAll('.travel-constellation').length, 1);
+    assert.equal(b.document.querySelectorAll('.travel-star-node').length, 5);
+    assert.equal(b.find('#travel-atlas').querySelectorAll('canvas').length, 1);
+  }));
+
+  await check('starfield animation stops while hidden/offscreen/reduced and cleans up on navigation', () => using({ reducedMotion: false }, async b => {
+    const root = b.find('#travel-atlas');
+    assert.equal(root.dataset.mapEffects, 'on');
+    await new Promise(resolve => setTimeout(resolve, 50));
+    assert.ok(b.calls.canvasDraws > 0, 'active starfield must draw through the real animation scheduler');
+    Object.defineProperty(b.document, 'hidden', { value: true, configurable: true });
+    b.event('visibilitychange');
+    assert.equal(root.dataset.mapPaused, 'true');
+    const hiddenDraws = b.calls.canvasDraws;
+    await new Promise(resolve => setTimeout(resolve, 50));
+    assert.equal(b.calls.canvasDraws, hiddenDraws);
+    assert.equal(b.calls.frames.size, 0);
+    Object.defineProperty(b.document, 'hidden', { value: false, configurable: true });
+    b.event('visibilitychange');
+    await new Promise(resolve => setTimeout(resolve, 50));
+    assert.ok(b.calls.canvasDraws > hiddenDraws, 'foreground must resume an enabled starfield');
+    for (const observer of b.calls.observers) observer.change(false);
+    assert.equal(root.dataset.mapPaused, 'true');
+    const offscreenDraws = b.calls.canvasDraws;
+    await new Promise(resolve => setTimeout(resolve, 50));
+    assert.equal(b.calls.canvasDraws, offscreenDraws);
+    assert.equal(b.calls.frames.size, 0);
+    for (const observer of b.calls.observers) observer.change(true);
+    await new Promise(resolve => setTimeout(resolve, 50));
+    assert.ok(b.calls.canvasDraws > offscreenDraws);
+    b.calls.media.find(media => media.media.includes('reduced-motion')).change(true);
+    assert.equal(root.dataset.mapPaused, 'true');
+    const reducedDraws = b.calls.canvasDraws;
+    await new Promise(resolve => setTimeout(resolve, 50));
+    assert.equal(b.calls.canvasDraws, reducedDraws);
+    assert.equal(b.calls.frames.size, 0);
+    b.event('pjax:send');
+    assert.equal(root.querySelectorAll('canvas, .travel-constellation').length, 0);
+    assert.equal(b.calls.frames.size, 0);
+    assert.ok(b.calls.observers.every(observer => observer.targets.size === 0));
   }));
 
   await check('Hebei selection stays on page and has no fabricated record or dead category link', () => using({}, b => {
@@ -343,6 +492,8 @@ async function using(options, callback) {
     assert.equal(b.calls.maps.length, 1);
     assert.equal(b.document.querySelectorAll('.leaflet-map-pane').length, 1);
     assert.equal(b.document.querySelectorAll('#travel-provinces button').length, 5);
+    assert.equal(b.document.querySelectorAll('.travel-constellation').length, 1);
+    assert.equal(b.document.querySelectorAll('.travel-star-node').length, 5);
   }));
 
   await check('PJAX departure removes Leaflet and re-entry creates exactly one new map', () => using({}, async b => {
@@ -355,6 +506,8 @@ async function using(options, callback) {
     assert.equal(b.calls.maps.length, 2);
     assert.equal(b.document.querySelectorAll('.leaflet-map-pane').length, 1);
     assert.equal(b.document.querySelectorAll('#travel-provinces button').length, 5);
+    assert.equal(b.document.querySelectorAll('.travel-constellation').length, 1);
+    assert.equal(b.document.querySelectorAll('.travel-star-node').length, 5);
   }));
 
   await check('navigation aborts pending requests and late replies do not revive the old map', () => using({ pending: true }, async b => {

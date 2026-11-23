@@ -58,6 +58,12 @@
 - EXIF 方向映射容易出错（脚本曾漏掉 orient 4、错映射 orient 6 导致照片倒放）。**若某张照片方向错误，与其纠结 EXIF 映射表，用户更接受直接把该缩略图旋转 180° 的简单方案。** 修正后需浏览器目视核对（源图浏览器会自动应用 EXIF，作对照）。
 - 最近一次修复：4bab6/1287988 两张照片方向（提交 10b753c，已推送远端 main）。
 
+## 旅行地图（全息星图，2026-11-23）
+- 入口 `source/travel/index.md`；`travel-map.js?v=4` 管交互与游记，`travel-atlas-effects.js?v=1` 在 Leaflet 后、地图脚本前仅本页加载。样式在 custom.css 的旅行地图块，缓存版本 `20261123-2`。
+- 默认全宽星图：本地省界、静态厚度、五处省级足迹光点与装饰星链；星链只是视觉连接，不是实际旅行路线，节点也不表示去过省中心城市。卫星影像仍点击后才加载，卫星模式停止隐藏的星空 canvas 绘制。
+- **桌面滚轮缩放必须保留**；触屏默认保留页面滚动，点「操作地图」开启拖拽/缩放。动效可关闭，并尊重 reduced-motion、标签页隐藏与地图离屏；离页/初始化失败都要清理 canvas、RAF、观察器和 Leaflet 层。
+- `scripts/travel-data.js` 的 visited 与文章数分离：河北有足迹但 counts=0，不得虚构文章或跳不存在的省分类。文章链接使用生成器的真实 posts 数据。回归 `node test/travel-map.js [--built]`（源码26项，构建27项）。
+
 ## 展示页黑洞 hero（/showcase/，重要坑）
 - 黑洞效果整体呈现叠在 **展示页顶部**（铺满 100vw），下方是原「极简居中」展示内容，中间用渐变过渡（2026-08-24 起渐变高度 60px、目标色 `rgba(0,0,0,0.35)`，提交 5f0a8bf），适配明/暗模式。
 - 黑洞 hero 容器在 `source/showcase/index.md` 里是 `#showcase` 内最顶部的 `<div id="blackhole-hero" class="blackhole-hero">`，canvas 由 `blackhole.js` 注入，用容器宽高自适应。
